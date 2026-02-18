@@ -131,13 +131,58 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| GUIX-01 | Phase 1 | Pending |
+| GUIX-02 | Phase 1 | Pending |
+| GUIX-04 | Phase 1 | Pending |
+| EXPN-01 | Phase 2 | Pending |
+| EXPN-02 | Phase 2 | Pending |
+| EXPN-03 | Phase 2 | Pending |
+| EXPN-04 | Phase 2 | Pending |
+| EXPN-05 | Phase 2 | Pending |
+| EXPN-06 | Phase 2 | Pending |
+| RECR-01 | Phase 2 | Pending |
+| RECR-02 | Phase 2 | Pending |
+| RECR-03 | Phase 2 | Pending |
+| RECR-04 | Phase 2 | Pending |
+| INCM-01 | Phase 2 | Pending |
+| INCM-02 | Phase 2 | Pending |
+| INCM-03 | Phase 2 | Pending |
+| GUIX-03 | Phase 2 | Pending |
+| DASH-01 | Phase 3 | Pending |
+| DASH-02 | Phase 3 | Pending |
+| DASH-03 | Phase 3 | Pending |
+| DASH-04 | Phase 3 | Pending |
+| CHRT-01 | Phase 3 | Pending |
+| CHRT-02 | Phase 3 | Pending |
+| CHRT-03 | Phase 3 | Pending |
+| CHRT-04 | Phase 3 | Pending |
+| LOAN-01 | Phase 3 | Pending |
+| LOAN-02 | Phase 3 | Pending |
+| LOAN-03 | Phase 3 | Pending |
+| LOAN-04 | Phase 3 | Pending |
+| SAVG-01 | Phase 3 | Pending |
+| SAVG-02 | Phase 3 | Pending |
+| SAVG-03 | Phase 3 | Pending |
+| CALC-01 | Phase 3 | Pending |
+| CALC-02 | Phase 3 | Pending |
+| IMPT-01 | Phase 4 | Pending |
+| IMPT-02 | Phase 4 | Pending |
+| IMPT-03 | Phase 4 | Pending |
+| IMPT-04 | Phase 4 | Pending |
+| IMPT-05 | Phase 4 | Pending |
+| AIDP-01 | Phase 5 | Pending |
+| AIDP-02 | Phase 5 | Pending |
+| AIDP-03 | Phase 5 | Pending |
+| AIDP-04 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 40 total
-- Mapped to phases: 0
-- Unmapped: 40
+- v1 requirements: 46 total
+- Mapped to phases: 46
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-18*
-*Last updated: 2026-02-18 after initial definition*
+*Last updated: 2026-02-18 after roadmap creation — traceability populated*
