@@ -5,3 +5,5 @@
 
 [2026-02-20 23:15] TASK-02 done: Defined Drizzle schema in src/db/schema.ts with all 12 tables (users, households, household_members, categories, expenses, recurring_templates, income_entries, loans, loan_payments, savings_goals, import_batches) with proper enums and relationships, generated initial migration via drizzle-kit, verified build succeeds
 
+[2026-02-20 23:45] TASK-03 done: Auth.js v5 configured with Google OAuth provider, created app/api/auth/[auth]/route.ts for OAuth callbacks, updated app/layout.tsx with SessionProvider, verified sign-in page, middleware protection, and verifySession() work end-to-end, all tests pass
+
