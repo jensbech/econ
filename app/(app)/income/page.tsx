@@ -1,7 +1,8 @@
 import { format } from "date-fns";
-import { and, desc, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
@@ -9,6 +10,7 @@ import { categories, incomeEntries } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { expandRecurringIncome } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
+import { getFilteredAccountIds } from "@/lib/accounts";
 import { IncomeTable } from "./income-table";
 
 export default async function IncomePage({
@@ -24,6 +26,11 @@ export default async function IncomePage({
 	const params = await searchParams;
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
+
+	// Resolve selected account IDs from cookie
+	const cookieStore = await cookies();
+	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
+	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
 	const view = params.view === "yearly" ? "yearly" : "monthly";
 	const { month, year, categoryId } = params;
@@ -48,13 +55,39 @@ export default async function IncomePage({
 		await expandRecurringIncome(householdId, expandMonth);
 	}
 
+	// No household — show empty state
+	if (!householdId) {
+		return (
+			<div className="p-4 sm:p-8">
+				<div className="mb-6 flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+							Inntekt
+						</h1>
+					</div>
+				</div>
+				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
+					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+						Ingen husholdning funnet.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Empty selection = all public accounts; explicit selection = those accounts only
+	const validIds = await getFilteredAccountIds(user.id as string, householdId, selectedIds);
+
 	type WhereCondition = Parameters<typeof and>[0];
 	const conditions: WhereCondition[] = [];
 
-	if (householdId) {
-		conditions.push(eq(incomeEntries.householdId, householdId));
-	}
+	conditions.push(eq(incomeEntries.householdId, householdId));
 	conditions.push(isNull(incomeEntries.deletedAt));
+
+	if (validIds.length > 0) {
+		// Show income with no account, OR with an account in the selected set
+		conditions.push(or(isNull(incomeEntries.accountId), inArray(incomeEntries.accountId, validIds)));
+	}
 
 	if (view === "yearly") {
 		const y = year ? Number.parseInt(year, 10) : new Date().getFullYear();
@@ -71,7 +104,6 @@ export default async function IncomePage({
 		conditions.push(gte(incomeEntries.date, start));
 		conditions.push(lte(incomeEntries.date, end));
 	} else {
-		// Default: current month
 		const now = new Date();
 		const start = format(
 			new Date(now.getFullYear(), now.getMonth(), 1),
@@ -89,45 +121,43 @@ export default async function IncomePage({
 		conditions.push(eq(incomeEntries.categoryId, categoryId));
 	}
 
-	const [incomeRows, categoryRows] = householdId
-		? await Promise.all([
-				db
-					.select({
-						id: incomeEntries.id,
-						date: incomeEntries.date,
-						source: incomeEntries.source,
-						type: incomeEntries.type,
-						amountOere: incomeEntries.amountOere,
-						categoryId: incomeEntries.categoryId,
-						categoryName: categories.name,
-						recurringTemplateId: incomeEntries.recurringTemplateId,
-					})
-					.from(incomeEntries)
-					.leftJoin(
-						categories,
-						and(
-							eq(incomeEntries.categoryId, categories.id),
-							eq(categories.householdId, householdId),
-						),
-					)
-					.where(and(...conditions))
-					.orderBy(desc(incomeEntries.date), desc(incomeEntries.createdAt)),
-				db
-					.select({ id: categories.id, name: categories.name })
-					.from(categories)
-					.where(
-						and(
-							eq(categories.householdId, householdId),
-							eq(categories.type, "income"),
-							isNull(categories.deletedAt),
-						),
-					)
-					.orderBy(categories.name),
-			])
-		: [[], []];
+	const [incomeRows, categoryRows] = await Promise.all([
+		db
+			.select({
+				id: incomeEntries.id,
+				date: incomeEntries.date,
+				source: incomeEntries.source,
+				type: incomeEntries.type,
+				amountOere: incomeEntries.amountOere,
+				categoryId: incomeEntries.categoryId,
+				categoryName: categories.name,
+				recurringTemplateId: incomeEntries.recurringTemplateId,
+			})
+			.from(incomeEntries)
+			.leftJoin(
+				categories,
+				and(
+					eq(incomeEntries.categoryId, categories.id),
+					eq(categories.householdId, householdId),
+				),
+			)
+			.where(and(...conditions))
+			.orderBy(desc(incomeEntries.date), desc(incomeEntries.createdAt)),
+		db
+			.select({ id: categories.id, name: categories.name })
+			.from(categories)
+			.where(
+				and(
+					eq(categories.householdId, householdId),
+					eq(categories.type, "income"),
+					isNull(categories.deletedAt),
+				),
+			)
+			.orderBy(categories.name),
+	]);
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">

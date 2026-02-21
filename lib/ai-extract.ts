@@ -9,6 +9,7 @@ export interface ExtractedTransaction {
 	description: string;
 	suggestedCategory: string;
 	confidence: "high" | "medium" | "low";
+	accountNumber: string | null; // extracted from statement header/context
 }
 
 export type AiExtractionResult =
@@ -58,6 +59,11 @@ const extractionJsonSchema = jsonSchema<{
 						description:
 							"Konfidensgrad: high = tydelig, medium = noe usikkert, low = utydelig",
 					},
+					accountNumber: {
+						type: ["string", "null"],
+						description:
+							"Kontonummer fra dokumentet (f.eks. fra kontoutskrift-header). Null hvis ikke funnet.",
+					},
 				},
 				required: [
 					"date",
@@ -65,6 +71,7 @@ const extractionJsonSchema = jsonSchema<{
 					"description",
 					"suggestedCategory",
 					"confidence",
+					"accountNumber",
 				],
 			},
 		},
@@ -99,6 +106,7 @@ Regler:
 - Beskrivelse: kort og norsk, gjerne butikknavn eller transaksjonskategori
 - suggestedCategory: velg én fra listen: ${CATEGORY_LIST}
 - confidence: "high" hvis dato og beløp er klart leselig, "medium" hvis noe er usikkert, "low" hvis mye er utydelig
+- accountNumber: Hvis dokumentet er en kontoutskrift, trekk ut kontonummeret fra headeren/overskriften. Formater som ren tekst (f.eks. "1234.56.78901"). Sett null hvis ikke funnet eller ved kvittering.
 
 Returner et JSON-objekt med en "transactions"-liste. Hvis ingen transaksjoner finnes, returner { "transactions": [] }.`;
 

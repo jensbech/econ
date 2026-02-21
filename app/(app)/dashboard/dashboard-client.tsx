@@ -3,8 +3,10 @@
 import { addMonths, format, parseISO, subMonths } from "date-fns";
 import { nb } from "date-fns/locale";
 import {
+	BarChart3,
 	ChevronLeft,
 	ChevronRight,
+	PiggyBank,
 	TrendingDown,
 	TrendingUp,
 	Wallet,
@@ -35,6 +37,11 @@ interface DashboardClientProps {
 	categoryBreakdown: CategoryRow[];
 	upcomingRecurring: RecurringExpense[];
 	hasData: boolean;
+	noAccountSelected: boolean;
+	monthlySavings?: number;
+	monthlyLoanTotal?: number;
+	monthlyLoanInterest?: number;
+	monthlyLoanPrincipal?: number;
 }
 
 export function DashboardClient({
@@ -45,6 +52,11 @@ export function DashboardClient({
 	categoryBreakdown,
 	upcomingRecurring,
 	hasData,
+	noAccountSelected,
+	monthlySavings = 0,
+	monthlyLoanTotal = 0,
+	monthlyLoanInterest = 0,
+	monthlyLoanPrincipal = 0,
 }: DashboardClientProps) {
 	const router = useRouter();
 
@@ -52,11 +64,31 @@ export function DashboardClient({
 	const prevMonth = format(subMonths(selectedMonth, 1), "yyyy-MM");
 	const nextMonth = format(addMonths(selectedMonth, 1), "yyyy-MM");
 	const monthLabel = format(selectedMonth, "MMMM yyyy", { locale: nb });
-	// Capitalize first letter
 	const monthLabelDisplay =
 		monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
 	const netAmount = totalIncome - totalExpenses;
+
+	if (noAccountSelected) {
+		return (
+			<div className="p-8">
+				<div className="mb-8">
+					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+						Dashboard
+					</h1>
+				</div>
+				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
+					<Wallet className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
+					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+						Velg en konto for å se data
+					</p>
+					<p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+						Bruk kontovalgeren øverst for å velge hvilke kontoer som skal vises.
+					</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="p-8">
@@ -75,7 +107,7 @@ export function DashboardClient({
 					<button
 						type="button"
 						onClick={() => router.push(`/dashboard?month=${prevMonth}`)}
-						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-all hover:bg-gray-50 hover:text-gray-900 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
 						aria-label="Forrige måned"
 					>
 						<ChevronLeft className="h-4 w-4" />
@@ -86,7 +118,7 @@ export function DashboardClient({
 					<button
 						type="button"
 						onClick={() => router.push(`/dashboard?month=${nextMonth}`)}
-						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-all hover:bg-gray-50 hover:text-gray-900 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
 						aria-label="Neste måned"
 					>
 						<ChevronRight className="h-4 w-4" />
@@ -95,15 +127,15 @@ export function DashboardClient({
 			</div>
 
 			{/* Summary stat cards */}
-			<div className="mb-8 grid grid-cols-3 gap-4">
+			<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
 				{/* Total income */}
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+				<div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
 					<div className="flex items-start justify-between">
 						<div>
 							<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
 								Inntekt
 							</p>
-							<p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
+							<p className="mt-1 text-2xl font-bold tabular-nums text-green-600 dark:text-green-400">
 								{formatNOK(totalIncome)}
 							</p>
 						</div>
@@ -114,13 +146,13 @@ export function DashboardClient({
 				</div>
 
 				{/* Total expenses */}
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+				<div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
 					<div className="flex items-start justify-between">
 						<div>
 							<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
 								Utgifter
 							</p>
-							<p className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
+							<p className="mt-1 text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
 								{formatNOK(totalExpenses)}
 							</p>
 						</div>
@@ -131,7 +163,7 @@ export function DashboardClient({
 				</div>
 
 				{/* Savings rate */}
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+				<div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
 					<div className="flex items-start justify-between">
 						<div>
 							<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -139,7 +171,7 @@ export function DashboardClient({
 							</p>
 							{savingsRate !== null ? (
 								<p
-									className={`mt-1 text-2xl font-bold ${
+									className={`mt-1 text-2xl font-bold tabular-nums ${
 										savingsRate >= 0
 											? "text-indigo-600 dark:text-indigo-400"
 											: "text-red-600 dark:text-red-400"
@@ -152,7 +184,7 @@ export function DashboardClient({
 									—
 								</p>
 							)}
-							<p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+							<p className="mt-0.5 text-xs tabular-nums text-gray-400 dark:text-gray-500">
 								Netto:{" "}
 								<span
 									className={
@@ -172,9 +204,55 @@ export function DashboardClient({
 				</div>
 			</div>
 
+			{/* Savings & loan cards */}
+			{(monthlySavings > 0 || monthlyLoanTotal > 0) && (
+				<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+					{/* Savings this month */}
+					<div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+						<div className="flex items-start justify-between">
+							<div>
+								<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+									Spart denne måneden
+								</p>
+								<p className="mt-1 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+									{formatNOK(monthlySavings)}
+								</p>
+							</div>
+							<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+								<PiggyBank className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+							</div>
+						</div>
+					</div>
+
+					{/* Loan payments this month */}
+					<div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+						<div className="flex items-start justify-between">
+							<div>
+								<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+									Lån denne måneden
+								</p>
+								<p className="mt-1 text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+									{formatNOK(monthlyLoanTotal)}
+								</p>
+								{(monthlyLoanInterest > 0 || monthlyLoanPrincipal > 0) && (
+									<p className="mt-0.5 text-xs tabular-nums text-gray-400 dark:text-gray-500">
+										Renter: {formatNOK(monthlyLoanInterest)} · Avdrag:{" "}
+										{formatNOK(monthlyLoanPrincipal)}
+									</p>
+								)}
+							</div>
+							<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
+								<BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Empty state */}
 			{!hasData && (
 				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
+					<TrendingDown className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
 					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
 						Ingen data for {monthLabelDisplay}
 					</p>
@@ -199,7 +277,7 @@ export function DashboardClient({
 			)}
 
 			{hasData && (
-				<div className="grid grid-cols-2 gap-6">
+				<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 					{/* Spending by category */}
 					<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
 						<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
@@ -221,25 +299,25 @@ export function DashboardClient({
 									return (
 										<li
 											key={row.categoryId ?? `uncategorized-${i}`}
-											className="flex items-center gap-3 px-5 py-3"
+											className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
 										>
 											<div className="min-w-0 flex-1">
 												<div className="flex items-center justify-between text-sm">
 													<span className="truncate font-medium text-gray-700 dark:text-gray-200">
 														{row.categoryName ?? "Ukategorisert"}
 													</span>
-													<span className="ml-4 flex-shrink-0 font-semibold text-red-600 dark:text-red-400">
+													<span className="ml-4 flex-shrink-0 font-semibold tabular-nums text-red-600 dark:text-red-400">
 														{formatNOK(row.total)}
 													</span>
 												</div>
 												<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
 													<div
-														className="h-full rounded-full bg-red-400 dark:bg-red-500"
+														className="h-full rounded-full bg-red-400 transition-all duration-500 ease-out dark:bg-red-500"
 														style={{ width: `${pct}%` }}
 													/>
 												</div>
 											</div>
-											<span className="w-8 flex-shrink-0 text-right text-xs text-gray-400 dark:text-gray-500">
+											<span className="w-8 flex-shrink-0 text-right text-xs tabular-nums text-gray-400 dark:text-gray-500">
 												{pct}%
 											</span>
 										</li>
@@ -265,7 +343,7 @@ export function DashboardClient({
 								{upcomingRecurring.map((item) => (
 									<li
 										key={item.id}
-										className="flex items-center justify-between px-5 py-3"
+										className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
 									>
 										<div className="min-w-0">
 											<p className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -276,7 +354,7 @@ export function DashboardClient({
 												{item.categoryName ? ` · ${item.categoryName}` : ""}
 											</p>
 										</div>
-										<span className="ml-4 flex-shrink-0 text-sm font-semibold text-red-600 dark:text-red-400">
+										<span className="ml-4 flex-shrink-0 text-sm font-semibold tabular-nums text-red-600 dark:text-red-400">
 											{formatNOK(item.amountOere)}
 										</span>
 									</li>

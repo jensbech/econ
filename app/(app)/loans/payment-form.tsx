@@ -76,19 +76,62 @@ export function PaymentForm({ action }: PaymentFormProps) {
 
 			{/* Amount */}
 			<div className="space-y-1.5">
-				<Label htmlFor="pay-amount">Beløp (NOK)</Label>
+				<Label htmlFor="pay-amount">Totalbeløp (NOK)</Label>
 				<Input
 					id="pay-amount"
 					name="amount"
-					type="number"
-					step="0.01"
-					min="0"
+					type="text"
+					inputMode="decimal"
+					pattern="[0-9]*[.,]?[0-9]*"
 					placeholder="0.00"
 					className="h-9"
 				/>
 				{state?.fieldErrors?.amount && (
 					<p className="text-xs text-red-600">{state.fieldErrors.amount[0]}</p>
 				)}
+			</div>
+
+			{/* Interest/Principal split */}
+			<div className="space-y-3 rounded-lg border border-amber-100 bg-amber-50/50 p-3 dark:border-amber-900/30 dark:bg-amber-900/10">
+				<p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+					Valgfri fordeling renter/avdrag
+				</p>
+				<div className="grid grid-cols-2 gap-3">
+					<div className="space-y-1.5">
+						<Label htmlFor="pay-interest">Renter (NOK)</Label>
+						<Input
+							id="pay-interest"
+							name="interestAmount"
+							type="text"
+							inputMode="decimal"
+							pattern="[0-9]*[.,]?[0-9]*"
+							placeholder="0.00"
+							className="h-9"
+						/>
+						{state?.fieldErrors?.interestAmount && (
+							<p className="text-xs text-red-600">
+								{state.fieldErrors.interestAmount[0]}
+							</p>
+						)}
+					</div>
+					<div className="space-y-1.5">
+						<Label htmlFor="pay-principal">Avdrag (NOK)</Label>
+						<Input
+							id="pay-principal"
+							name="principalAmount"
+							type="text"
+							inputMode="decimal"
+							pattern="[0-9]*[.,]?[0-9]*"
+							placeholder="0.00"
+							className="h-9"
+						/>
+						{state?.fieldErrors?.principalAmount && (
+							<p className="text-xs text-red-600">
+								{state.fieldErrors.principalAmount[0]}
+							</p>
+						)}
+					</div>
+				</div>
 			</div>
 
 			<Button

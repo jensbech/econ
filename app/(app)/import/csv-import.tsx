@@ -256,12 +256,31 @@ function delimLabel(d: string): string {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
+interface SavingsAccountOption {
+	id: string;
+	name: string;
+}
+
+interface LoanOption {
+	id: string;
+	name: string;
+}
+
+interface AccountOption {
+	id: string;
+	name: string;
+}
+
 interface CsvImportProps {
 	categories: Category[];
 	headingHidden?: boolean;
+	accountId?: string;
+	accounts?: AccountOption[];
+	savingsAccounts?: SavingsAccountOption[];
+	loans?: LoanOption[];
 }
 
-export function CsvImport({ categories, headingHidden }: CsvImportProps) {
+export function CsvImport({ categories, headingHidden, accountId, accounts = [], savingsAccounts = [], loans = [] }: CsvImportProps) {
 	const router = useRouter();
 	const [step, setStep] = useState<Step>("idle");
 	const [error, setError] = useState<string | null>(null);
@@ -275,6 +294,11 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 	const [duplicateFlags, setDuplicateFlags] = useState<boolean[]>([]);
 	const [skipped, setSkipped] = useState<Set<number>>(new Set());
 	const [rowCategories, setRowCategories] = useState<(string | null)[]>([]);
+	const [rowAccountIds, setRowAccountIds] = useState<(string | null)[]>([]);
+	const [rowSavingsGoalIds, setRowSavingsGoalIds] = useState<
+		(string | null)[]
+	>([]);
+	const [rowLoanIds, setRowLoanIds] = useState<(string | null)[]>([]);
 	const [importResult, setImportResult] = useState<{
 		batchId: string;
 		inserted: number;
@@ -374,6 +398,9 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 		setRowCategories(
 			rows.map((r) => suggestCategory(r.description, categories)),
 		);
+		setRowAccountIds(rows.map(() => accountId ?? null));
+		setRowSavingsGoalIds(rows.map(() => null));
+		setRowLoanIds(rows.map(() => null));
 		setStep("preview");
 	}
 
@@ -391,6 +418,9 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 					amount: mappedRows[i].amount,
 					description: mappedRows[i].description,
 					categoryId: rowCategories[i] ?? null,
+					accountId: rowAccountIds[i] ?? null,
+					savingsGoalId: rowSavingsGoalIds[i] ?? null,
+					loanId: rowLoanIds[i] ?? null,
 				});
 			}
 		}
@@ -400,6 +430,7 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 				parsedFile.filename,
 				toImport,
 				parsedFile.detection.decimalSeparator,
+				accountId ?? null,
 			);
 			setImportResult(result);
 			setStep("done");
@@ -435,6 +466,9 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 		setDuplicateFlags([]);
 		setSkipped(new Set());
 		setRowCategories([]);
+		setRowAccountIds([]);
+		setRowSavingsGoalIds([]);
+		setRowLoanIds([]);
 		setImportResult(null);
 		setIsRollingBack(false);
 		setError(null);
@@ -583,6 +617,33 @@ export function CsvImport({ categories, headingHidden }: CsvImportProps) {
 							setRowCategories((prev) => {
 								const next = [...prev];
 								next[i] = catId;
+								return next;
+							})
+						}
+						accounts={accounts}
+						rowAccountIds={rowAccountIds}
+						onAccountChange={(i, accId) =>
+							setRowAccountIds((prev) => {
+								const next = [...prev];
+								next[i] = accId;
+								return next;
+							})
+						}
+						savingsAccounts={savingsAccounts}
+						loans={loans}
+						rowSavingsGoalIds={rowSavingsGoalIds}
+						rowLoanIds={rowLoanIds}
+						onSavingsGoalChange={(i, sgId) =>
+							setRowSavingsGoalIds((prev) => {
+								const next = [...prev];
+								next[i] = sgId;
+								return next;
+							})
+						}
+						onLoanChange={(i, lId) =>
+							setRowLoanIds((prev) => {
+								const next = [...prev];
+								next[i] = lId;
 								return next;
 							})
 						}
@@ -879,6 +940,15 @@ interface MappedPreviewProps {
 	categories: Category[];
 	rowCategories: (string | null)[];
 	onCategoryChange: (index: number, categoryId: string | null) => void;
+	accounts: AccountOption[];
+	rowAccountIds: (string | null)[];
+	onAccountChange: (index: number, accountId: string | null) => void;
+	savingsAccounts: SavingsAccountOption[];
+	loans: LoanOption[];
+	rowSavingsGoalIds: (string | null)[];
+	rowLoanIds: (string | null)[];
+	onSavingsGoalChange: (index: number, id: string | null) => void;
+	onLoanChange: (index: number, id: string | null) => void;
 }
 
 function MappedPreview({
@@ -889,6 +959,15 @@ function MappedPreview({
 	categories,
 	rowCategories,
 	onCategoryChange,
+	accounts,
+	rowAccountIds,
+	onAccountChange,
+	savingsAccounts,
+	loans,
+	rowSavingsGoalIds,
+	rowLoanIds,
+	onSavingsGoalChange,
+	onLoanChange,
 }: MappedPreviewProps) {
 	return (
 		<div>
@@ -912,7 +991,13 @@ function MappedPreview({
 								Beskrivelse
 							</th>
 							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+								Konto
+							</th>
+							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
 								Kategori
+							</th>
+							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+								Kobling
 							</th>
 							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
 								Status
@@ -924,6 +1009,7 @@ function MappedPreview({
 							const isDuplicate = duplicateFlags[i] ?? false;
 							const isSkipped = skipped.has(i);
 							const catId = rowCategories[i] ?? null;
+							const catName = catId ? categories.find((c) => c.id === catId)?.name : null;
 							const rowKey = `${row.date}|${row.amount}|${row.description}|${i}`;
 							return (
 								<tr
@@ -957,6 +1043,28 @@ function MappedPreview({
 										{row.description || "—"}
 									</td>
 									<td className="px-4 py-1.5">
+										{!isSkipped && accounts.length > 0 && (
+											<Select
+												value={rowAccountIds[i] ?? "__none"}
+												onValueChange={(v) =>
+													onAccountChange(i, v === "__none" ? null : v)
+												}
+											>
+												<SelectTrigger className="h-7 min-w-[130px] text-xs">
+													<SelectValue placeholder="Konto…" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="__none">Ingen konto</SelectItem>
+													{accounts.map((a) => (
+														<SelectItem key={a.id} value={a.id}>
+															{a.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+									</td>
+									<td className="px-4 py-1.5">
 										{!isSkipped && (
 											<Select
 												value={catId ?? "__none"}
@@ -972,6 +1080,48 @@ function MappedPreview({
 													{categories.map((cat) => (
 														<SelectItem key={cat.id} value={cat.id}>
 															{cat.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+									</td>
+									<td className="px-4 py-1.5">
+										{!isSkipped && catName === "Sparing" && savingsAccounts.length > 0 && (
+											<Select
+												value={rowSavingsGoalIds[i] ?? "__none"}
+												onValueChange={(v) =>
+													onSavingsGoalChange(i, v === "__none" ? null : v)
+												}
+											>
+												<SelectTrigger className="h-7 min-w-[130px] text-xs">
+													<SelectValue placeholder="Sparekonto…" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="__none">Ingen</SelectItem>
+													{savingsAccounts.map((sa) => (
+														<SelectItem key={sa.id} value={sa.id}>
+															{sa.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
+										{!isSkipped && catName === "Lån" && loans.length > 0 && (
+											<Select
+												value={rowLoanIds[i] ?? "__none"}
+												onValueChange={(v) =>
+													onLoanChange(i, v === "__none" ? null : v)
+												}
+											>
+												<SelectTrigger className="h-7 min-w-[130px] text-xs">
+													<SelectValue placeholder="Lån…" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="__none">Ingen</SelectItem>
+													{loans.map((l) => (
+														<SelectItem key={l.id} value={l.id}>
+															{l.name}
 														</SelectItem>
 													))}
 												</SelectContent>

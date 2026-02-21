@@ -3,7 +3,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { categories, expenses, importBatches } from "@/db/schema";
+import { categories, expenses, importBatches, loanPayments } from "@/db/schema";
 import type { DecimalSeparator } from "@/lib/csv-detect";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
@@ -17,6 +17,11 @@ export interface CheckRow {
 
 export interface ImportRow extends CheckRow {
 	categoryId: string | null;
+	accountId?: string | null;
+	savingsGoalId?: string | null;
+	loanId?: string | null;
+	interestOere?: number | null;
+	principalOere?: number | null;
 }
 
 function parseAmountToOere(
@@ -106,6 +111,7 @@ export async function confirmImport(
 	filename: string,
 	rows: ImportRow[],
 	decimalSeparator: DecimalSeparator,
+	accountId: string | null = null,
 ): Promise<{ batchId: string; inserted: number }> {
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
@@ -118,6 +124,11 @@ export async function confirmImport(
 			amountOere: parseAmountToOere(row.amount, decimalSeparator),
 			description: row.description.trim(),
 			categoryId: row.categoryId || null,
+			accountId: row.accountId ?? accountId ?? null,
+			savingsGoalId: row.savingsGoalId || null,
+			loanId: row.loanId || null,
+			interestOere: row.interestOere ?? null,
+			principalOere: row.principalOere ?? null,
 		}))
 		.filter(
 			(
@@ -127,6 +138,11 @@ export async function confirmImport(
 				amountOere: number;
 				description: string;
 				categoryId: string | null;
+				accountId: string | null;
+				savingsGoalId: string | null;
+				loanId: string | null;
+				interestOere: number | null;
+				principalOere: number | null;
 			} => r.isoDate !== null && r.amountOere !== null,
 		);
 
@@ -167,6 +183,7 @@ export async function confirmImport(
 			userId: user.id as string,
 			filename,
 			rowCount: parsed.length,
+			accountId: accountId || null,
 		})
 		.returning({ id: importBatches.id });
 
@@ -180,11 +197,30 @@ export async function confirmImport(
 			date: r.isoDate,
 			notes: r.description || null,
 			importBatchId: batch.id,
+			accountId: r.accountId || null,
+			savingsGoalId: r.savingsGoalId,
+			loanId: r.loanId,
+			interestOere: r.interestOere,
+			principalOere: r.principalOere,
 		})),
 	);
 
+	// Create loanPayments rows for backward compat with computeLoanBalance
+	const loanRows = parsed.filter((r) => r.loanId !== null);
+	if (loanRows.length > 0) {
+		await db.insert(loanPayments).values(
+			loanRows.map((r) => ({
+				loanId: r.loanId as string,
+				amountOere: r.principalOere ?? r.amountOere,
+				date: r.isoDate,
+			})),
+		);
+	}
+
 	revalidatePath("/import");
 	revalidatePath("/expenses");
+	revalidatePath("/savings");
+	revalidatePath("/loans");
 
 	return { batchId: batch.id, inserted: parsed.length };
 }
@@ -221,4 +257,6 @@ export async function rollbackImport(batchId: string): Promise<void> {
 
 	revalidatePath("/import");
 	revalidatePath("/expenses");
+	revalidatePath("/savings");
+	revalidatePath("/loans");
 }

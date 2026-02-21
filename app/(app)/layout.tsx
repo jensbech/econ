@@ -2,7 +2,9 @@ import {
 	BarChart3,
 	Calculator,
 	CreditCard,
+	HelpCircle,
 	Import,
+	Landmark,
 	LayoutDashboard,
 	LineChart,
 	LogOut,
@@ -11,9 +13,15 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
+import { AccountSelector } from "@/components/account-selector";
+import { MobileSidebar } from "@/components/mobile-sidebar";
+import { NavLink } from "@/components/nav-link";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { getVisibleAccounts } from "@/lib/accounts";
+import { ensureUserAndHousehold, getHouseholdId } from "@/lib/households";
 
 const navItems = [
 	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,11 +29,27 @@ const navItems = [
 	{ href: "/income", label: "Inntekt", icon: TrendingUp },
 	{ href: "/loans", label: "Lån", icon: BarChart3 },
 	{ href: "/savings", label: "Sparing", icon: PiggyBank },
+	{ href: "/accounts", label: "Kontoer", icon: Landmark },
 	{ href: "/charts", label: "Grafer", icon: LineChart },
 	{ href: "/calculator", label: "Kalkulator", icon: Calculator },
 	{ href: "/import", label: "Importer", icon: Import },
 	{ href: "/settings/categories", label: "Kategorier", icon: Settings },
+	{ href: "/guide", label: "Brukerveiledning", icon: HelpCircle },
 ];
+
+function SidebarNav() {
+	return (
+		<>
+			<nav className="flex-1 space-y-0.5 px-3 py-4">
+				{navItems.map(({ href, label, icon: Icon }) => (
+					<NavLink key={href} href={href} label={label}>
+						<Icon className="h-4 w-4 flex-shrink-0" />
+					</NavLink>
+				))}
+			</nav>
+		</>
+	);
+}
 
 export default async function AppLayout({
 	children,
@@ -37,30 +61,40 @@ export default async function AppLayout({
 
 	const user = session.user;
 
+	// If no household exists yet (e.g. DB was reset, session cookie still valid),
+	// create one now — same logic as the signIn callback.
+	let householdId = await getHouseholdId(user.id as string);
+	if (!householdId && user.email) {
+		await ensureUserAndHousehold(
+			user.id as string,
+			user.email,
+			user.name ?? null,
+			user.image ?? null,
+		);
+		householdId = await getHouseholdId(user.id as string);
+	}
+
+	const visibleAccounts = householdId
+		? await getVisibleAccounts(user.id as string, householdId)
+		: [];
+
+	const cookieStore = await cookies();
+	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
+	const initialSelected = selectedRaw
+		.split(",")
+		.filter((id) => visibleAccounts.some((a) => a.id === id));
+
 	return (
 		<div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-			{/* Sidebar */}
-			<aside className="flex w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-				{/* Logo / App name */}
+			{/* Desktop Sidebar */}
+			<aside className="hidden w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:flex dark:border-gray-800 dark:bg-gray-900">
 				<div className="border-b border-gray-200 px-5 py-5 dark:border-gray-800">
 					<h1 className="text-sm font-semibold leading-tight text-gray-900 dark:text-white">
 						Jeg vil ha pengene mine!
 					</h1>
 				</div>
 
-				{/* Navigation */}
-				<nav className="flex-1 space-y-0.5 px-3 py-4">
-					{navItems.map(({ href, label, icon: Icon }) => (
-						<Link
-							key={href}
-							href={href}
-							className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-						>
-							<Icon className="h-4 w-4 flex-shrink-0" />
-							{label}
-						</Link>
-					))}
-				</nav>
+				<SidebarNav />
 
 				{/* User section */}
 				<div className="border-t border-gray-200 p-3 dark:border-gray-800">
@@ -87,6 +121,7 @@ export default async function AppLayout({
 							</p>
 						</div>
 					</div>
+					<ThemeToggle />
 					<form
 						action={async () => {
 							"use server";
@@ -95,7 +130,7 @@ export default async function AppLayout({
 					>
 						<button
 							type="submit"
-							className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
 						>
 							<LogOut className="h-4 w-4 flex-shrink-0" />
 							Logg ut
@@ -104,8 +139,29 @@ export default async function AppLayout({
 				</div>
 			</aside>
 
-			{/* Main content */}
-			<main className="flex-1 overflow-auto">{children}</main>
+			{/* Main content area */}
+			<div className="flex flex-1 flex-col min-w-0">
+				{/* Top bar */}
+				<header className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 md:px-6 dark:border-gray-800 dark:bg-gray-900">
+					{/* Mobile hamburger + sidebar drawer */}
+					<MobileSidebar>
+						<SidebarNav />
+						<div className="border-t border-gray-200 p-3 dark:border-gray-800">
+							<ThemeToggle />
+						</div>
+					</MobileSidebar>
+
+					{/* Account selector */}
+					<div className="flex-1 overflow-x-auto">
+						<AccountSelector
+							accounts={visibleAccounts}
+							initialSelected={initialSelected}
+						/>
+					</div>
+				</header>
+
+				<main className="flex-1 overflow-auto">{children}</main>
+			</div>
 		</div>
 	);
 }

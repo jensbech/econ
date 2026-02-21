@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useActionState, useRef } from "react";
 import {
 	CalendarField,
 	FormError,
@@ -16,6 +17,11 @@ interface Category {
 	name: string;
 }
 
+interface AccountOption {
+	id: string;
+	name: string;
+}
+
 interface IncomeFormProps {
 	action: (
 		state: IncomeFormState,
@@ -26,8 +32,11 @@ interface IncomeFormProps {
 	defaultSource?: string;
 	defaultType?: "salary" | "variable";
 	defaultCategoryId?: string;
+	defaultAccountId?: string;
 	categories: Category[];
+	accounts?: AccountOption[];
 	submitLabel?: string;
+	cancelHref?: string;
 }
 
 export function IncomeForm({
@@ -37,14 +46,46 @@ export function IncomeForm({
 	defaultSource,
 	defaultType,
 	defaultCategoryId,
+	defaultAccountId,
 	categories,
+	accounts = [],
 	submitLabel = "Lagre",
+	cancelHref = "/income",
 }: IncomeFormProps) {
 	const [state, formAction, pending] = useActionState(action, null);
+	const formRef = useRef<HTMLFormElement>(null);
+	const forceInputRef = useRef<HTMLInputElement>(null);
 
 	return (
-		<form action={formAction} className="space-y-5">
+		<form ref={formRef} action={formAction} className="space-y-5">
+			<input type="hidden" name="force" ref={forceInputRef} defaultValue="" />
 			<FormError error={state?.error} />
+
+			{state?.duplicateWarning && (
+				<div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-300">
+					<AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+					<div className="flex-1">
+						<p className="font-medium">Mulig duplikat</p>
+						<p className="mt-0.5">{state.warning}</p>
+						<div className="mt-3 flex gap-2">
+							<Button
+								type="button"
+								size="sm"
+								className="bg-amber-600 hover:bg-amber-700 text-white"
+								onClick={() => {
+									if (forceInputRef.current) forceInputRef.current.value = "true";
+									formRef.current?.requestSubmit();
+								}}
+							>
+								Lagre likevel
+							</Button>
+							<Button type="button" size="sm" variant="outline" asChild>
+								<a href={cancelHref}>Avbryt</a>
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<CalendarField
 				name="date"
@@ -60,15 +101,19 @@ export function IncomeForm({
 				<Input
 					id="amount"
 					name="amount"
-					type="number"
-					step="0.01"
-					min="0"
+					type="text"
+					inputMode="decimal"
+					pattern="[0-9]*[.,]?[0-9]*"
 					placeholder="0.00"
 					defaultValue={defaultAmountNOK}
 					className="h-9"
+					// biome-ignore lint/a11y/noAutofocus: first editable field should auto-focus
+					autoFocus={!defaultAmountNOK}
 				/>
 				{state?.fieldErrors?.amount && (
-					<p className="text-xs text-red-600">{state.fieldErrors.amount[0]}</p>
+					<p className="text-xs text-red-600 dark:text-red-400">
+						{state.fieldErrors.amount[0]}
+					</p>
 				)}
 			</div>
 
@@ -83,8 +128,13 @@ export function IncomeForm({
 					defaultValue={defaultSource}
 					className="h-9"
 				/>
+				<p className="text-xs text-gray-400 dark:text-gray-500">
+					Navn på arbeidsgiver, klient, eller inntektskilde
+				</p>
 				{state?.fieldErrors?.source && (
-					<p className="text-xs text-red-600">{state.fieldErrors.source[0]}</p>
+					<p className="text-xs text-red-600 dark:text-red-400">
+						{state.fieldErrors.source[0]}
+					</p>
 				)}
 			</div>
 
@@ -97,11 +147,13 @@ export function IncomeForm({
 					defaultValue={defaultType ?? "salary"}
 					className={SELECT_CLASS_NAME}
 				>
-					<option value="salary">Lønn</option>
-					<option value="variable">Variabel inntekt</option>
+					<option value="salary">Lønn (fast, forutsigbar)</option>
+					<option value="variable">Variabel inntekt (uforutsigbar)</option>
 				</select>
 				{state?.fieldErrors?.type && (
-					<p className="text-xs text-red-600">{state.fieldErrors.type[0]}</p>
+					<p className="text-xs text-red-600 dark:text-red-400">
+						{state.fieldErrors.type[0]}
+					</p>
 				)}
 			</div>
 
@@ -123,16 +175,37 @@ export function IncomeForm({
 				</select>
 			</div>
 
+			{/* Account */}
+			{accounts.length > 0 && (
+				<div className="space-y-1.5">
+					<Label htmlFor="accountId">Konto</Label>
+					<select
+						id="accountId"
+						name="accountId"
+						defaultValue={defaultAccountId ?? ""}
+						className={SELECT_CLASS_NAME}
+					>
+						<option value="">Ingen konto</option>
+						{accounts.map((acc) => (
+							<option key={acc.id} value={acc.id}>
+								{acc.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
+
 			<div className="flex gap-3 pt-1">
 				<Button
 					type="submit"
 					disabled={pending}
-					className="bg-indigo-600 hover:bg-indigo-700"
+					className="gap-2 bg-indigo-600 hover:bg-indigo-700"
 				>
+					{pending && <Loader2 className="h-4 w-4 animate-spin" />}
 					{pending ? "Lagrer..." : submitLabel}
 				</Button>
 				<Button type="button" variant="outline" asChild>
-					<a href="/income">Avbryt</a>
+					<a href={cancelHref}>Avbryt</a>
 				</Button>
 			</div>
 		</form>

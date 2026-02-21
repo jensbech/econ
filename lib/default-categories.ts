@@ -14,6 +14,7 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
 	"Reise",
 	"Barn",
 	"Sparing",
+	"Lån",
 	"Annet",
 ] as const;
 

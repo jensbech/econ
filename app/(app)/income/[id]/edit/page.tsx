@@ -1,11 +1,13 @@
 import { parse } from "date-fns";
 import { and, eq, isNull } from "drizzle-orm";
-import { Repeat } from "lucide-react";
+import { ArrowLeft, Repeat } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { categories, incomeEntries } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { getVisibleAccounts } from "@/lib/accounts";
 import { deleteIncome, updateIncome } from "../../actions";
 import { IncomeForm } from "../../income-form";
 import { DeleteIncomeButton } from "./delete-button";
@@ -34,17 +36,20 @@ export default async function EditIncomePage({
 
 	if (!entry) notFound();
 
-	const incomeCategories = await db
-		.select({ id: categories.id, name: categories.name })
-		.from(categories)
-		.where(
-			and(
-				eq(categories.householdId, householdId),
-				eq(categories.type, "income"),
-				isNull(categories.deletedAt),
-			),
-		)
-		.orderBy(categories.name);
+	const [incomeCategories, visibleAccounts] = await Promise.all([
+		db
+			.select({ id: categories.id, name: categories.name })
+			.from(categories)
+			.where(
+				and(
+					eq(categories.householdId, householdId),
+					eq(categories.type, "income"),
+					isNull(categories.deletedAt),
+				),
+			)
+			.orderBy(categories.name),
+		getVisibleAccounts(user.id as string, householdId),
+	]);
 
 	const updateAction = updateIncome.bind(null, entry.id);
 	const deleteAction = deleteIncome.bind(null, entry.id);
@@ -55,8 +60,15 @@ export default async function EditIncomePage({
 		: undefined;
 
 	return (
-		<div className="mx-auto max-w-lg space-y-6 p-8">
+		<div className="mx-auto max-w-lg space-y-6 p-4 sm:p-8">
 			<div>
+				<Link
+					href="/income"
+					className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+				>
+					<ArrowLeft className="h-3.5 w-3.5" />
+					Tilbake til inntekter
+				</Link>
 				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
 					Rediger inntekt
 				</h1>
@@ -87,7 +99,9 @@ export default async function EditIncomePage({
 					defaultSource={entry.source ?? undefined}
 					defaultType={entry.type}
 					defaultCategoryId={entry.categoryId ?? undefined}
+					defaultAccountId={entry.accountId ?? undefined}
 					categories={incomeCategories}
+					accounts={visibleAccounts}
 					submitLabel="Lagre endringer"
 				/>
 			</div>

@@ -1,12 +1,13 @@
 import { parse } from "date-fns";
 import { and, eq, isNull } from "drizzle-orm";
-import { Repeat } from "lucide-react";
+import { ArrowLeft, Repeat } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { categories, expenses } from "@/db/schema";
+import { categories, expenses, loans, savingsGoals } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { getVisibleAccounts } from "@/lib/accounts";
 import { deleteExpense, updateExpense } from "../../actions";
 import { ExpenseForm } from "../../expense-form";
 import { DeleteExpenseButton } from "./delete-button";
@@ -35,17 +36,41 @@ export default async function EditExpensePage({
 
 	if (!expense) notFound();
 
-	const expenseCategories = await db
-		.select({ id: categories.id, name: categories.name })
-		.from(categories)
-		.where(
-			and(
-				eq(categories.householdId, householdId),
-				eq(categories.type, "expense"),
-				isNull(categories.deletedAt),
-			),
-		)
-		.orderBy(categories.name);
+	const [expenseCategories, visibleAccounts, savingsAccountRows, loanRows] =
+		await Promise.all([
+			db
+				.select({ id: categories.id, name: categories.name })
+				.from(categories)
+				.where(
+					and(
+						eq(categories.householdId, householdId),
+						eq(categories.type, "expense"),
+						isNull(categories.deletedAt),
+					),
+				)
+				.orderBy(categories.name),
+			getVisibleAccounts(user.id as string, householdId),
+			db
+				.select({ id: savingsGoals.id, name: savingsGoals.name })
+				.from(savingsGoals)
+				.where(
+					and(
+						eq(savingsGoals.householdId, householdId),
+						isNull(savingsGoals.deletedAt),
+					),
+				)
+				.orderBy(savingsGoals.name),
+			db
+				.select({ id: loans.id, name: loans.name })
+				.from(loans)
+				.where(
+					and(
+						eq(loans.householdId, householdId),
+						isNull(loans.deletedAt),
+					),
+				)
+				.orderBy(loans.name),
+		]);
 
 	const updateAction = updateExpense.bind(null, expense.id);
 	const deleteAction = deleteExpense.bind(null, expense.id);
@@ -55,9 +80,23 @@ export default async function EditExpensePage({
 		? parse(expense.date, "yyyy-MM-dd", new Date())
 		: undefined;
 
+	const defaultInterestNOK = expense.interestOere
+		? (expense.interestOere / 100).toFixed(2)
+		: undefined;
+	const defaultPrincipalNOK = expense.principalOere
+		? (expense.principalOere / 100).toFixed(2)
+		: undefined;
+
 	return (
-		<div className="mx-auto max-w-lg space-y-6 p-8">
+		<div className="mx-auto max-w-lg space-y-6 p-4 sm:p-8">
 			<div>
+				<Link
+					href="/expenses"
+					className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+				>
+					<ArrowLeft className="h-3.5 w-3.5" />
+					Tilbake til utgifter
+				</Link>
 				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
 					Rediger utgift
 				</h1>
@@ -93,7 +132,15 @@ export default async function EditExpensePage({
 					defaultAmountNOK={defaultAmountNOK}
 					defaultCategoryId={expense.categoryId ?? undefined}
 					defaultNotes={expense.notes ?? undefined}
+					defaultAccountId={expense.accountId ?? undefined}
+					defaultSavingsGoalId={expense.savingsGoalId ?? undefined}
+					defaultLoanId={expense.loanId ?? undefined}
+					defaultInterestNOK={defaultInterestNOK}
+					defaultPrincipalNOK={defaultPrincipalNOK}
 					categories={expenseCategories}
+					accounts={visibleAccounts}
+					savingsAccounts={savingsAccountRows}
+					loans={loanRows}
 					submitLabel="Lagre endringer"
 				/>
 			</div>

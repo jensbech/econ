@@ -1,5 +1,6 @@
 import { endOfMonth, format, startOfMonth } from "date-fns";
-import { and, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { db } from "@/db";
 import { categories, expenses, incomeEntries } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
@@ -8,6 +9,7 @@ import {
 	expandRecurringIncome,
 } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
+import { getFilteredAccountIds } from "@/lib/accounts";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage({
@@ -18,6 +20,11 @@ export default async function DashboardPage({
 	const params = await searchParams;
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
+
+	// Resolve selected account IDs from cookie
+	const cookieStore = await cookies();
+	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
+	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
 	// Parse month from search params or use current month
 	let selectedMonth: Date;
@@ -44,90 +51,159 @@ export default async function DashboardPage({
 		]);
 	}
 
-	const [expenseRows, incomeRows, categoryBreakdown, upcomingRecurring] =
-		householdId
-			? await Promise.all([
-					// All expenses for the month (just amounts)
-					db
-						.select({ amountOere: expenses.amountOere })
-						.from(expenses)
-						.where(
-							and(
-								eq(expenses.householdId, householdId),
-								isNull(expenses.deletedAt),
-								gte(expenses.date, monthStart),
-								lte(expenses.date, monthEnd),
-							),
-						),
+	if (!householdId) {
+		return (
+			<DashboardClient
+				selectedMonthStr={format(selectedMonth, "yyyy-MM")}
+				totalIncome={0}
+				totalExpenses={0}
+				savingsRate={null}
+				categoryBreakdown={[]}
+				upcomingRecurring={[]}
+				hasData={false}
+				noAccountSelected={true}
+			/>
+		);
+	}
 
-					// All income for the month (just amounts)
-					db
-						.select({ amountOere: incomeEntries.amountOere })
-						.from(incomeEntries)
-						.where(
-							and(
-								eq(incomeEntries.householdId, householdId),
-								isNull(incomeEntries.deletedAt),
-								gte(incomeEntries.date, monthStart),
-								lte(incomeEntries.date, monthEnd),
-							),
-						),
+	// Empty selection = all public accounts; explicit selection = those accounts only
+	const validIds = await getFilteredAccountIds(user.id as string, householdId, selectedIds);
 
-					// Expenses grouped by category
-					db
-						.select({
-							categoryId: expenses.categoryId,
-							categoryName: categories.name,
-							total: sql<number>`sum(${expenses.amountOere})::int`,
-						})
-						.from(expenses)
-						.leftJoin(
-							categories,
-							and(
-								eq(expenses.categoryId, categories.id),
-								eq(categories.householdId, householdId),
-							),
-						)
-						.where(
-							and(
-								eq(expenses.householdId, householdId),
-								isNull(expenses.deletedAt),
-								gte(expenses.date, monthStart),
-								lte(expenses.date, monthEnd),
-							),
-						)
-						.groupBy(expenses.categoryId, categories.name)
-						.orderBy(sql`sum(${expenses.amountOere}) desc`),
+	if (validIds.length === 0) {
+		return (
+			<DashboardClient
+				selectedMonthStr={format(selectedMonth, "yyyy-MM")}
+				totalIncome={0}
+				totalExpenses={0}
+				savingsRate={null}
+				categoryBreakdown={[]}
+				upcomingRecurring={[]}
+				hasData={false}
+				noAccountSelected={true}
+			/>
+		);
+	}
 
-					// Recurring expenses for the month (generated from templates)
-					db
-						.select({
-							id: expenses.id,
-							date: expenses.date,
-							notes: expenses.notes,
-							amountOere: expenses.amountOere,
-							categoryName: categories.name,
-						})
-						.from(expenses)
-						.leftJoin(
-							categories,
-							and(
-								eq(expenses.categoryId, categories.id),
-								eq(categories.householdId, householdId),
-							),
-						)
-						.where(
-							and(
-								eq(expenses.householdId, householdId),
-								isNull(expenses.deletedAt),
-								gte(expenses.date, monthStart),
-								lte(expenses.date, monthEnd),
-								isNotNull(expenses.recurringTemplateId),
-							),
-						)
-						.orderBy(expenses.date),
-				])
-			: [[], [], [], []];
+	const [expenseRows, incomeRows, categoryBreakdown, upcomingRecurring, savingsRows, loanRows] =
+		await Promise.all([
+			// All expenses for the month (just amounts)
+			db
+				.select({ amountOere: expenses.amountOere })
+				.from(expenses)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						gte(expenses.date, monthStart),
+						lte(expenses.date, monthEnd),
+						or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+					),
+				),
+
+			// All income for the month (just amounts)
+			db
+				.select({ amountOere: incomeEntries.amountOere })
+				.from(incomeEntries)
+				.where(
+					and(
+						eq(incomeEntries.householdId, householdId),
+						isNull(incomeEntries.deletedAt),
+						gte(incomeEntries.date, monthStart),
+						lte(incomeEntries.date, monthEnd),
+						or(isNull(incomeEntries.accountId), inArray(incomeEntries.accountId, validIds)),
+					),
+				),
+
+			// Expenses grouped by category
+			db
+				.select({
+					categoryId: expenses.categoryId,
+					categoryName: categories.name,
+					total: sql<number>`sum(${expenses.amountOere})::int`,
+				})
+				.from(expenses)
+				.leftJoin(
+					categories,
+					and(
+						eq(expenses.categoryId, categories.id),
+						eq(categories.householdId, householdId),
+					),
+				)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						gte(expenses.date, monthStart),
+						lte(expenses.date, monthEnd),
+						or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+					),
+				)
+				.groupBy(expenses.categoryId, categories.name)
+				.orderBy(sql`sum(${expenses.amountOere}) desc`),
+
+			// Recurring expenses for the month
+			db
+				.select({
+					id: expenses.id,
+					date: expenses.date,
+					notes: expenses.notes,
+					amountOere: expenses.amountOere,
+					categoryName: categories.name,
+				})
+				.from(expenses)
+				.leftJoin(
+					categories,
+					and(
+						eq(expenses.categoryId, categories.id),
+						eq(categories.householdId, householdId),
+					),
+				)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						gte(expenses.date, monthStart),
+						lte(expenses.date, monthEnd),
+						isNotNull(expenses.recurringTemplateId),
+						or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+					),
+				)
+				.orderBy(expenses.date),
+
+			// Savings this month: expenses linked to a savings account
+			db
+				.select({ amountOere: expenses.amountOere })
+				.from(expenses)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						gte(expenses.date, monthStart),
+						lte(expenses.date, monthEnd),
+						or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+						isNotNull(expenses.savingsGoalId),
+					),
+				),
+
+			// Loan payments this month: expenses linked to a loan
+			db
+				.select({
+					amountOere: expenses.amountOere,
+					interestOere: expenses.interestOere,
+					principalOere: expenses.principalOere,
+				})
+				.from(expenses)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						gte(expenses.date, monthStart),
+						lte(expenses.date, monthEnd),
+						or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+						isNotNull(expenses.loanId),
+					),
+				),
+		]);
 
 	const totalIncome = incomeRows.reduce((sum, r) => sum + r.amountOere, 0);
 	const totalExpenses = expenseRows.reduce((sum, r) => sum + r.amountOere, 0);
@@ -135,6 +211,11 @@ export default async function DashboardPage({
 		totalIncome > 0
 			? ((totalIncome - totalExpenses) / totalIncome) * 100
 			: null;
+
+	const monthlySavings = savingsRows.reduce((sum, r) => sum + r.amountOere, 0);
+	const monthlyLoanTotal = loanRows.reduce((sum, r) => sum + r.amountOere, 0);
+	const monthlyLoanInterest = loanRows.reduce((sum, r) => sum + (r.interestOere ?? 0), 0);
+	const monthlyLoanPrincipal = loanRows.reduce((sum, r) => sum + (r.principalOere ?? 0), 0);
 
 	const selectedMonthStr = format(selectedMonth, "yyyy-MM");
 
@@ -147,6 +228,11 @@ export default async function DashboardPage({
 			categoryBreakdown={categoryBreakdown}
 			upcomingRecurring={upcomingRecurring}
 			hasData={expenseRows.length > 0 || incomeRows.length > 0}
+			noAccountSelected={false}
+			monthlySavings={monthlySavings}
+			monthlyLoanTotal={monthlyLoanTotal}
+			monthlyLoanInterest={monthlyLoanInterest}
+			monthlyLoanPrincipal={monthlyLoanPrincipal}
 		/>
 	);
 }

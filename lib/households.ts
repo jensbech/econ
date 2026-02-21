@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { householdMembers, households, users } from "@/db/schema";
+import { accounts, householdMembers, households, users } from "@/db/schema";
 import { seedDefaultCategories } from "./default-categories";
 
 export async function ensureUserAndHousehold(
@@ -9,14 +9,18 @@ export async function ensureUserAndHousehold(
 	name: string | null,
 	image: string | null,
 ): Promise<string> {
-	// Upsert user record
-	await db
+	// Upsert user record — conflict on email so re-signing in never fails
+	const [upsertedUser] = await db
 		.insert(users)
 		.values({ id: userId, email, name, image })
 		.onConflictDoUpdate({
-			target: users.id,
+			target: users.email,
 			set: { name, image },
-		});
+		})
+		.returning({ id: users.id });
+
+	// Use the actual stored ID (may differ from the passed-in userId on conflict)
+	userId = upsertedUser.id;
 
 	// Return existing household if one exists
 	const existing = await db
@@ -42,6 +46,24 @@ export async function ensureUserAndHousehold(
 	});
 
 	await seedDefaultCategories(household.id);
+
+	// Create default public and private accounts for the new user
+	await db.insert(accounts).values([
+		{
+			householdId: household.id,
+			userId,
+			name: "Felles",
+			type: "public",
+			icon: "landmark",
+		},
+		{
+			householdId: household.id,
+			userId,
+			name: "Privat",
+			type: "private",
+			icon: "wallet",
+		},
+	]);
 
 	return household.id;
 }

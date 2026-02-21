@@ -1,14 +1,16 @@
 import { endOfMonth, format, startOfMonth } from "date-fns";
-import { and, desc, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Plus, Repeat } from "lucide-react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
-import { categories, expenses } from "@/db/schema";
+import { categories, expenses, loans, savingsGoals, users } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { expandRecurringExpenses } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
+import { getFilteredAccountIds, getVisibleAccounts } from "@/lib/accounts";
 import { ExpenseTable } from "./expense-table";
 
 export default async function ExpensesPage({
@@ -25,6 +27,11 @@ export default async function ExpensesPage({
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 
+	// Resolve selected account IDs from cookie
+	const cookieStore = await cookies();
+	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
+	const selectedIds = selectedRaw.split(",").filter(Boolean);
+
 	const { month, categoryId, from, to } = params;
 
 	// Expand recurring expenses for the viewed month (idempotent)
@@ -37,24 +44,53 @@ export default async function ExpensesPage({
 				Number.parseInt(monStr, 10) - 1,
 				1,
 			);
-		} else if (!month) {
-			expandMonth = new Date();
 		} else {
 			expandMonth = new Date();
 		}
 		await expandRecurringExpenses(householdId, expandMonth);
 	}
 
+	// No household — show empty state
+	if (!householdId) {
+		return (
+			<div className="p-4 sm:p-8">
+				<div className="mb-6 flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+							Utgifter
+						</h1>
+						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+							Oversikt over utgifter.
+						</p>
+					</div>
+				</div>
+				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
+					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+						Ingen husholdning funnet.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Empty selection = all public accounts; explicit selection = those accounts only
+	const [validIds, visibleAccounts] = await Promise.all([
+		getFilteredAccountIds(user.id as string, householdId, selectedIds),
+		getVisibleAccounts(user.id as string, householdId),
+	]);
+
 	type WhereCondition = Parameters<typeof and>[0];
 	const conditions: WhereCondition[] = [];
 
-	if (householdId) {
-		conditions.push(eq(expenses.householdId, householdId));
-	}
+	conditions.push(eq(expenses.householdId, householdId));
 	conditions.push(isNull(expenses.deletedAt));
 
+	if (validIds.length > 0) {
+		// Show expenses with no account, OR with an account in the selected set
+		conditions.push(or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)));
+	}
+
 	if (month === "all") {
-		// No month constraint — optionally filter by date range
 		if (from) conditions.push(gte(expenses.date, from));
 		if (to) conditions.push(lte(expenses.date, to));
 	} else if (month) {
@@ -66,7 +102,6 @@ export default async function ExpensesPage({
 		conditions.push(gte(expenses.date, start));
 		conditions.push(lte(expenses.date, end));
 	} else {
-		// Default: current month
 		const now = new Date();
 		conditions.push(
 			gte(expenses.date, format(startOfMonth(now), "yyyy-MM-dd")),
@@ -78,42 +113,59 @@ export default async function ExpensesPage({
 		conditions.push(eq(expenses.categoryId, categoryId));
 	}
 
-	const [expenseRows, categoryRows] = householdId
-		? await Promise.all([
-				db
-					.select({
-						id: expenses.id,
-						date: expenses.date,
-						notes: expenses.notes,
-						amountOere: expenses.amountOere,
-						categoryId: expenses.categoryId,
-						categoryName: categories.name,
-					})
-					.from(expenses)
-					.leftJoin(
-						categories,
-						and(
-							eq(expenses.categoryId, categories.id),
-							eq(categories.householdId, householdId),
-						),
-					)
-					.where(and(...conditions))
-					.orderBy(desc(expenses.date), desc(expenses.createdAt)),
-				db
-					.select({ id: categories.id, name: categories.name })
-					.from(categories)
-					.where(
-						and(
-							eq(categories.householdId, householdId),
-							isNull(categories.deletedAt),
-						),
-					)
-					.orderBy(categories.name),
-			])
-		: [[], []];
+	const [expenseRows, categoryRows] = await Promise.all([
+		db
+			.select({
+				id: expenses.id,
+				date: expenses.date,
+				notes: expenses.notes,
+				amountOere: expenses.amountOere,
+				categoryId: expenses.categoryId,
+				categoryName: categories.name,
+				accountId: expenses.accountId,
+				uploaderName: users.name,
+				savingsGoalId: expenses.savingsGoalId,
+				loanId: expenses.loanId,
+				interestOere: expenses.interestOere,
+				principalOere: expenses.principalOere,
+				savingsGoalName: savingsGoals.name,
+				loanName: loans.name,
+			})
+			.from(expenses)
+			.leftJoin(
+				categories,
+				and(
+					eq(expenses.categoryId, categories.id),
+					eq(categories.householdId, householdId),
+				),
+			)
+			.leftJoin(users, eq(expenses.userId, users.id))
+			.leftJoin(savingsGoals, eq(expenses.savingsGoalId, savingsGoals.id))
+			.leftJoin(loans, eq(expenses.loanId, loans.id))
+			.where(and(...conditions))
+			.orderBy(desc(expenses.date), desc(expenses.createdAt)),
+		db
+			.select({ id: categories.id, name: categories.name })
+			.from(categories)
+			.where(
+				and(
+					eq(categories.householdId, householdId),
+					isNull(categories.deletedAt),
+				),
+			)
+			.orderBy(categories.name),
+	]);
+
+	// Map accountId to account name for display
+	const accountMap = Object.fromEntries(visibleAccounts.map((a) => [a.id, a.name]));
+	const expenseRowsWithAccount = expenseRows.map((r) => ({
+		...r,
+		accountName: r.accountId ? (accountMap[r.accountId] ?? null) : null,
+		scope: "household" as const,
+	}));
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -146,7 +198,7 @@ export default async function ExpensesPage({
 					</div>
 				}
 			>
-				<ExpenseTable expenses={expenseRows} categories={categoryRows} />
+				<ExpenseTable expenses={expenseRowsWithAccount} categories={categoryRows} />
 			</Suspense>
 		</div>
 	);

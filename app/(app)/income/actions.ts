@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -13,6 +13,8 @@ import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
 export type IncomeFormState = {
 	error?: string | null;
 	fieldErrors?: Record<string, string[]>;
+	warning?: string | null;
+	duplicateWarning?: boolean;
 } | null;
 
 const IncomeSchema = z.object({
@@ -21,6 +23,7 @@ const IncomeSchema = z.object({
 	source: z.string().optional(),
 	type: z.enum(["salary", "variable"]),
 	categoryId: z.string().optional(),
+	accountId: z.string().optional(),
 });
 
 export async function createIncome(
@@ -31,12 +34,15 @@ export async function createIncome(
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
+	const force = formData.get("force") === "true";
+
 	const raw = {
 		date: formData.get("date") as string,
 		amount: formData.get("amount") as string,
 		source: (formData.get("source") as string) || undefined,
 		type: formData.get("type") as string,
 		categoryId: (formData.get("categoryId") as string) || undefined,
+		accountId: (formData.get("accountId") as string) || undefined,
 	};
 
 	const parsed = IncomeSchema.safeParse(raw);
@@ -67,10 +73,36 @@ export async function createIncome(
 		if (!cat) return { fieldErrors: { categoryId: ["Ugyldig kategori"] } };
 	}
 
+	// Duplicate check: warn if same amount+date already exists
+	if (!force) {
+		const [dup] = await db
+			.select({ id: incomeEntries.id })
+			.from(incomeEntries)
+			.where(
+				and(
+					eq(incomeEntries.householdId, householdId),
+					isNull(incomeEntries.deletedAt),
+					eq(incomeEntries.date, parsed.data.date),
+					sql`${incomeEntries.amountOere} = ${amountOere}`,
+				),
+			)
+			.limit(1);
+		if (dup) {
+			const nokStr = (amountOere / 100).toLocaleString("nb-NO", {
+				minimumFractionDigits: 2,
+			});
+			return {
+				duplicateWarning: true,
+				warning: `Det finnes allerede en inntekt på kr ${nokStr} for ${parsed.data.date}. Er du sikker på at dette ikke er en duplikat?`,
+			};
+		}
+	}
+
 	await db.insert(incomeEntries).values({
 		householdId,
 		userId: user.id as string,
 		categoryId: parsed.data.categoryId ?? null,
+		accountId: parsed.data.accountId ?? null,
 		amountOere,
 		date: parsed.data.date,
 		source: parsed.data.source ?? null,
@@ -96,6 +128,7 @@ export async function updateIncome(
 		source: (formData.get("source") as string) || undefined,
 		type: formData.get("type") as string,
 		categoryId: (formData.get("categoryId") as string) || undefined,
+		accountId: (formData.get("accountId") as string) || undefined,
 	};
 
 	const parsed = IncomeSchema.safeParse(raw);
@@ -130,6 +163,7 @@ export async function updateIncome(
 		.update(incomeEntries)
 		.set({
 			categoryId: parsed.data.categoryId ?? null,
+			accountId: parsed.data.accountId ?? null,
 			amountOere,
 			date: parsed.data.date,
 			source: parsed.data.source ?? null,

@@ -15,12 +15,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		signIn: "/",
 	},
 	callbacks: {
+		async jwt({ token, account, profile }) {
+			// Lock token.sub to the stable Google account ID on sign-in
+			if (account?.provider === "google" && account.providerAccountId) {
+				token.sub = account.providerAccountId;
+			}
+			return token;
+		},
 		async signIn({ user, account }) {
-			if (account?.provider === "google" && user.id && user.email) {
+			if (account?.provider === "google" && account.providerAccountId && user.email) {
 				// Dynamic import to keep middleware Edge-runtime compatible
 				const { ensureUserAndHousehold } = await import("@/lib/households");
 				await ensureUserAndHousehold(
-					user.id,
+					account.providerAccountId,
 					user.email,
 					user.name ?? null,
 					user.image ?? null,

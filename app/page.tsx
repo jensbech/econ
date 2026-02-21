@@ -2,8 +2,8 @@ import { signIn } from "@/auth";
 
 export default function SignInPage() {
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
-			<div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+		<div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
+			<div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
 						Jeg vil ha pengene mine!
@@ -21,7 +21,7 @@ export default function SignInPage() {
 				>
 					<button
 						type="submit"
-						className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+						className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:ring-offset-gray-900"
 					>
 						<svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
 							<path

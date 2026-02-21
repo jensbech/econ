@@ -1,19 +1,21 @@
-import { and, eq, isNull } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { format, parseISO } from "date-fns";
+import { nb } from "date-fns/locale";
+import { PiggyBank, Plus } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
-import { savingsGoals } from "@/db/schema";
+import { categories, expenses, savingsGoals } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { formatNOK } from "@/lib/format";
 import { getHouseholdId } from "@/lib/households";
-import { deleteSavingsGoal, updateProgress } from "./actions";
-import { GoalCard } from "./goal-card";
+import { SavingsAccountCard } from "./savings-account-card";
+import { deleteSavingsAccount } from "./actions";
 
 export default async function SavingsPage() {
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 
-	const goals = householdId
+	const accounts = householdId
 		? await db
 				.select()
 				.from(savingsGoals)
@@ -23,12 +25,75 @@ export default async function SavingsPage() {
 						isNull(savingsGoals.deletedAt),
 					),
 				)
+				.orderBy(savingsGoals.name)
 		: [];
 
-	const totalTarget = goals.reduce((s, g) => s + g.targetOere, 0);
-	const totalCurrent = goals.reduce((s, g) => s + g.currentOere, 0);
-	const overallPct =
-		totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+	// Compute balance for each savings account from linked expenses
+	const balances: Record<string, number> = {};
+	if (accounts.length > 0 && householdId) {
+		const rows = await db
+			.select({
+				savingsGoalId: expenses.savingsGoalId,
+				total: sql<number>`coalesce(sum(${expenses.amountOere}), 0)::int`,
+			})
+			.from(expenses)
+			.where(
+				and(
+					eq(expenses.householdId, householdId),
+					isNull(expenses.deletedAt),
+					sql`${expenses.savingsGoalId} is not null`,
+				),
+			)
+			.groupBy(expenses.savingsGoalId);
+
+		for (const row of rows) {
+			if (row.savingsGoalId) {
+				balances[row.savingsGoalId] = row.total;
+			}
+		}
+	}
+
+	// Get recent transactions for each savings account (last 5)
+	const recentTransactions: Record<
+		string,
+		Array<{ date: string; notes: string | null; amountOere: number }>
+	> = {};
+	if (accounts.length > 0 && householdId) {
+		const txRows = await db
+			.select({
+				savingsGoalId: expenses.savingsGoalId,
+				date: expenses.date,
+				notes: expenses.notes,
+				amountOere: expenses.amountOere,
+			})
+			.from(expenses)
+			.where(
+				and(
+					eq(expenses.householdId, householdId),
+					isNull(expenses.deletedAt),
+					sql`${expenses.savingsGoalId} is not null`,
+				),
+			)
+			.orderBy(desc(expenses.date), desc(expenses.createdAt))
+			.limit(accounts.length * 5);
+
+		for (const tx of txRows) {
+			if (!tx.savingsGoalId) continue;
+			if (!recentTransactions[tx.savingsGoalId]) {
+				recentTransactions[tx.savingsGoalId] = [];
+			}
+			if (recentTransactions[tx.savingsGoalId].length < 5) {
+				recentTransactions[tx.savingsGoalId].push({
+					date: tx.date,
+					notes: tx.notes,
+					amountOere: tx.amountOere,
+				});
+			}
+		}
+	}
+
+	const totalBalance = Object.values(balances).reduce((s, b) => s + b, 0);
+	const totalTarget = accounts.reduce((s, a) => s + (a.targetOere ?? 0), 0);
 
 	return (
 		<div className="p-8">
@@ -36,18 +101,23 @@ export default async function SavingsPage() {
 			<div className="mb-6 flex items-center justify-between">
 				<div>
 					<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-						Sparemål
+						Sparing
 					</h2>
-					{goals.length > 0 && (
+					{accounts.length > 0 && (
 						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-							Totalt spart:{" "}
+							Total saldo:{" "}
 							<span className="font-medium text-green-600 dark:text-green-400">
-								{formatNOK(totalCurrent)}
-							</span>{" "}
-							av{" "}
-							<span className="font-medium text-gray-700 dark:text-gray-300">
-								{formatNOK(totalTarget)}
+								{formatNOK(totalBalance)}
 							</span>
+							{totalTarget > 0 && (
+								<>
+									{" "}
+									av{" "}
+									<span className="font-medium text-gray-700 dark:text-gray-300">
+										{formatNOK(totalTarget)}
+									</span>
+								</>
+							)}
 						</p>
 					)}
 				</div>
@@ -56,85 +126,47 @@ export default async function SavingsPage() {
 					className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
 				>
 					<Plus className="h-4 w-4" />
-					Nytt sparemål
+					Ny sparekonto
 				</Link>
 			</div>
 
-			{/* Summary card */}
-			{goals.length > 0 && (
-				<div className="mb-8 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<div className="flex items-end justify-between">
-						<div>
-							<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-								Samlet fremgang
-							</p>
-							<p className="mt-1 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-								{overallPct}%
-							</p>
-							<p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-								{formatNOK(totalCurrent)} av {formatNOK(totalTarget)} totalt
-							</p>
-						</div>
-						<div className="text-right text-sm text-gray-500 dark:text-gray-400">
-							<p>
-								<span className="font-medium text-gray-900 dark:text-white">
-									{goals.length}
-								</span>{" "}
-								{goals.length === 1 ? "sparemål" : "sparemål"}
-							</p>
-							<p>
-								<span className="font-medium text-green-600 dark:text-green-400">
-									{goals.filter((g) => g.currentOere >= g.targetOere).length}
-								</span>{" "}
-								nådd
-							</p>
-						</div>
-					</div>
-					<div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-						<div
-							className={`h-full rounded-full transition-all ${
-								overallPct >= 100 ? "bg-green-500" : "bg-indigo-500"
-							}`}
-							style={{ width: `${overallPct}%` }}
-						/>
-					</div>
-				</div>
-			)}
-
-			{/* Goal cards */}
-			{goals.length === 0 ? (
+			{/* Account cards */}
+			{accounts.length === 0 ? (
 				<div className="rounded-xl border border-dashed border-gray-200 py-20 text-center dark:border-gray-700">
+					<PiggyBank className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
 					<p className="text-gray-400 dark:text-gray-500">
-						Ingen sparemål ennå
+						Ingen sparekontoer ennå
 					</p>
 					<p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-						Opprett et sparemål for å begynne å spare mot noe konkret.
+						Opprett en sparekonto og registrer utgifter med kategorien
+						&laquo;Sparing&raquo; for å spore saldoen automatisk.
 					</p>
 					<Link
 						href="/savings/new"
 						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
 					>
 						<Plus className="h-4 w-4" />
-						Nytt sparemål
+						Ny sparekonto
 					</Link>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-					{goals.map((goal) => {
-						const updateAction = updateProgress.bind(null, goal.id);
-						const deleteAction = deleteSavingsGoal.bind(null, goal.id);
+					{accounts.map((account) => {
+						const balance = balances[account.id] ?? 0;
+						const transactions = recentTransactions[account.id] ?? [];
+						const deleteAction = deleteSavingsAccount.bind(null, account.id);
 
 						return (
-							<GoalCard
-								key={goal.id}
-								goal={{
-									id: goal.id,
-									name: goal.name,
-									targetOere: goal.targetOere,
-									currentOere: goal.currentOere,
-									targetDate: goal.targetDate,
+							<SavingsAccountCard
+								key={account.id}
+								account={{
+									id: account.id,
+									name: account.name,
+									targetOere: account.targetOere,
+									targetDate: account.targetDate,
 								}}
-								updateAction={updateAction}
+								balance={balance}
+								recentTransactions={transactions}
 								deleteAction={deleteAction}
 							/>
 						);

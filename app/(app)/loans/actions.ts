@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { loanPayments, loans } from "@/db/schema";
+import { categories, expenses, loanPayments, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
@@ -22,16 +22,19 @@ export type PaymentFormState = {
 
 const LoanSchema = z.object({
 	name: z.string().min(1, "Navn er påkrevd"),
-	type: z.enum(["mortgage", "student"]),
+	type: z.enum(["mortgage", "student", "car", "consumer", "other"]),
 	principal: z.string().min(1, "Hovedstol er påkrevd"),
 	interestRate: z.string().min(1, "Rente er påkrevd"),
 	termMonths: z.string().min(1, "Løpetid er påkrevd"),
 	startDate: z.string().min(1, "Startdato er påkrevd"),
+	accountId: z.string().optional(),
 });
 
 const PaymentSchema = z.object({
 	date: z.string().min(1, "Dato er påkrevd"),
 	amount: z.string().min(1, "Beløp er påkrevd"),
+	interestAmount: z.string().optional(),
+	principalAmount: z.string().optional(),
 });
 
 export async function createLoan(
@@ -49,6 +52,7 @@ export async function createLoan(
 		interestRate: formData.get("interestRate") as string,
 		termMonths: formData.get("termMonths") as string,
 		startDate: formData.get("startDate") as string,
+		accountId: (formData.get("accountId") as string) || undefined,
 	};
 
 	const parsed = LoanSchema.safeParse(raw);
@@ -84,6 +88,7 @@ export async function createLoan(
 		interestRate,
 		termMonths,
 		startDate: parsed.data.startDate,
+		accountId: parsed.data.accountId ?? null,
 	});
 
 	revalidatePath("/loans");
@@ -121,7 +126,7 @@ export async function addLoanPayment(
 
 	// Verify loan belongs to this household
 	const [loan] = await db
-		.select({ id: loans.id })
+		.select({ id: loans.id, accountId: loans.accountId })
 		.from(loans)
 		.where(
 			and(
@@ -137,6 +142,8 @@ export async function addLoanPayment(
 	const raw = {
 		date: formData.get("date") as string,
 		amount: formData.get("amount") as string,
+		interestAmount: (formData.get("interestAmount") as string) || undefined,
+		principalAmount: (formData.get("principalAmount") as string) || undefined,
 	};
 
 	const parsed = PaymentSchema.safeParse(raw);
@@ -151,13 +158,63 @@ export async function addLoanPayment(
 		return { fieldErrors: { amount: ["Ugyldig beløp"] } };
 	}
 
+	// Parse optional interest/principal split
+	let interestOere: number | null = null;
+	let principalOere: number | null = null;
+
+	if (parsed.data.interestAmount) {
+		try {
+			interestOere = nokToOere(parsed.data.interestAmount);
+		} catch {
+			return { fieldErrors: { interestAmount: ["Ugyldig beløp for renter"] } };
+		}
+	}
+	if (parsed.data.principalAmount) {
+		try {
+			principalOere = nokToOere(parsed.data.principalAmount);
+		} catch {
+			return { fieldErrors: { principalAmount: ["Ugyldig beløp for avdrag"] } };
+		}
+	}
+
+	// Find the "Lån" category for this household
+	const [loanCategory] = await db
+		.select({ id: categories.id })
+		.from(categories)
+		.where(
+			and(
+				eq(categories.householdId, householdId),
+				eq(categories.name, "Lån"),
+				eq(categories.type, "expense"),
+				isNull(categories.deletedAt),
+			),
+		)
+		.limit(1);
+
+	// Create the loanPayments row
 	await db.insert(loanPayments).values({
 		loanId,
-		amountOere,
+		amountOere: principalOere ?? amountOere,
 		date: parsed.data.date,
 	});
 
+	// Also create a corresponding expense with "Lån" category
+	await db.insert(expenses).values({
+		householdId,
+		userId: user.id as string,
+		categoryId: loanCategory?.id ?? null,
+		amountOere,
+		date: parsed.data.date,
+		notes: `Lånebetaling`,
+		loanId,
+		interestOere,
+		principalOere,
+		accountId: loan.accountId,
+	});
+
 	revalidatePath(`/loans/${loanId}`);
+	revalidatePath("/expenses");
+	revalidatePath("/dashboard");
 	return null;
 }
 

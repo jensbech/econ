@@ -4,8 +4,8 @@ import { AlertCircle, FileText, Image, Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import type { ExtractedTransaction, SupportedMediaType } from "@/lib/ai-extract";
-import { startAiExtraction } from "./ai-actions";
+import type { SupportedMediaType } from "@/lib/ai-extract";
+import { type EnrichedTransaction, startAiExtraction } from "./ai-actions";
 import { AiReview } from "./ai-review";
 import type { Category } from "./csv-import";
 
@@ -24,7 +24,7 @@ interface ReviewState {
 	fileUrl: string;
 	fileType: "image" | "pdf";
 	filename: string;
-	transactions: ExtractedTransaction[];
+	transactions: EnrichedTransaction[];
 }
 
 const INITIAL_STATE: UploadState = {
@@ -51,15 +51,16 @@ function readFileAsBase64(file: File): Promise<string> {
 
 interface UploadZoneProps {
 	kind: UploadKind;
+	accounts?: Array<{ id: string; accountNumber: string | null }>;
 	onExtracted: (
 		fileUrl: string,
 		fileType: "image" | "pdf",
 		filename: string,
-		transactions: ExtractedTransaction[],
+		transactions: EnrichedTransaction[],
 	) => void;
 }
 
-function UploadZone({ kind, onExtracted }: UploadZoneProps) {
+function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 	const [state, setState] = useState<UploadState>(INITIAL_STATE);
 
 	const isReceipt = kind === "receipt";
@@ -86,7 +87,7 @@ function UploadZone({ kind, onExtracted }: UploadZoneProps) {
 			try {
 				const base64 = await readFileAsBase64(file);
 				const mediaType = file.type as SupportedMediaType;
-				const result = await startAiExtraction(base64, mediaType);
+				const result = await startAiExtraction(base64, mediaType, accounts);
 				if (result.success) {
 					const dataUrl = `data:${file.type};base64,${base64}`;
 					onExtracted(dataUrl, fileType, file.name, result.transactions);
@@ -105,7 +106,7 @@ function UploadZone({ kind, onExtracted }: UploadZoneProps) {
 				}));
 			}
 		},
-		[fileType, onExtracted],
+		[fileType, accounts, onExtracted],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -209,18 +210,39 @@ function UploadZone({ kind, onExtracted }: UploadZoneProps) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-interface DocumentUploadProps {
-	categories: Category[];
+interface SavingsAccountOption {
+	id: string;
+	name: string;
 }
 
-export function DocumentUpload({ categories }: DocumentUploadProps) {
+interface LoanOption {
+	id: string;
+	name: string;
+}
+
+interface AccountOption {
+	id: string;
+	name: string;
+	accountNumber: string | null;
+}
+
+interface DocumentUploadProps {
+	categories: Category[];
+	accountId?: string;
+	accounts?: AccountOption[];
+	scope?: "household" | "personal";
+	savingsAccounts?: SavingsAccountOption[];
+	loans?: LoanOption[];
+}
+
+export function DocumentUpload({ categories, accountId, accounts = [], scope = "household", savingsAccounts = [], loans = [] }: DocumentUploadProps) {
 	const [reviewState, setReviewState] = useState<ReviewState | null>(null);
 
 	function handleExtracted(
 		fileUrl: string,
 		fileType: "image" | "pdf",
 		filename: string,
-		transactions: ExtractedTransaction[],
+		transactions: EnrichedTransaction[],
 	) {
 		setReviewState({ fileUrl, fileType, filename, transactions });
 	}
@@ -241,6 +263,11 @@ export function DocumentUpload({ categories }: DocumentUploadProps) {
 					transactions={reviewState.transactions}
 					categories={categories}
 					onDiscard={handleDiscard}
+					accountId={accountId}
+					accounts={accounts}
+					scope={scope}
+					savingsAccounts={savingsAccounts}
+					loans={loans}
 				/>
 			</div>
 		);
@@ -257,7 +284,7 @@ export function DocumentUpload({ categories }: DocumentUploadProps) {
 				<p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
 					Bilde av en kvittering — Claude tolker og trekker ut transaksjonsdata.
 				</p>
-				<UploadZone kind="receipt" onExtracted={handleExtracted} />
+				<UploadZone kind="receipt" accounts={accounts} onExtracted={handleExtracted} />
 			</div>
 
 			<div>
@@ -267,7 +294,7 @@ export function DocumentUpload({ categories }: DocumentUploadProps) {
 				<p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
 					PDF-kontoutskrift fra din bank — Claude trekker ut alle transaksjoner.
 				</p>
-				<UploadZone kind="statement" onExtracted={handleExtracted} />
+				<UploadZone kind="statement" accounts={accounts} onExtracted={handleExtracted} />
 			</div>
 
 			<div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400">

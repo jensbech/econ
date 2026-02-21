@@ -22,7 +22,13 @@ export const frequencyEnum = pgEnum("frequency", [
 ]);
 export const templateTypeEnum = pgEnum("template_type", ["expense", "income"]);
 export const incomeTypeEnum = pgEnum("income_type", ["salary", "variable"]);
-export const loanTypeEnum = pgEnum("loan_type", ["mortgage", "student"]);
+export const loanTypeEnum = pgEnum("loan_type", [
+	"mortgage",
+	"student",
+	"car",
+	"consumer",
+	"other",
+]);
 
 // ---------------------------------------------------------------------------
 // Users
@@ -93,6 +99,30 @@ export const categories = pgTable("categories", {
 });
 
 // ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
+
+export const accounts = pgTable("accounts", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	householdId: text("household_id")
+		.notNull()
+		.references(() => households.id, { onDelete: "cascade" }),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id),
+	name: text("name").notNull(),
+	accountNumber: text("account_number"), // e.g. "1234.56.78901"
+	type: text("type").notNull().default("public"), // 'public' | 'private'
+	icon: text("icon").notNull().default("wallet"), // lucide icon name
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+// ---------------------------------------------------------------------------
 // Recurring templates
 // ---------------------------------------------------------------------------
 
@@ -107,6 +137,7 @@ export const recurringTemplates = pgTable("recurring_templates", {
 		.notNull()
 		.references(() => users.id),
 	categoryId: text("category_id").references(() => categories.id),
+	accountId: text("account_id").references(() => accounts.id),
 	amountOere: integer("amount_oere").notNull(),
 	frequency: frequencyEnum("frequency").notNull(),
 	startDate: date("start_date").notNull(),
@@ -135,6 +166,8 @@ export const importBatches = pgTable("import_batches", {
 		.references(() => users.id),
 	filename: text("filename").notNull(),
 	rowCount: integer("row_count").notNull(),
+	scope: text("scope").notNull().default("household"), // 'household' | 'personal'
+	accountId: text("account_id").references(() => accounts.id),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -159,6 +192,13 @@ export const expenses = pgTable("expenses", {
 	amountOere: integer("amount_oere").notNull(),
 	date: date("date").notNull(),
 	notes: text("notes"),
+	scope: text("scope").notNull().default("household"), // 'household' | 'personal'
+	isShared: boolean("is_shared").notNull().default(false), // personal only: visible to household?
+	accountId: text("account_id").references(() => accounts.id),
+	savingsGoalId: text("savings_goal_id").references(() => savingsGoals.id),
+	loanId: text("loan_id").references(() => loans.id),
+	interestOere: integer("interest_oere"),
+	principalOere: integer("principal_oere"),
 	recurringTemplateId: text("recurring_template_id").references(
 		() => recurringTemplates.id,
 	),
@@ -188,6 +228,7 @@ export const incomeEntries = pgTable("income_entries", {
 	date: date("date").notNull(),
 	source: text("source"),
 	type: incomeTypeEnum("type").notNull(),
+	accountId: text("account_id").references(() => accounts.id),
 	recurringTemplateId: text("recurring_template_id").references(
 		() => recurringTemplates.id,
 	),
@@ -217,6 +258,7 @@ export const loans = pgTable("loans", {
 	interestRate: doublePrecision("interest_rate").notNull(),
 	termMonths: integer("term_months").notNull(),
 	startDate: date("start_date").notNull(),
+	accountId: text("account_id").references(() => accounts.id),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -256,9 +298,10 @@ export const savingsGoals = pgTable("savings_goals", {
 		.notNull()
 		.references(() => users.id),
 	name: text("name").notNull(),
-	targetOere: integer("target_oere").notNull(),
+	targetOere: integer("target_oere"),
 	currentOere: integer("current_oere").notNull().default(0),
 	targetDate: date("target_date"),
+	accountId: text("account_id").references(() => accounts.id),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),

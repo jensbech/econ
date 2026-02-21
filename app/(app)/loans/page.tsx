@@ -13,6 +13,9 @@ import { computeLoanBalance } from "@/lib/loan-math";
 const LOAN_TYPE_LABELS: Record<string, string> = {
 	mortgage: "Boliglån",
 	student: "Studielån",
+	car: "Billån",
+	consumer: "Forbrukslån",
+	other: "Annet",
 };
 
 export default async function LoansPage() {

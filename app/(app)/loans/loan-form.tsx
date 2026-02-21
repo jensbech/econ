@@ -11,14 +11,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { LoanFormState } from "./actions";
 
+interface AccountOption {
+	id: string;
+	name: string;
+}
+
 interface LoanFormProps {
 	action: (state: LoanFormState, formData: FormData) => Promise<LoanFormState>;
 	defaultName?: string;
-	defaultType?: "mortgage" | "student";
+	defaultType?: string;
 	defaultPrincipalNOK?: string;
 	defaultInterestRate?: string;
 	defaultTermMonths?: string;
 	defaultStartDate?: Date;
+	defaultAccountId?: string;
+	accounts?: AccountOption[];
 	submitLabel?: string;
 	cancelHref?: string;
 }
@@ -31,6 +38,8 @@ export function LoanForm({
 	defaultInterestRate,
 	defaultTermMonths,
 	defaultStartDate,
+	defaultAccountId,
+	accounts = [],
 	submitLabel = "Lagre",
 	cancelHref = "/loans",
 }: LoanFormProps) {
@@ -67,6 +76,9 @@ export function LoanForm({
 				>
 					<option value="mortgage">Boliglån</option>
 					<option value="student">Studielån</option>
+					<option value="car">Billån</option>
+					<option value="consumer">Forbrukslån</option>
+					<option value="other">Annet</option>
 				</select>
 				{state?.fieldErrors?.type && (
 					<p className="text-xs text-red-600">{state.fieldErrors.type[0]}</p>
@@ -79,9 +91,9 @@ export function LoanForm({
 				<Input
 					id="principal"
 					name="principal"
-					type="number"
-					step="0.01"
-					min="0"
+					type="text"
+					inputMode="decimal"
+					pattern="[0-9]*[.,]?[0-9]*"
 					placeholder="0.00"
 					defaultValue={defaultPrincipalNOK}
 					className="h-9"
@@ -99,9 +111,9 @@ export function LoanForm({
 				<Input
 					id="interestRate"
 					name="interestRate"
-					type="number"
-					step="0.01"
-					min="0"
+					type="text"
+					inputMode="decimal"
+					pattern="[0-9]*[.,]?[0-9]*"
 					placeholder="5.00"
 					defaultValue={defaultInterestRate}
 					className="h-9"
@@ -140,6 +152,26 @@ export function LoanForm({
 				defaultToToday
 				error={state?.fieldErrors?.startDate?.[0]}
 			/>
+
+			{/* Account */}
+			{accounts.length > 0 && (
+				<div className="space-y-1.5">
+					<Label htmlFor="accountId">Tilknyttet konto (valgfritt)</Label>
+					<select
+						id="accountId"
+						name="accountId"
+						defaultValue={defaultAccountId ?? ""}
+						className={SELECT_CLASS_NAME}
+					>
+						<option value="">Ingen konto</option>
+						{accounts.map((acc) => (
+							<option key={acc.id} value={acc.id}>
+								{acc.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
 
 			<div className="flex gap-3 pt-1">
 				<Button
