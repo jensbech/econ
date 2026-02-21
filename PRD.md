@@ -101,3 +101,11 @@ Work through tasks in order. Each task = one commit. Do not skip ahead.
 - [ ] **TASK-20** — AI extraction: Create a `src/lib/ai-extract.ts` server function. Use Vercel AI SDK `generateObject()` with `@ai-sdk/google` (Gemini 1.5 Flash). Define a Zod schema for extracted output: array of `{ date: string, amountOere: number, description: string, suggestedCategory: string, confidence: 'high' | 'medium' | 'low' }`. Prompt the model to extract all transactions from the document, parse Norwegian date formats (dd.mm.yyyy), convert amounts to øre (integers). Handle errors gracefully — if extraction fails, return an error state the UI can display.
 
 - [ ] **TASK-21** — AI review UI: After AI extraction, show a side-by-side review page: original document (PDF iframe or image) on the left, extracted transactions table on the right. Each row is fully editable inline (date, amount, category, description). Confidence indicators shown as colored dots (green/yellow/red). Low-confidence rows are highlighted. "Confirm" saves all visible rows (non-deleted) using the same import batch mechanism as CSV import. "Discard all" cancels without saving. Individual rows can be deleted from the list before confirming.
+
+
+### Phase 5 — AI Document Parsing
+- [ ] **TASK-22** - UNIT TESTS, 80 PERCENT COVERAGE!
+- [ ] **TASK-23** -  BUG HUNTING! THEN VERIFY NO BREAKING CHANGES. REBUILD
+- [ ] **TASK-24** - REFACTOR ENTIRE CODEBASE FOR DRY PRINCIPLES. THEN VERIFY NO BREAKING CHANGES. REBUILD.
+- [ ] **TASK-25** - BUG HUNTING! FIX ANY BUGS YOU FIND. THEN VERIFY NO BREAKING CHANGES. REBUILD 
+- [ ] **TASK-26** - BUG HUTING! THEN VERIFY NO BREAKING CHANGES. REBUILD

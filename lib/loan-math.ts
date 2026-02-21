@@ -1,0 +1,113 @@
+export interface LoanBalanceResult {
+	currentBalanceOere: number;
+	monthlyPaymentOere: number;
+	remainingMonths: number;
+	principalPaidPct: number; // 0–100
+}
+
+/** Compute the fixed monthly payment for a standard amortizing loan. */
+export function computeMonthlyPayment(
+	principalOere: number,
+	annualRatePct: number,
+	termMonths: number,
+): number {
+	if (annualRatePct === 0) {
+		return Math.ceil(principalOere / termMonths);
+	}
+	const r = annualRatePct / 100 / 12;
+	const n = termMonths;
+	const factor = (1 + r) ** n;
+	return Math.round((principalOere * r * factor) / (factor - 1));
+}
+
+/**
+ * Simulate amortization from startDate to today, applying the scheduled
+ * monthly payment each period and deducting any extra recorded payments.
+ *
+ * Recorded payments are treated as EXTRA payments on top of the scheduled
+ * amortization payment (i.e., they speed up payoff, not replace it).
+ */
+export function computeLoanBalance(
+	principalOere: number,
+	annualRatePct: number,
+	termMonths: number,
+	startDate: string, // "yyyy-MM-dd"
+	extraPayments: Array<{ date: string; amountOere: number }>,
+): LoanBalanceResult {
+	const monthlyRate = annualRatePct / 100 / 12;
+	const monthlyPaymentOere = computeMonthlyPayment(
+		principalOere,
+		annualRatePct,
+		termMonths,
+	);
+
+	// Convert startDate to an absolute month index (year * 12 + month0)
+	const sy = Number(startDate.substring(0, 4));
+	const sm = Number(startDate.substring(5, 7)) - 1; // 0-indexed month
+	const startMonthIdx = sy * 12 + sm;
+
+	const now = new Date();
+	const nowMonthIdx = now.getFullYear() * 12 + now.getMonth();
+	const monthsElapsed = Math.max(0, nowMonthIdx - startMonthIdx);
+
+	// Build extra-payments map: absolute-month-index → total øre
+	const extraByMonth = new Map<number, number>();
+	for (const p of extraPayments) {
+		const py = Number(p.date.substring(0, 4));
+		const pm = Number(p.date.substring(5, 7)) - 1;
+		const idx = py * 12 + pm;
+		extraByMonth.set(idx, (extraByMonth.get(idx) ?? 0) + p.amountOere);
+	}
+
+	// Month-by-month amortization simulation
+	let balance = principalOere;
+	const steps = Math.min(monthsElapsed, termMonths);
+
+	for (let step = 0; step < steps && balance > 0; step++) {
+		// Accrue one month of interest
+		if (monthlyRate > 0) {
+			balance = Math.round(balance + balance * monthlyRate);
+		}
+		// Apply scheduled payment
+		balance = Math.max(0, balance - monthlyPaymentOere);
+		// Apply any extra payments recorded in this period
+		const extra = extraByMonth.get(startMonthIdx + step) ?? 0;
+		if (extra > 0) {
+			balance = Math.max(0, balance - extra);
+		}
+	}
+
+	// Estimate remaining months at current payment rate
+	let remainingMonths: number;
+	if (balance <= 0) {
+		remainingMonths = 0;
+	} else if (monthlyPaymentOere <= 0) {
+		remainingMonths = termMonths;
+	} else if (monthlyRate === 0) {
+		remainingMonths = Math.ceil(balance / monthlyPaymentOere);
+	} else {
+		const r = monthlyRate;
+		const ratio = (r * balance) / monthlyPaymentOere;
+		if (ratio >= 1) {
+			// Payment doesn't cover interest – fall back to original remaining
+			remainingMonths = Math.max(0, termMonths - steps);
+		} else {
+			remainingMonths = Math.ceil(-Math.log(1 - ratio) / Math.log(1 + r));
+		}
+	}
+
+	const principalPaidPct = Math.max(
+		0,
+		Math.min(
+			100,
+			Math.round(((principalOere - balance) / principalOere) * 100),
+		),
+	);
+
+	return {
+		currentBalanceOere: Math.max(0, balance),
+		monthlyPaymentOere,
+		remainingMonths,
+		principalPaidPct,
+	};
+}
