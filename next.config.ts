@@ -2,9 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	output: "standalone",
-	experimental: {
-		serverActionsBodySizeLimit: "1mb", // Reduced from 25mb to prevent resource exhaustion
-	},
+	// NOTE: serverActionsBodySizeLimit was removed in Next.js 16
+	// Use API route middleware or request size limits in your runtime (Vercel, Docker, etc.)
 	images: {
 		remotePatterns: [
 			{

@@ -27,8 +27,8 @@ export const ourFileRouter = {
 			return { url: file.ufsUrl, uploadedBy: metadata.userId };
 		}),
 
-	// Route for PDF bank statements — max 5 MB
-	statement: f({ pdf: { maxFileSize: "5MB", maxFileCount: 1 } })
+	// Route for PDF bank statements — max 4 MB
+	statement: f({ pdf: { maxFileSize: "4MB", maxFileCount: 1 } })
 		.middleware(async () => {
 			const session = await auth();
 			if (!session?.user?.id) throw new Error("Unauthorized");

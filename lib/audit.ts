@@ -79,14 +79,23 @@ export async function logDelete(
 	userId: string,
 	resourceType: string,
 	resourceId: string,
-	reason?: string,
+	reason?: string | Record<string, any>,
 ): Promise<void> {
+	let changes: Record<string, any> | undefined;
+	if (reason) {
+		if (typeof reason === "string") {
+			changes = { reason };
+		} else {
+			changes = reason;
+		}
+	}
+
 	await logAuditEvent({
 		householdId,
 		userId,
 		action: "delete",
 		resourceType,
 		resourceId,
-		changes: reason ? { reason } : undefined,
+		changes,
 	});
 }

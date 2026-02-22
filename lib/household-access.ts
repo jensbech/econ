@@ -11,7 +11,7 @@ export async function verifyHouseholdAccess(
 	householdId: string,
 ): Promise<void> {
 	const [member] = await db
-		.select({ id: householdMembers.id })
+		.select({ userId: householdMembers.userId })
 		.from(householdMembers)
 		.where(
 			and(
@@ -35,7 +35,7 @@ export async function isHouseholdMember(
 	householdId: string,
 ): Promise<boolean> {
 	const [member] = await db
-		.select({ id: householdMembers.id })
+		.select({ userId: householdMembers.userId })
 		.from(householdMembers)
 		.where(
 			and(
