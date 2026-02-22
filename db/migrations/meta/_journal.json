@@ -36,6 +36,20 @@
       "when": 1771712984882,
       "tag": "0004_rare_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771758036050,
+      "tag": "0005_watery_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771760838592,
+      "tag": "0006_clear_yellowjacket",
+      "breakpoints": true
     }
   ]
 }

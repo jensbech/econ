@@ -16,6 +16,7 @@ export default async function AccountsPage() {
 					name: accounts.name,
 					accountNumber: accounts.accountNumber,
 					type: accounts.type,
+					kind: accounts.kind,
 					icon: accounts.icon,
 					userId: accounts.userId,
 					creatorName: users.name,

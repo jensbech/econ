@@ -9,6 +9,8 @@ import { categories, expenses, loanPayments } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { logCreate, logUpdate, logDelete } from "@/lib/audit";
 
 export type ExpenseFormState = {
 	error?: string | null;
@@ -34,7 +36,18 @@ export async function createExpense(
 	formData: FormData,
 ): Promise<ExpenseFormState> {
 	const user = await verifySession();
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user.id) {
+		return { error: "User ID not available" };
+	}
+
+	// Rate limiting: max 20 expenses per minute per user
+	try {
+		checkRateLimit(`expense:create:${user.id}`, 20, 60);
+	} catch (error) {
+		return { error: "Too many expense creations. Please try again later." };
+	}
+
+	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
 	const force = formData.get("force") === "true";
@@ -126,7 +139,7 @@ export async function createExpense(
 		.insert(expenses)
 		.values({
 			householdId,
-			userId: user.id as string,
+			userId: user.id,
 			categoryId: parsed.data.categoryId ?? null,
 			accountId: parsed.data.accountId ?? null,
 			amountOere,
@@ -148,6 +161,16 @@ export async function createExpense(
 		});
 	}
 
+	// Log the expense creation
+	if (inserted) {
+		await logCreate(householdId, user.id, "expense", inserted.id, {
+			amount: amountOere,
+			date: parsed.data.date,
+			category: parsed.data.categoryId,
+			account: parsed.data.accountId,
+		});
+	}
+
 	revalidatePath("/expenses");
 	revalidatePath("/savings");
 	revalidatePath("/loans");
@@ -160,7 +183,18 @@ export async function updateExpense(
 	formData: FormData,
 ): Promise<ExpenseFormState> {
 	const user = await verifySession();
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user.id) {
+		return { error: "User ID not available" };
+	}
+
+	// Rate limiting: max 20 updates per minute per user
+	try {
+		checkRateLimit(`expense:update:${user.id}`, 20, 60);
+	} catch (error) {
+		return { error: "Too many expense updates. Please try again later." };
+	}
+
+	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
 	const raw = {
@@ -252,7 +286,14 @@ export async function updateExpense(
 
 export async function deleteExpense(id: string): Promise<void> {
 	const user = await verifySession();
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user.id) {
+		throw new Error("User ID not available");
+	}
+
+	// Rate limiting: max 10 deletions per minute per user
+	checkRateLimit(`expense:delete:${user.id}`, 10, 60);
+
+	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
 	await db
@@ -275,8 +316,28 @@ export async function deleteExpense(id: string): Promise<void> {
 // Deletes without redirect — used from the expense list table
 export async function deleteExpenseNoRedirect(id: string): Promise<void> {
 	const user = await verifySession();
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user.id) {
+		throw new Error("User ID not available");
+	}
+	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	// AUTHORIZATION: Verify expense exists and belongs to this household before deletion
+	const [expense] = await db
+		.select({ id: expenses.id })
+		.from(expenses)
+		.where(
+			and(
+				eq(expenses.id, id),
+				eq(expenses.householdId, householdId),
+				isNull(expenses.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!expense) {
+		throw new Error("Expense not found or access denied");
+	}
 
 	await db
 		.update(expenses)

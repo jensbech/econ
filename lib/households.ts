@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, householdMembers, households, users } from "@/db/schema";
 import { seedDefaultCategories } from "./default-categories";
+import { checkRateLimit } from "./rate-limit";
 
 export async function ensureUserAndHousehold(
 	userId: string,
@@ -69,6 +70,15 @@ export async function ensureUserAndHousehold(
 }
 
 export async function getHouseholdId(userId: string): Promise<string | null> {
+	// Rate limit household lookups to prevent enumeration attacks
+	try {
+		checkRateLimit(`household:lookup:${userId}`, 100, 60);
+	} catch (error) {
+		// Log but don't expose to user; just fail silently for security
+		console.warn(`Household lookup rate limit exceeded for user ${userId}`);
+		throw new Error("Service temporarily unavailable");
+	}
+
 	const result = await db
 		.select({ householdId: householdMembers.householdId })
 		.from(householdMembers)

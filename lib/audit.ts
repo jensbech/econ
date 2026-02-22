@@ -1,0 +1,92 @@
+import { db } from "@/db";
+import { auditLog } from "@/db/schema";
+
+export interface AuditLogEntry {
+	householdId: string;
+	userId: string;
+	action: string; // 'create', 'update', 'delete', etc.
+	resourceType: string; // 'expense', 'income', 'account', etc.
+	resourceId: string;
+	changes?: Record<string, any>;
+}
+
+/**
+ * Log an audit event for financial data changes.
+ * This creates a permanent record of who did what and when.
+ */
+export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
+	try {
+		await db.insert(auditLog).values({
+			householdId: entry.householdId,
+			userId: entry.userId,
+			action: entry.action,
+			resourceType: entry.resourceType,
+			resourceId: entry.resourceId,
+			changes: entry.changes ? JSON.stringify(entry.changes) : null,
+			timestamp: new Date(),
+		});
+	} catch (error) {
+		// Log error but don't fail the main operation
+		console.error("Failed to log audit event:", error);
+	}
+}
+
+/**
+ * Convenience function to log a create event.
+ */
+export async function logCreate(
+	householdId: string,
+	userId: string,
+	resourceType: string,
+	resourceId: string,
+	data: Record<string, any>,
+): Promise<void> {
+	await logAuditEvent({
+		householdId,
+		userId,
+		action: "create",
+		resourceType,
+		resourceId,
+		changes: data,
+	});
+}
+
+/**
+ * Convenience function to log an update event.
+ */
+export async function logUpdate(
+	householdId: string,
+	userId: string,
+	resourceType: string,
+	resourceId: string,
+	changes: Record<string, any>,
+): Promise<void> {
+	await logAuditEvent({
+		householdId,
+		userId,
+		action: "update",
+		resourceType,
+		resourceId,
+		changes,
+	});
+}
+
+/**
+ * Convenience function to log a delete event.
+ */
+export async function logDelete(
+	householdId: string,
+	userId: string,
+	resourceType: string,
+	resourceId: string,
+	reason?: string,
+): Promise<void> {
+	await logAuditEvent({
+		householdId,
+		userId,
+		action: "delete",
+		resourceType,
+		resourceId,
+		changes: reason ? { reason } : undefined,
+	});
+}

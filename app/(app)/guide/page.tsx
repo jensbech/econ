@@ -112,10 +112,9 @@ export default function GuidePage() {
 					</p>
 					<StepList
 						steps={[
-							"Opprett kontoer — legg inn brukskonto, sparekonto, kredittkort osv. Fyll gjerne inn kontonummer slik at import-funksjonen kan matche transaksjoner automatisk.",
+							"Opprett kontoer — legg inn brukskonto, sparekonto, kredittkort osv. Velg riktig kontotype (Brukskonto, Sparekonto, osv.). Fyll gjerne inn kontonummer slik at import-funksjonen kan matche transaksjoner automatisk.",
 							"Sjekk kategorier — appen har standardkategorier for utgifter og inntekt. Gå til Kategorier-siden og legg til eller fjern etter behov.",
 							"Registrer lån — opprett lån med nåværende saldo, rente og terminlengde. Appen beregner nedbetalingsfremdrift automatisk.",
-							"Registrer sparemål — opprett sparemål med eventuell målsum og nåværende saldo. Saldoen oppdateres automatisk fra tilknyttede transaksjoner.",
 							"Sett opp gjentagende maler — legg inn faste utgifter (husleie, strøm, abonnementer) og faste inntekter (lønn) som gjentagende maler. Disse genereres automatisk hver måned.",
 							"Importer historikk — last opp kontoutskrifter (CSV eller PDF) fra de siste 1–3 månedene. Dette gir deg et grunnlag for historikk, kategorier og dashboardet.",
 						]}
@@ -197,11 +196,12 @@ export default function GuidePage() {
 
 						<SubSection title="Sparing" icon={PiggyBank}>
 							<p>
-								Sparemål kan ha en målsum og en måldato. Nåværende saldo
-								beregnes automatisk fra utgifter som er lenket til sparemålet
-								(via kategorien &laquo;Sparing&raquo;). Du trenger altså ikke
-								oppdatere saldoen manuelt — bare registrer overføringer som
-								utgifter koblet til riktig sparemål.
+								Sparekontoer er vanlige kontoer som markeres med type &laquo;Sparekonto&raquo; på Kontoer-siden. Saldoen beregnes automatisk fra inntekt som
+								er kreditert til kontoen minus utgifter som er debitert fra den.
+								Du trenger ikke oppdatere saldoen manuelt — bare registrer
+								inntekt og utgifter koblet til sparekontoene. For eksempel:
+								å overføre penger fra brukskonto til sparekonto registreres som
+								en utgift på bruskontoen og en inntekt på sparekontoen.
 							</p>
 						</SubSection>
 

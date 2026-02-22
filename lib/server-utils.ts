@@ -30,14 +30,32 @@ export function extractFieldErrors(
 
 /**
  * Parse dd.mm.yyyy or yyyy-mm-dd to ISO yyyy-mm-dd.
- * Returns null if the string cannot be parsed.
+ * Returns null if the string cannot be parsed or represents an invalid date.
  */
 export function parseDateToIso(dateStr: string): string | null {
 	const s = dateStr.trim();
 	// dd.mm.yyyy → yyyy-mm-dd
 	const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s);
-	if (m) return `${m[3]}-${m[2]}-${m[1]}`;
-	// Already ISO
-	if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+	if (m) {
+		const day = parseInt(m[1], 10);
+		const month = parseInt(m[2], 10);
+		const year = parseInt(m[3], 10);
+
+		// Validate that the date is actually valid (rejects 31.02.2024, etc.)
+		const date = new Date(year, month - 1, day);
+		if (date.getDate() !== day || date.getMonth() !== month - 1) {
+			return null; // Invalid date
+		}
+
+		return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+	}
+
+	// Already ISO format
+	if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+		const date = new Date(s + "T00:00:00Z");
+		if (Number.isNaN(date.getTime())) return null; // Invalid ISO date
+		return s;
+	}
+
 	return null;
 }

@@ -23,11 +23,6 @@ interface AccountOption {
 	name: string;
 }
 
-interface SavingsAccountOption {
-	id: string;
-	name: string;
-}
-
 interface LoanOption {
 	id: string;
 	name: string;
@@ -43,13 +38,11 @@ interface ExpenseFormProps {
 	defaultCategoryId?: string;
 	defaultNotes?: string;
 	defaultAccountId?: string;
-	defaultSavingsGoalId?: string;
 	defaultLoanId?: string;
 	defaultInterestNOK?: string;
 	defaultPrincipalNOK?: string;
 	categories: Category[];
 	accounts?: AccountOption[];
-	savingsAccounts?: SavingsAccountOption[];
 	loans?: LoanOption[];
 	submitLabel?: string;
 	cancelHref?: string;
@@ -62,13 +55,11 @@ export function ExpenseForm({
 	defaultCategoryId,
 	defaultNotes,
 	defaultAccountId,
-	defaultSavingsGoalId,
 	defaultLoanId,
 	defaultInterestNOK,
 	defaultPrincipalNOK,
 	categories,
 	accounts = [],
-	savingsAccounts = [],
 	loans = [],
 	submitLabel = "Lagre",
 	cancelHref = "/expenses",
@@ -85,7 +76,6 @@ export function ExpenseForm({
 		return cat?.name ?? "";
 	}, [categories, selectedCategoryId]);
 
-	const isSparingCategory = selectedCategoryName === "Sparing";
 	const isLoanCategory = selectedCategoryName === "Lån";
 
 	return (
@@ -168,25 +158,6 @@ export function ExpenseForm({
 				</select>
 			</div>
 
-			{/* Savings account selector — shown when category = "Sparing" */}
-			{isSparingCategory && savingsAccounts.length > 0 && (
-				<div className="space-y-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
-					<Label htmlFor="savingsGoalId">Hvilken sparekonto?</Label>
-					<select
-						id="savingsGoalId"
-						name="savingsGoalId"
-						defaultValue={defaultSavingsGoalId ?? (savingsAccounts.length === 1 ? savingsAccounts[0].id : "")}
-						className={SELECT_CLASS_NAME}
-					>
-						<option value="">Ingen</option>
-						{savingsAccounts.map((sa) => (
-							<option key={sa.id} value={sa.id}>
-								{sa.name}
-							</option>
-						))}
-					</select>
-				</div>
-			)}
 
 			{/* Loan selector + interest/principal split — shown when category = "Lån" */}
 			{isLoanCategory && loans.length > 0 && (

@@ -27,6 +27,7 @@ interface AccountRow {
 	name: string;
 	accountNumber: string | null;
 	type: string;
+	kind: string;
 	icon: string;
 	userId: string;
 	creatorName: string | null;
@@ -104,19 +105,22 @@ export function AccountsClient({
 	const [showNewForm, setShowNewForm] = useState(false);
 	const [newName, setNewName] = useState("");
 	const [newType, setNewType] = useState<"public" | "private">("public");
+	const [newKind, setNewKind] = useState("checking");
 	const [newIcon, setNewIcon] = useState("wallet");
 	const [newAccountNumber, setNewAccountNumber] = useState("");
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [editName, setEditName] = useState("");
+	const [editKind, setEditKind] = useState("checking");
 	const [editIcon, setEditIcon] = useState("wallet");
 	const [editAccountNumber, setEditAccountNumber] = useState("");
 
 	function handleCreate() {
 		if (!newName.trim()) return;
 		startTransition(async () => {
-			await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined);
+			await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind);
 			toast.success("Konto opprettet");
 			setNewName("");
+			setNewKind("checking");
 			setNewIcon("wallet");
 			setNewAccountNumber("");
 			setShowNewForm(false);
@@ -127,6 +131,7 @@ export function AccountsClient({
 	function startEdit(account: AccountRow) {
 		setEditingId(account.id);
 		setEditName(account.name);
+		setEditKind(account.kind);
 		setEditIcon(account.icon);
 		setEditAccountNumber(account.accountNumber ?? "");
 	}
@@ -134,7 +139,7 @@ export function AccountsClient({
 	function handleUpdate(id: string) {
 		if (!editName.trim()) return;
 		startTransition(async () => {
-			await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null);
+			await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind);
 			toast.success("Konto oppdatert");
 			setEditingId(null);
 			router.refresh();
@@ -218,6 +223,24 @@ export function AccountsClient({
 													className="h-8 max-w-[160px]"
 													placeholder="Kontonummer"
 												/>
+												<select
+													value={editKind}
+													onChange={(e) =>
+														setEditKind(e.target.value)
+													}
+													onKeyDown={(e) => {
+														if (e.key === "Enter")
+															handleUpdate(account.id);
+														if (e.key === "Escape")
+															setEditingId(null);
+													}}
+													className="h-8 rounded-md border border-gray-200 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+												>
+													<option value="checking">Brukskonto</option>
+													<option value="savings">Sparekonto</option>
+													<option value="credit">Kredittkort</option>
+													<option value="investment">Investering</option>
+												</select>
 												<Button
 													size="sm"
 													onClick={() =>
@@ -379,6 +402,20 @@ export function AccountsClient({
 							</option>
 						</select>
 					</div>
+					<div className="space-y-1.5">
+						<Label htmlFor="newKind">Kontotype</Label>
+						<select
+							id="newKind"
+							value={newKind}
+							onChange={(e) => setNewKind(e.target.value)}
+							className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+						>
+							<option value="checking">Brukskonto</option>
+							<option value="savings">Sparekonto</option>
+							<option value="credit">Kredittkort</option>
+							<option value="investment">Investering</option>
+						</select>
+					</div>
 					<div className="flex gap-2">
 						<Button
 							onClick={handleCreate}
@@ -392,6 +429,7 @@ export function AccountsClient({
 							onClick={() => {
 								setShowNewForm(false);
 								setNewName("");
+								setNewKind("checking");
 								setNewIcon("wallet");
 								setNewAccountNumber("");
 							}}

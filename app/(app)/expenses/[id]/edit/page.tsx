@@ -4,7 +4,7 @@ import { ArrowLeft, Repeat } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { categories, expenses, loans, savingsGoals } from "@/db/schema";
+import { categories, expenses, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { getVisibleAccounts } from "@/lib/accounts";
@@ -36,7 +36,7 @@ export default async function EditExpensePage({
 
 	if (!expense) notFound();
 
-	const [expenseCategories, visibleAccounts, savingsAccountRows, loanRows] =
+	const [expenseCategories, visibleAccounts, loanRows] =
 		await Promise.all([
 			db
 				.select({ id: categories.id, name: categories.name })
@@ -50,16 +50,7 @@ export default async function EditExpensePage({
 				)
 				.orderBy(categories.name),
 			getVisibleAccounts(user.id as string, householdId),
-			db
-				.select({ id: savingsGoals.id, name: savingsGoals.name })
-				.from(savingsGoals)
-				.where(
-					and(
-						eq(savingsGoals.householdId, householdId),
-						isNull(savingsGoals.deletedAt),
-					),
-				)
-				.orderBy(savingsGoals.name),
+			
 			db
 				.select({ id: loans.id, name: loans.name })
 				.from(loans)
@@ -133,13 +124,11 @@ export default async function EditExpensePage({
 					defaultCategoryId={expense.categoryId ?? undefined}
 					defaultNotes={expense.notes ?? undefined}
 					defaultAccountId={expense.accountId ?? undefined}
-					defaultSavingsGoalId={expense.savingsGoalId ?? undefined}
 					defaultLoanId={expense.loanId ?? undefined}
 					defaultInterestNOK={defaultInterestNOK}
 					defaultPrincipalNOK={defaultPrincipalNOK}
 					categories={expenseCategories}
 					accounts={visibleAccounts}
-					savingsAccounts={savingsAccountRows}
 					loans={loanRows}
 					submitLabel="Lagre endringer"
 				/>

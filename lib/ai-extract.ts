@@ -149,8 +149,16 @@ export async function extractTransactions(
 
 		return { success: true, transactions: object.transactions };
 	} catch (error) {
-		const message =
-			error instanceof Error ? error.message : "Ukjent feil under AI-analyse";
-		return { success: false, error: message };
+		// Log sanitized error server-side (do not log full error object or stack)
+		const errorId = Math.random().toString(36).substring(7);
+		const errorMessage =
+			error instanceof Error ? error.message : String(error);
+		console.error(`[AI Extraction Error ${errorId}] ${errorMessage}`);
+
+		// Return generic message to client
+		return {
+			success: false,
+			error: "Kunne ikke behandle dokumentet. Prøv igjen senere.",
+		};
 	}
 }

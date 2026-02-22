@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	output: "standalone",
 	experimental: {
-		serverActionsBodySizeLimit: "25mb",
+		serverActionsBodySizeLimit: "1mb", // Reduced from 25mb to prevent resource exhaustion
 	},
 	images: {
 		remotePatterns: [
@@ -12,6 +12,57 @@ const nextConfig: NextConfig = {
 				hostname: "lh3.googleusercontent.com",
 			},
 		],
+	},
+	async headers() {
+		return [
+			{
+				source: "/(.*)",
+				headers: [
+					{
+						key: "X-Frame-Options",
+						value: "DENY",
+					},
+					{
+						key: "X-Content-Type-Options",
+						value: "nosniff",
+					},
+					{
+						key: "X-XSS-Protection",
+						value: "1; mode=block",
+					},
+					{
+						key: "Referrer-Policy",
+						value: "strict-origin-when-cross-origin",
+					},
+					{
+						key: "Permissions-Policy",
+						value: "geolocation=(), microphone=(), camera=()",
+					},
+					{
+						key: "Content-Security-Policy",
+						value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none';",
+					},
+				],
+			},
+			{
+				source: "/api/:path*",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "no-store, no-cache, must-revalidate",
+					},
+				],
+			},
+			{
+				source: "/:path*.(jpg|jpeg|png|gif|svg|webp|ico|js|css|woff|woff2)$",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
+					},
+				],
+			},
+		];
 	},
 };
 

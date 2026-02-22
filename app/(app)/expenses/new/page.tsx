@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { db } from "@/db";
-import { categories, loans, savingsGoals } from "@/db/schema";
+import { categories, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { getVisibleAccounts } from "@/lib/accounts";
@@ -18,7 +18,7 @@ export default async function NewExpensePage() {
 	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
 	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
-	const [expenseCategories, visibleAccounts, savingsAccountRows, loanRows] =
+	const [expenseCategories, visibleAccounts, loanRows] =
 		await Promise.all([
 			householdId
 				? db
@@ -35,18 +35,6 @@ export default async function NewExpensePage() {
 				: [],
 			householdId
 				? getVisibleAccounts(user.id as string, householdId)
-				: [],
-			householdId
-				? db
-						.select({ id: savingsGoals.id, name: savingsGoals.name })
-						.from(savingsGoals)
-						.where(
-							and(
-								eq(savingsGoals.householdId, householdId),
-								isNull(savingsGoals.deletedAt),
-							),
-						)
-						.orderBy(savingsGoals.name)
 				: [],
 			householdId
 				? db
@@ -91,7 +79,6 @@ export default async function NewExpensePage() {
 					action={createExpense}
 					categories={expenseCategories}
 					accounts={visibleAccounts}
-					savingsAccounts={savingsAccountRows}
 					loans={loanRows}
 					defaultAccountId={defaultAccountId}
 					submitLabel="Legg til utgift"

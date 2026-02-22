@@ -1,0 +1,1 @@
+ALTER TABLE "accounts" ADD COLUMN "kind" text DEFAULT 'checking' NOT NULL;

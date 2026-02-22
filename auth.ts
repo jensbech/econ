@@ -11,6 +11,11 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
 	providers: [Google],
+	session: {
+		strategy: "jwt",
+		maxAge: 4 * 60 * 60, // 4 hours (reduced from 24 for financial app security)
+		updateAge: 30 * 60, // Refresh every 30 minutes
+	},
 	pages: {
 		signIn: "/",
 	},

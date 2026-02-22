@@ -2,49 +2,28 @@
 
 import { format, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
-import { PiggyBank, Trash2 } from "lucide-react";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { PiggyBank } from "lucide-react";
 import { formatNOK } from "@/lib/format";
 
 interface SavingsAccountCardProps {
 	account: {
 		id: string;
 		name: string;
-		targetOere: number | null;
-		targetDate: string | null;
 	};
 	balance: number;
 	recentTransactions: Array<{
 		date: string;
 		notes: string | null;
-		amountOere: number;
+		amount: number;
+		type: "income" | "expense";
 	}>;
-	deleteAction: () => Promise<void>;
 }
 
 export function SavingsAccountCard({
 	account,
 	balance,
 	recentTransactions,
-	deleteAction,
 }: SavingsAccountCardProps) {
-	const hasTarget = account.targetOere !== null && account.targetOere > 0;
-	const pct =
-		hasTarget && account.targetOere
-			? Math.min(100, Math.round((balance / account.targetOere) * 100))
-			: null;
-
 	return (
 		<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
 			{/* Header */}
@@ -55,78 +34,16 @@ export function SavingsAccountCard({
 						<h3 className="truncate font-semibold text-gray-900 dark:text-white">
 							{account.name}
 						</h3>
-						{account.targetDate && (
-							<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-								Mål:{" "}
-								{format(parseISO(account.targetDate), "d. MMMM yyyy", {
-									locale: nb,
-								})}
-							</p>
-						)}
 					</div>
 				</div>
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-7 w-7 flex-shrink-0 text-gray-400 hover:text-red-600"
-						>
-							<Trash2 className="h-3.5 w-3.5" />
-						</Button>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Slett sparekonto?</AlertDialogTitle>
-							<AlertDialogDescription>
-								Er du sikker på at du vil slette &laquo;{account.name}&raquo;?
-								Utgifter koblet til denne kontoen beholdes, men mister
-								tilknytningen.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Avbryt</AlertDialogCancel>
-							<AlertDialogAction
-								onClick={async () => {
-									await deleteAction();
-								}}
-								className="bg-red-600 hover:bg-red-700"
-							>
-								Slett
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
 			</div>
 
 			{/* Balance */}
-			<div className="mb-3">
+			<div className="mb-4">
 				<span className="text-2xl font-bold text-green-600 dark:text-green-400">
 					{formatNOK(balance)}
 				</span>
-				{hasTarget && account.targetOere && (
-					<span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-						av {formatNOK(account.targetOere)}
-					</span>
-				)}
 			</div>
-
-			{/* Progress bar — only when target is set */}
-			{pct !== null && (
-				<>
-					<div className="mb-1 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-						<div
-							className={`h-full rounded-full transition-all ${
-								pct >= 100 ? "bg-green-500" : "bg-indigo-500"
-							}`}
-							style={{ width: `${pct}%` }}
-						/>
-					</div>
-					<p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-						{pct}% av mål
-					</p>
-				</>
-			)}
 
 			{/* Recent transactions */}
 			{recentTransactions.length > 0 && (
@@ -144,8 +61,15 @@ export function SavingsAccountCard({
 									{format(parseISO(tx.date), "d. MMM", { locale: nb })}
 									{tx.notes ? ` — ${tx.notes}` : ""}
 								</span>
-								<span className="font-medium tabular-nums text-green-600 dark:text-green-400">
-									{formatNOK(tx.amountOere)}
+								<span
+									className={`font-medium tabular-nums ${
+										tx.type === "income"
+											? "text-green-600 dark:text-green-400"
+											: "text-red-600 dark:text-red-400"
+									}`}
+								>
+									{tx.type === "income" ? "+" : "−"}
+									{formatNOK(Math.abs(tx.amount))}
 								</span>
 							</li>
 						))}
@@ -155,7 +79,8 @@ export function SavingsAccountCard({
 
 			{recentTransactions.length === 0 && (
 				<p className="text-xs text-gray-400 dark:text-gray-500">
-					Ingen transaksjoner ennå. Registrer en utgift med &laquo;Sparing&raquo;-kategorien.
+					Ingen transaksjoner ennå. Registrer inntekt eller utgifter koblet til
+					denne kontoen.
 				</p>
 			)}
 		</div>

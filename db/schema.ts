@@ -113,13 +113,16 @@ export const accounts = pgTable("accounts", {
 		.notNull()
 		.references(() => users.id),
 	name: text("name").notNull(),
-	accountNumber: text("account_number"), // e.g. "1234.56.78901"
+	accountNumber: text("account_number"), // e.g. "1234.56.78901" (plaintext for compatibility; DEPRECATED: use accountNumberEncrypted in future)
 	type: text("type").notNull().default("public"), // 'public' | 'private'
+	kind: text("kind").notNull().default("checking"), // 'checking' | 'savings' | 'credit' | 'investment'
 	icon: text("icon").notNull().default("wallet"), // lucide icon name
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 	deletedAt: timestamp("deleted_at", { withTimezone: true }),
+	// TODO: Add encrypted account number field in future migration
+	// accountNumberEncrypted: text("account_number_encrypted"), // Application-level encryption required
 });
 
 // ---------------------------------------------------------------------------
@@ -286,6 +289,8 @@ export const loanPayments = pgTable("loan_payments", {
 // ---------------------------------------------------------------------------
 // Savings goals
 // ---------------------------------------------------------------------------
+// TODO: This table is deprecated. Savings are now represented by accounts with kind='savings'.
+// Remove this table and the savingsGoalId FK on expenses in a future migration.
 
 export const savingsGoals = pgTable("savings_goals", {
 	id: text("id")
@@ -306,4 +311,39 @@ export const savingsGoals = pgTable("savings_goals", {
 		.notNull()
 		.defaultNow(),
 	deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+// ---------------------------------------------------------------------------
+// Audit log
+// ---------------------------------------------------------------------------
+//
+// ⚠️ INTEGRITY WARNING: This table is currently NOT protected against tampering.
+// Database admins or compromised accounts can modify/delete audit log entries.
+// For production compliance (GDPR, financial audit standards), implement:
+// 1. Cryptographic chaining: each entry hashes the previous entry
+// 2. Write-once enforcement: REVOKE UPDATE, DELETE on this table
+// 3. Immutable export: periodic backup to immutable store (S3 versioning, etc.)
+// 4. Hash verification: separate checksums stored outside database
+//
+// TODO: Implement audit log integrity protection in future migration
+export const auditLog = pgTable("audit_log", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	householdId: text("household_id")
+		.notNull()
+		.references(() => households.id, { onDelete: "cascade" }),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id),
+	action: text("action").notNull(), // 'create', 'update', 'delete', etc.
+	resourceType: text("resource_type").notNull(), // 'expense', 'income', 'account', etc.
+	resourceId: text("resource_id").notNull(),
+	changes: text("changes"), // JSON string of what changed
+	timestamp: timestamp("timestamp", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	// TODO: Add integrity fields
+	// previousHash: text("previous_hash"), // Hash of previous log entry
+	// entryHash: text("entry_hash"),       // Hash of this entry
 });

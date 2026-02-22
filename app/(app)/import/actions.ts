@@ -8,6 +8,8 @@ import type { DecimalSeparator } from "@/lib/csv-detect";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { parseDateToIso } from "@/lib/server-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { logDelete } from "@/lib/audit";
 
 export interface CheckRow {
 	date: string;
@@ -231,20 +233,40 @@ export async function confirmImport(
  */
 export async function rollbackImport(batchId: string): Promise<void> {
 	const user = await verifySession();
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user.id) throw new Error("User ID not available");
+
+	// Rate limiting: max 5 rollbacks per hour per user
+	checkRateLimit(`import:rollback:${user.id}`, 5, 3600);
+
+	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
-	await db
-		.update(importBatches)
-		.set({ rolledBackAt: new Date() })
+	// AUTHORIZATION: Verify import batch exists and belongs to the household
+	const [batch] = await db
+		.select({
+			id: importBatches.id,
+			rowCount: importBatches.rowCount,
+			filename: importBatches.filename,
+		})
+		.from(importBatches)
 		.where(
 			and(
 				eq(importBatches.id, batchId),
 				eq(importBatches.householdId, householdId),
 			),
-		);
+		)
+		.limit(1);
+
+	if (!batch) {
+		throw new Error("Import batch not found or access denied");
+	}
 
 	await db
+		.update(importBatches)
+		.set({ rolledBackAt: new Date() })
+		.where(eq(importBatches.id, batchId));
+
+	const result = await db
 		.update(expenses)
 		.set({ deletedAt: new Date() })
 		.where(
@@ -254,6 +276,13 @@ export async function rollbackImport(batchId: string): Promise<void> {
 				isNull(expenses.deletedAt),
 			),
 		);
+
+	// Log the rollback
+	await logDelete(householdId, user.id, "importBatch", batchId, {
+		reason: "User initiated rollback",
+		filename: batch.filename,
+		expensesDeleted: batch.rowCount,
+	});
 
 	revalidatePath("/import");
 	revalidatePath("/expenses");
