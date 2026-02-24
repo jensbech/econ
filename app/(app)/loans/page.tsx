@@ -70,6 +70,8 @@ export default async function LoansPage() {
 			loan.termMonths,
 			loan.startDate,
 			paymentsByLoan.get(loan.id) ?? [],
+			loan.openingBalanceOere,
+			loan.openingBalanceDate,
 		),
 	}));
 

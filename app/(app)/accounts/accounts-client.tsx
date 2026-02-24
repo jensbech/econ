@@ -30,6 +30,8 @@ interface AccountRow {
 	kind: string;
 	icon: string;
 	userId: string;
+	openingBalanceOere: number | null;
+	openingBalanceDate: string | null;
 	creatorName: string | null;
 	creatorEmail: string | null;
 }
@@ -108,21 +110,27 @@ export function AccountsClient({
 	const [newKind, setNewKind] = useState("checking");
 	const [newIcon, setNewIcon] = useState("wallet");
 	const [newAccountNumber, setNewAccountNumber] = useState("");
+	const [newOpeningBalance, setNewOpeningBalance] = useState("");
+	const [newOpeningBalanceDate, setNewOpeningBalanceDate] = useState("");
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [editName, setEditName] = useState("");
 	const [editKind, setEditKind] = useState("checking");
 	const [editIcon, setEditIcon] = useState("wallet");
 	const [editAccountNumber, setEditAccountNumber] = useState("");
+	const [editOpeningBalance, setEditOpeningBalance] = useState("");
+	const [editOpeningBalanceDate, setEditOpeningBalanceDate] = useState("");
 
 	function handleCreate() {
 		if (!newName.trim()) return;
 		startTransition(async () => {
-			await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind);
+			await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind, newOpeningBalance || undefined, newOpeningBalanceDate || undefined);
 			toast.success("Konto opprettet");
 			setNewName("");
 			setNewKind("checking");
 			setNewIcon("wallet");
 			setNewAccountNumber("");
+			setNewOpeningBalance("");
+			setNewOpeningBalanceDate("");
 			setShowNewForm(false);
 			router.refresh();
 		});
@@ -134,12 +142,14 @@ export function AccountsClient({
 		setEditKind(account.kind);
 		setEditIcon(account.icon);
 		setEditAccountNumber(account.accountNumber ?? "");
+		setEditOpeningBalance(account.openingBalanceOere != null ? String(account.openingBalanceOere / 100) : "");
+		setEditOpeningBalanceDate(account.openingBalanceDate ?? "");
 	}
 
 	function handleUpdate(id: string) {
 		if (!editName.trim()) return;
 		startTransition(async () => {
-			await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind);
+			await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind, editOpeningBalance || undefined, editOpeningBalanceDate || undefined);
 			toast.success("Konto oppdatert");
 			setEditingId(null);
 			router.refresh();
@@ -241,6 +251,23 @@ export function AccountsClient({
 													<option value="credit">Kredittkort</option>
 													<option value="investment">Investering</option>
 												</select>
+												{editKind === "savings" && (
+													<>
+														<Input
+															value={editOpeningBalance}
+															onChange={(e) => setEditOpeningBalance(e.target.value)}
+															placeholder="Inngående saldo (NOK)"
+															inputMode="decimal"
+															className="h-8 max-w-[140px]"
+														/>
+														<Input
+															type="date"
+															value={editOpeningBalanceDate}
+															onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
+															className="h-8 max-w-[160px]"
+														/>
+													</>
+												)}
 												<Button
 													size="sm"
 													onClick={() =>
@@ -416,6 +443,31 @@ export function AccountsClient({
 							<option value="investment">Investering</option>
 						</select>
 					</div>
+					{newKind === "savings" && (
+						<>
+							<div className="space-y-1.5">
+								<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
+								<Input
+									id="newOpeningBalance"
+									value={newOpeningBalance}
+									onChange={(e) => setNewOpeningBalance(e.target.value)}
+									placeholder="0.00"
+									inputMode="decimal"
+									className="max-w-xs"
+								/>
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="newOpeningBalanceDate">Per dato</Label>
+								<Input
+									id="newOpeningBalanceDate"
+									type="date"
+									value={newOpeningBalanceDate}
+									onChange={(e) => setNewOpeningBalanceDate(e.target.value)}
+									className="max-w-xs"
+								/>
+							</div>
+						</>
+					)}
 					<div className="flex gap-2">
 						<Button
 							onClick={handleCreate}
@@ -432,6 +484,8 @@ export function AccountsClient({
 								setNewKind("checking");
 								setNewIcon("wallet");
 								setNewAccountNumber("");
+								setNewOpeningBalance("");
+								setNewOpeningBalanceDate("");
 							}}
 						>
 							Avbryt

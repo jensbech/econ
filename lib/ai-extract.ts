@@ -81,7 +81,7 @@ const extractionJsonSchema = jsonSchema<{
 
 // ─── Category list for prompting ─────────────────────────────────────────────
 
-const CATEGORY_LIST = [
+const FALLBACK_CATEGORIES = [
 	"Mat & dagligvarer",
 	"Transport",
 	"Bolig",
@@ -96,25 +96,29 @@ const CATEGORY_LIST = [
 	"Lønn",
 	"Variabel inntekt",
 	"Annet",
-].join(", ");
+];
 
-const SYSTEM_PROMPT = `Du er en norsk regnskapsassistent. Trekk ut alle transaksjoner fra dokumentet.
+function buildSystemPrompt(categoryNames?: string[]): string {
+	const categoryList = (categoryNames ?? FALLBACK_CATEGORIES).join(", ");
+	return `Du er en norsk regnskapsassistent. Trekk ut alle transaksjoner fra dokumentet.
 
 Regler:
 - Datoer: konverter til dd.mm.yyyy format
 - Beløp: konverter til øre (1 NOK = 100 øre), heltall. Utgifter er positive tall. Inntekter og refusjoner er negative tall.
 - Beskrivelse: kort og norsk, gjerne butikknavn eller transaksjonskategori
-- suggestedCategory: velg én fra listen: ${CATEGORY_LIST}
+- suggestedCategory: velg én fra listen: ${categoryList}
 - confidence: "high" hvis dato og beløp er klart leselig, "medium" hvis noe er usikkert, "low" hvis mye er utydelig
 - accountNumber: Hvis dokumentet er en kontoutskrift, trekk ut kontonummeret fra headeren/overskriften. Formater som ren tekst (f.eks. "1234.56.78901"). Sett null hvis ikke funnet eller ved kvittering.
 
 Returner et JSON-objekt med en "transactions"-liste. Hvis ingen transaksjoner finnes, returner { "transactions": [] }.`;
+}
 
 // ─── Main extraction function ─────────────────────────────────────────────────
 
 export async function extractTransactions(
 	base64: string,
 	mediaType: SupportedMediaType,
+	categoryNames?: string[],
 ): Promise<AiExtractionResult> {
 	try {
 		const mediaPart =
@@ -140,7 +144,7 @@ export async function extractTransactions(
 						mediaPart,
 						{
 							type: "text",
-							text: SYSTEM_PROMPT,
+							text: buildSystemPrompt(categoryNames),
 						},
 					],
 				},

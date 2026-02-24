@@ -26,6 +26,11 @@ export function computeMonthlyPayment(
  *
  * Recorded payments are treated as EXTRA payments on top of the scheduled
  * amortization payment (i.e., they speed up payoff, not replace it).
+ *
+ * If openingBalanceOere and openingBalanceDate are both provided, the
+ * simulation starts from openingBalanceDate using openingBalanceOere as
+ * the initial balance, and only extra payments on or after that date are
+ * applied. principalOere is still used for principalPaidPct calculation.
  */
 export function computeLoanBalance(
 	principalOere: number,
@@ -33,6 +38,8 @@ export function computeLoanBalance(
 	termMonths: number,
 	startDate: string, // "yyyy-MM-dd"
 	extraPayments: Array<{ date: string; amountOere: number }>,
+	openingBalanceOere?: number | null,
+	openingBalanceDate?: string | null,
 ): LoanBalanceResult {
 	const monthlyRate = annualRatePct / 100 / 12;
 	const monthlyPaymentOere = computeMonthlyPayment(
@@ -41,9 +48,13 @@ export function computeLoanBalance(
 		termMonths,
 	);
 
-	// Convert startDate to an absolute month index (year * 12 + month0)
-	const sy = Number(startDate.substring(0, 4));
-	const sm = Number(startDate.substring(5, 7)) - 1; // 0-indexed month
+	const simStart = openingBalanceOere != null && openingBalanceDate != null
+		? openingBalanceDate
+		: startDate;
+
+	// Convert simStart to an absolute month index (year * 12 + month0)
+	const sy = Number(simStart.substring(0, 4));
+	const sm = Number(simStart.substring(5, 7)) - 1; // 0-indexed month
 	const startMonthIdx = sy * 12 + sm;
 
 	const now = new Date();
@@ -51,8 +62,13 @@ export function computeLoanBalance(
 	const monthsElapsed = Math.max(0, nowMonthIdx - startMonthIdx);
 
 	// Build extra-payments map: absolute-month-index → total øre
+	// When using opening balance, only include payments on/after openingBalanceDate
+	const filterDate = openingBalanceOere != null && openingBalanceDate != null
+		? openingBalanceDate
+		: null;
 	const extraByMonth = new Map<number, number>();
 	for (const p of extraPayments) {
+		if (filterDate && p.date < filterDate) continue;
 		const py = Number(p.date.substring(0, 4));
 		const pm = Number(p.date.substring(5, 7)) - 1;
 		const idx = py * 12 + pm;
@@ -60,7 +76,9 @@ export function computeLoanBalance(
 	}
 
 	// Month-by-month amortization simulation
-	let balance = principalOere;
+	let balance = openingBalanceOere != null && openingBalanceDate != null
+		? openingBalanceOere
+		: principalOere;
 	const steps = Math.min(monthsElapsed, termMonths);
 
 	for (let step = 0; step < steps && balance > 0; step++) {

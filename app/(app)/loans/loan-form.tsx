@@ -25,6 +25,8 @@ interface LoanFormProps {
 	defaultTermMonths?: string;
 	defaultStartDate?: Date;
 	defaultAccountId?: string;
+	defaultOpeningBalanceNOK?: string;
+	defaultOpeningBalanceDate?: Date;
 	accounts?: AccountOption[];
 	submitLabel?: string;
 	cancelHref?: string;
@@ -39,6 +41,8 @@ export function LoanForm({
 	defaultTermMonths,
 	defaultStartDate,
 	defaultAccountId,
+	defaultOpeningBalanceNOK,
+	defaultOpeningBalanceDate,
 	accounts = [],
 	submitLabel = "Lagre",
 	cancelHref = "/loans",
@@ -152,6 +156,36 @@ export function LoanForm({
 				defaultToToday
 				error={state?.fieldErrors?.startDate?.[0]}
 			/>
+
+			{/* Opening balance */}
+			<div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+				<div>
+					<p className="text-sm font-medium text-gray-900 dark:text-white">Åpningssaldo (valgfritt)</p>
+					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Fyll ut hvis lånet eksisterte før du begynte å bruke appen</p>
+				</div>
+				<div className="space-y-1.5">
+					<Label htmlFor="openingBalance">Gjeldende restgjeld (NOK)</Label>
+					<Input
+						id="openingBalance"
+						name="openingBalance"
+						type="text"
+						inputMode="decimal"
+						pattern="[0-9]*[.,]?[0-9]*"
+						placeholder="0.00"
+						defaultValue={defaultOpeningBalanceNOK}
+						className="h-9"
+					/>
+					{state?.fieldErrors?.openingBalance && (
+						<p className="text-xs text-red-600">{state.fieldErrors.openingBalance[0]}</p>
+					)}
+				</div>
+				<CalendarField
+					name="openingBalanceDate"
+					label="Per dato"
+					defaultDate={defaultOpeningBalanceDate}
+					error={state?.fieldErrors?.openingBalanceDate?.[0]}
+				/>
+			</div>
 
 			{/* Account */}
 			{accounts.length > 0 && (

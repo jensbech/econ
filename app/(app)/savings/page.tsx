@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import Link from "next/link";
 import { PiggyBank } from "lucide-react";
 import { db } from "@/db";
@@ -84,11 +84,49 @@ export default async function SavingsPage() {
 			}
 		}
 
+		// For accounts with opening balance, run filtered queries
+		const accountsWithOpening = savingsAccounts.filter(
+			(a) => a.openingBalanceOere != null && a.openingBalanceDate != null,
+		);
+		const filteredIncome: Record<string, number> = {};
+		const filteredExpenses: Record<string, number> = {};
+		for (const account of accountsWithOpening) {
+			const fromDate = account.openingBalanceDate as string;
+			const [incRow] = await db
+				.select({ total: sql<number>`coalesce(sum(${incomeEntries.amountOere}), 0)::int` })
+				.from(incomeEntries)
+				.where(
+					and(
+						eq(incomeEntries.householdId, householdId),
+						isNull(incomeEntries.deletedAt),
+						eq(incomeEntries.accountId, account.id),
+						gte(incomeEntries.date, fromDate),
+					),
+				);
+			const [expRow] = await db
+				.select({ total: sql<number>`coalesce(sum(${expenses.amountOere}), 0)::int` })
+				.from(expenses)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						eq(expenses.accountId, account.id),
+						gte(expenses.date, fromDate),
+					),
+				);
+			filteredIncome[account.id] = incRow?.total ?? 0;
+			filteredExpenses[account.id] = expRow?.total ?? 0;
+		}
+
 		// Calculate balance for each savings account
 		for (const account of savingsAccounts) {
-			const income = incomeByAccount[account.id] ?? 0;
-			const expensesAmount = expensesByAccount[account.id] ?? 0;
-			balances[account.id] = income - expensesAmount;
+			if (account.openingBalanceOere != null && account.openingBalanceDate != null) {
+				balances[account.id] = account.openingBalanceOere + (filteredIncome[account.id] ?? 0) - (filteredExpenses[account.id] ?? 0);
+			} else {
+				const income = incomeByAccount[account.id] ?? 0;
+				const expensesAmount = expensesByAccount[account.id] ?? 0;
+				balances[account.id] = income - expensesAmount;
+			}
 		}
 
 		// Get recent transactions (income + expenses) for each account, limit 5 per account
@@ -214,6 +252,8 @@ export default async function SavingsPage() {
 								}}
 								balance={balance}
 								recentTransactions={transactions}
+								openingBalanceDate={account.openingBalanceDate ?? undefined}
+								hasOpeningBalance={account.openingBalanceOere != null}
 							/>
 						);
 					})}

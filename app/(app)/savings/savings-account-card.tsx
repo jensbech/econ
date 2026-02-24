@@ -17,12 +17,16 @@ interface SavingsAccountCardProps {
 		amount: number;
 		type: "income" | "expense";
 	}>;
+	openingBalanceDate?: string;
+	hasOpeningBalance?: boolean;
 }
 
 export function SavingsAccountCard({
 	account,
 	balance,
 	recentTransactions,
+	openingBalanceDate,
+	hasOpeningBalance = false,
 }: SavingsAccountCardProps) {
 	return (
 		<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
@@ -34,6 +38,11 @@ export function SavingsAccountCard({
 						<h3 className="truncate font-semibold text-gray-900 dark:text-white">
 							{account.name}
 						</h3>
+						{openingBalanceDate && (
+							<p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+								Saldo fra {format(parseISO(openingBalanceDate), "d. MMM yyyy", { locale: nb })}
+							</p>
+						)}
 					</div>
 				</div>
 			</div>
@@ -81,6 +90,11 @@ export function SavingsAccountCard({
 				<p className="text-xs text-gray-400 dark:text-gray-500">
 					Ingen transaksjoner ennå. Registrer inntekt eller utgifter koblet til
 					denne kontoen.
+				</p>
+			)}
+			{!hasOpeningBalance && (
+				<p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+					Saldo beregnes fra alle importerte transaksjoner. Sett inngående saldo for korrekt beregning.
 				</p>
 			)}
 		</div>

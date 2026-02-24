@@ -97,7 +97,7 @@ export default async function DashboardPage({
 		);
 	}
 
-	const [expenseRows, incomeRows, categoryBreakdown, upcomingRecurring, loanRows, monthlyExpenses, monthlyIncome, budgetRows] =
+	const [expenseRows, incomeRows, categoryBreakdown, upcomingRecurring, loanRows, monthlyExpenses, monthlyIncome, budgetRows, earliestExpense, earliestIncome] =
 		await Promise.all([
 			// All expenses for the month (just amounts)
 			db
@@ -270,7 +270,28 @@ export default async function DashboardPage({
 				),
 			)
 			.groupBy(recurringTemplates.categoryId, categories.name),
+
+		// Earliest expense date
+		db
+			.select({ min: sql<string>`min(${expenses.date})` })
+			.from(expenses)
+			.where(and(eq(expenses.householdId, householdId), isNull(expenses.deletedAt))),
+
+		// Earliest income date
+		db
+			.select({ min: sql<string>`min(${incomeEntries.date})` })
+			.from(incomeEntries)
+			.where(and(eq(incomeEntries.householdId, householdId), isNull(incomeEntries.deletedAt))),
 	]);
+
+	const earliestExpenseDate = earliestExpense[0]?.min ?? null;
+	const earliestIncomeDate = earliestIncome[0]?.min ?? null;
+	let earliestDataDate: string | null = null;
+	if (earliestExpenseDate && earliestIncomeDate) {
+		earliestDataDate = earliestExpenseDate < earliestIncomeDate ? earliestExpenseDate : earliestIncomeDate;
+	} else {
+		earliestDataDate = earliestExpenseDate ?? earliestIncomeDate ?? null;
+	}
 
 	const totalIncome = incomeRows.reduce((sum, r) => sum + r.amountOere, 0);
 	const totalExpenses = expenseRows.reduce((sum, r) => sum + r.amountOere, 0);
@@ -310,6 +331,7 @@ export default async function DashboardPage({
 			monthlyLoanTotal={monthlyLoanTotal}
 			monthlyLoanInterest={monthlyLoanInterest}
 			monthlyLoanPrincipal={monthlyLoanPrincipal}
+			earliestDataDate={earliestDataDate}
 			activeTab={activeTab}
 		/>
 	);

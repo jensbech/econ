@@ -47,6 +47,7 @@ interface DashboardClientProps {
 	monthlyLoanTotal?: number;
 	monthlyLoanInterest?: number;
 	monthlyLoanPrincipal?: number;
+	earliestDataDate?: string | null;
 	activeTab?: "summary" | "grafer";
 }
 
@@ -64,6 +65,7 @@ export function DashboardClient({
 	monthlyLoanTotal = 0,
 	monthlyLoanInterest = 0,
 	monthlyLoanPrincipal = 0,
+	earliestDataDate,
 	activeTab = "summary",
 }: DashboardClientProps) {
 	const selectedMonth = parseISO(`${selectedMonthStr}-01`);
@@ -226,6 +228,13 @@ export function DashboardClient({
 							</div>
 						</div>
 					</div>
+
+					{/* Data completeness banner */}
+					{earliestDataDate && (
+						<div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-300">
+							Viser data fra {format(parseISO(earliestDataDate), "d. MMMM yyyy", { locale: nb })}. Eldre transaksjoner er ikke registrert.
+						</div>
+					)}
 
 					{/* Loan card */}
 					{monthlyLoanTotal > 0 && (

@@ -77,9 +77,6 @@ export async function startAiExtraction(
 	mediaType: SupportedMediaType,
 	accounts: Array<{ id: string; accountNumber: string | null }> = [],
 ): Promise<EnrichedExtractionResult> {
-	const raw = await extractTransactions(base64, mediaType);
-	if (!raw.success) return raw;
-
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 
@@ -97,8 +94,10 @@ export async function startAiExtraction(
 		return accountNumberMap.get(normalized) ?? null;
 	}
 
-	// No household — return raw transactions with no enrichment
+	// No household — extract without category names
 	if (!householdId) {
+		const raw = await extractTransactions(base64, mediaType);
+		if (!raw.success) return raw;
 		return {
 			success: true,
 			transactions: raw.transactions.map((tx) => ({
@@ -138,6 +137,10 @@ export async function startAiExtraction(
 				),
 			),
 	]);
+
+	const categoryNames = dbCategories.map((c) => c.name);
+	const raw = await extractTransactions(base64, mediaType, categoryNames);
+	if (!raw.success) return raw;
 
 	const enriched: EnrichedTransaction[] = raw.transactions.map((tx) => {
 		const txAccountNumber = tx.accountNumber ?? null;

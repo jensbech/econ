@@ -30,6 +30,8 @@ const LoanSchema = z.object({
 	termMonths: z.string().min(1, "Løpetid er påkrevd"),
 	startDate: z.string().min(1, "Startdato er påkrevd"),
 	accountId: z.string().optional(),
+	openingBalance: z.string().optional(),
+	openingBalanceDate: z.string().optional(),
 });
 
 const PaymentSchema = z.object({
@@ -64,6 +66,8 @@ export async function createLoan(
 		termMonths: formData.get("termMonths") as string,
 		startDate: formData.get("startDate") as string,
 		accountId: (formData.get("accountId") as string) || undefined,
+		openingBalance: (formData.get("openingBalance") as string) || undefined,
+		openingBalanceDate: (formData.get("openingBalanceDate") as string) || undefined,
 	};
 
 	const parsed = LoanSchema.safeParse(raw);
@@ -109,6 +113,23 @@ export async function createLoan(
 		return { fieldErrors: { termMonths: ["Ugyldig løpetid"] } };
 	}
 
+	let openingBalanceOere: number | null = null;
+	const openingBalanceDate: string | null = parsed.data.openingBalanceDate || null;
+
+	if (parsed.data.openingBalance || openingBalanceDate) {
+		if (!parsed.data.openingBalance || !openingBalanceDate) {
+			return { fieldErrors: { openingBalance: ["Både restgjeld og dato må fylles ut sammen"] } };
+		}
+		if (openingBalanceDate < parsed.data.startDate) {
+			return { fieldErrors: { openingBalanceDate: ["Dato må være lik eller etter startdato"] } };
+		}
+		try {
+			openingBalanceOere = nokToOere(parsed.data.openingBalance);
+		} catch {
+			return { fieldErrors: { openingBalance: ["Ugyldig beløp"] } };
+		}
+	}
+
 	const [inserted] = await db
 		.insert(loans)
 		.values({
@@ -121,6 +142,8 @@ export async function createLoan(
 			termMonths,
 			startDate: parsed.data.startDate,
 			accountId: parsed.data.accountId ?? null,
+			openingBalanceOere,
+			openingBalanceDate,
 		})
 		.returning({ id: loans.id });
 

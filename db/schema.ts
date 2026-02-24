@@ -117,6 +117,8 @@ export const accounts = pgTable("accounts", {
 	type: text("type").notNull().default("public"), // 'public' | 'private'
 	kind: text("kind").notNull().default("checking"), // 'checking' | 'savings' | 'credit' | 'investment'
 	icon: text("icon").notNull().default("wallet"), // lucide icon name
+	openingBalanceOere: integer("opening_balance_oere"),
+	openingBalanceDate: date("opening_balance_date"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -261,6 +263,8 @@ export const loans = pgTable("loans", {
 	termMonths: integer("term_months").notNull(),
 	startDate: date("start_date").notNull(),
 	accountId: text("account_id").references(() => accounts.id),
+	openingBalanceOere: integer("opening_balance_oere"),
+	openingBalanceDate: date("opening_balance_date"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),

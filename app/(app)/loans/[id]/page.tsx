@@ -75,6 +75,8 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			date: p.date,
 			amountOere: p.principalOere ?? p.amountOere,
 		})),
+		loan.openingBalanceOere,
+		loan.openingBalanceDate,
 	);
 
 	const paymentAction = addLoanPayment.bind(null, id);

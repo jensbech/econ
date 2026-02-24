@@ -9,6 +9,7 @@ import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logCreate, logUpdate, logDelete } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
+import { nokToOere } from "@/lib/server-utils";
 
 export async function createAccount(
 	name: string,
@@ -16,6 +17,8 @@ export async function createAccount(
 	icon: string = "wallet",
 	accountNumber?: string,
 	kind: string = "checking",
+	openingBalanceNOK?: string,
+	openingBalanceDate?: string,
 ): Promise<void> {
 	// CSRF protection
 	await validateCsrfOrigin();
@@ -38,6 +41,16 @@ export async function createAccount(
 		);
 	}
 
+	let openingBalanceOere: number | null = null;
+	const parsedOpeningBalanceDate: string | null = openingBalanceDate?.trim() || null;
+	if (openingBalanceNOK?.trim()) {
+		try {
+			openingBalanceOere = nokToOere(openingBalanceNOK.trim());
+		} catch {
+			throw new Error("Ugyldig inngående saldo");
+		}
+	}
+
 	const [inserted] = await db
 		.insert(accounts)
 		.values({
@@ -48,6 +61,8 @@ export async function createAccount(
 			kind,
 			icon,
 			accountNumber: trimmedAccountNumber,
+			openingBalanceOere,
+			openingBalanceDate: parsedOpeningBalanceDate,
 		})
 		.returning({ id: accounts.id });
 
@@ -68,6 +83,8 @@ export async function updateAccount(
 	icon?: string,
 	accountNumber?: string | null,
 	kind?: string,
+	openingBalanceNOK?: string,
+	openingBalanceDate?: string,
 ): Promise<void> {
 	// CSRF protection
 	await validateCsrfOrigin();
@@ -108,10 +125,27 @@ export async function updateAccount(
 		);
 	}
 
-	const set: Record<string, string | null> = { name: name.trim() };
+	let openingBalanceOere: number | null | undefined = undefined;
+	const parsedUpdateOpeningBalanceDate: string | null | undefined =
+		openingBalanceDate !== undefined ? openingBalanceDate.trim() || null : undefined;
+	if (openingBalanceNOK !== undefined) {
+		if (openingBalanceNOK.trim()) {
+			try {
+				openingBalanceOere = nokToOere(openingBalanceNOK.trim());
+			} catch {
+				throw new Error("Ugyldig inngående saldo");
+			}
+		} else {
+			openingBalanceOere = null;
+		}
+	}
+
+	const set: Record<string, string | number | null> = { name: name.trim() };
 	if (icon) set.icon = icon;
 	if (accountNumber !== undefined) set.accountNumber = trimmedAccountNumber;
 	if (kind) set.kind = kind;
+	if (openingBalanceOere !== undefined) set.openingBalanceOere = openingBalanceOere;
+	if (parsedUpdateOpeningBalanceDate !== undefined) set.openingBalanceDate = parsedUpdateOpeningBalanceDate;
 
 	await db
 		.update(accounts)

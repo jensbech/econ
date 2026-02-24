@@ -19,6 +19,8 @@ export default async function AccountsPage() {
 					kind: accounts.kind,
 					icon: accounts.icon,
 					userId: accounts.userId,
+					openingBalanceOere: accounts.openingBalanceOere,
+					openingBalanceDate: accounts.openingBalanceDate,
 					creatorName: users.name,
 					creatorEmail: users.email,
 				})
