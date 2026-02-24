@@ -1,12 +1,10 @@
 import {
 	BarChart3,
-	Calculator,
 	CreditCard,
 	HelpCircle,
 	Import,
 	Landmark,
 	LayoutDashboard,
-	LineChart,
 	LogOut,
 	PiggyBank,
 	Settings,
@@ -17,6 +15,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { AccountSelector } from "@/components/account-selector";
+import { MonthSelector } from "@/components/month-selector";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { NavLink } from "@/components/nav-link";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -24,14 +23,12 @@ import { getVisibleAccounts } from "@/lib/accounts";
 import { ensureUserAndHousehold, getHouseholdId } from "@/lib/households";
 
 const navItems = [
-	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ href: "/dashboard", label: "Oversikt", icon: LayoutDashboard },
 	{ href: "/expenses", label: "Utgifter", icon: CreditCard },
 	{ href: "/income", label: "Inntekt", icon: TrendingUp },
 	{ href: "/loans", label: "Lån", icon: BarChart3 },
 	{ href: "/savings", label: "Sparing", icon: PiggyBank },
 	{ href: "/accounts", label: "Kontoer", icon: Landmark },
-	{ href: "/charts", label: "Grafer", icon: LineChart },
-	{ href: "/calculator", label: "Kalkulator", icon: Calculator },
 	{ href: "/import", label: "Importer", icon: Import },
 	{ href: "/settings/categories", label: "Kategorier", icon: Settings },
 	{ href: "/guide", label: "Brukerveiledning", icon: HelpCircle },
@@ -42,7 +39,7 @@ function SidebarNav() {
 		<>
 			<nav className="flex-1 space-y-0.5 px-3 py-4">
 				{navItems.map(({ href, label, icon: Icon }) => (
-					<NavLink key={href} href={href} label={label}>
+					<NavLink key={href} href={href} label={label} onDark>
 						<Icon className="h-4 w-4 flex-shrink-0" />
 					</NavLink>
 				))}
@@ -61,8 +58,6 @@ export default async function AppLayout({
 
 	const user = session.user;
 
-	// If no household exists yet (e.g. DB was reset, session cookie still valid),
-	// create one now — same logic as the signIn callback.
 	let householdId = await getHouseholdId(user.id as string);
 	if (!householdId && user.email) {
 		await ensureUserAndHousehold(
@@ -84,20 +79,30 @@ export default async function AppLayout({
 		.split(",")
 		.filter((id) => visibleAccounts.some((a) => a.id === id));
 
+	const now = new Date();
+	const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+	const initialMonth =
+		cookieStore.get("selectedMonth")?.value ?? currentMonthStr;
+
 	return (
-		<div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-			{/* Desktop Sidebar */}
-			<aside className="hidden w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-white md:flex dark:border-gray-800 dark:bg-gray-900">
-				<div className="border-b border-gray-200 px-5 py-5 dark:border-gray-800">
-					<h1 className="text-sm font-semibold leading-tight text-gray-900 dark:text-white">
-						Jeg vil ha pengene mine!
-					</h1>
+		<div className="flex min-h-screen bg-[#F5F3EF] dark:bg-gray-950">
+			{/* Desktop Sidebar — always dark */}
+			<aside className="hidden w-60 flex-shrink-0 flex-col bg-[#0C0E14] md:flex">
+				<div className="border-b border-white/[0.06] px-5 py-4">
+					<div className="flex items-center gap-2.5">
+						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-indigo-600 text-[11px] font-bold tracking-tight text-white">
+							kr
+						</div>
+						<h1 className="text-sm font-semibold leading-tight text-white">
+							Pengene mine
+						</h1>
+					</div>
 				</div>
 
 				<SidebarNav />
 
 				{/* User section */}
-				<div className="border-t border-gray-200 p-3 dark:border-gray-800">
+				<div className="border-t border-white/[0.06] p-3">
 					<div className="flex items-center gap-3 rounded-lg px-3 py-2">
 						{user.image ? (
 							<Image
@@ -108,20 +113,20 @@ export default async function AppLayout({
 								className="rounded-full object-cover"
 							/>
 						) : (
-							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-300">
 								{(user.name ?? "?")[0].toUpperCase()}
 							</div>
 						)}
 						<div className="min-w-0 flex-1">
-							<p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+							<p className="truncate text-sm font-medium text-white">
 								{user.name}
 							</p>
-							<p className="truncate text-xs text-gray-500 dark:text-gray-400">
+							<p className="truncate text-xs text-gray-400">
 								{user.email}
 							</p>
 						</div>
 					</div>
-					<ThemeToggle />
+					<ThemeToggle onDark />
 					<form
 						action={async () => {
 							"use server";
@@ -130,7 +135,7 @@ export default async function AppLayout({
 					>
 						<button
 							type="submit"
-							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
 						>
 							<LogOut className="h-4 w-4 flex-shrink-0" />
 							Logg ut
@@ -142,14 +147,17 @@ export default async function AppLayout({
 			{/* Main content area */}
 			<div className="flex flex-1 flex-col min-w-0">
 				{/* Top bar */}
-				<header className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 md:px-6 dark:border-gray-800 dark:bg-gray-900">
+				<header className="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200/70 bg-white/90 px-4 py-3 backdrop-blur-md md:px-6 dark:border-gray-800 dark:bg-gray-900/90">
 					{/* Mobile hamburger + sidebar drawer */}
 					<MobileSidebar>
 						<SidebarNav />
-						<div className="border-t border-gray-200 p-3 dark:border-gray-800">
-							<ThemeToggle />
+						<div className="border-t border-white/[0.06] p-3">
+							<ThemeToggle onDark />
 						</div>
 					</MobileSidebar>
+
+					{/* Month selector */}
+					<MonthSelector initialMonth={initialMonth} />
 
 					{/* Account selector */}
 					<div className="flex-1 overflow-x-auto">

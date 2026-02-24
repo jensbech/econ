@@ -15,11 +15,6 @@ interface AccountOption {
 	type: string;
 }
 
-interface SavingsAccountOption {
-	id: string;
-	name: string;
-}
-
 interface LoanOption {
 	id: string;
 	name: string;
@@ -28,17 +23,15 @@ interface LoanOption {
 interface ImportTabsProps {
 	categories: Category[];
 	accounts: AccountOption[];
-	savingsAccounts?: SavingsAccountOption[];
 	loans?: LoanOption[];
 }
 
 export function ImportTabs({
 	categories,
 	accounts,
-	savingsAccounts = [],
 	loans = [],
 }: ImportTabsProps) {
-	const [activeTab, setActiveTab] = useState<Tab>("csv");
+	const [activeTab, setActiveTab] = useState<Tab>("document");
 	const [selectedAccountId, setSelectedAccountId] = useState<string>(
 		accounts[0]?.id ?? "",
 	);
@@ -91,17 +84,6 @@ export function ImportTabs({
 			<div className="mt-6 flex gap-1 rounded-lg border border-gray-200 bg-gray-100 p-1 w-fit dark:border-gray-700 dark:bg-gray-800">
 				<button
 					type="button"
-					onClick={() => setActiveTab("csv")}
-					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-						activeTab === "csv"
-							? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
-							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-					}`}
-				>
-					CSV-fil
-				</button>
-				<button
-					type="button"
 					onClick={() => setActiveTab("document")}
 					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
 						activeTab === "document"
@@ -110,6 +92,17 @@ export function ImportTabs({
 					}`}
 				>
 					Kvittering / PDF
+				</button>
+				<button
+					type="button"
+					onClick={() => setActiveTab("csv")}
+					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+						activeTab === "csv"
+							? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
+							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+					}`}
+				>
+					CSV-fil
 				</button>
 			</div>
 
@@ -121,7 +114,6 @@ export function ImportTabs({
 						headingHidden
 						accountId={selectedAccountId}
 						accounts={accounts}
-						savingsAccounts={savingsAccounts}
 						loans={loans}
 					/>
 				) : (
@@ -129,7 +121,6 @@ export function ImportTabs({
 						categories={categories}
 						accountId={selectedAccountId}
 						accounts={accounts}
-						savingsAccounts={savingsAccounts}
 						loans={loans}
 					/>
 				))}

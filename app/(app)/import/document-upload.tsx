@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, FileText, Image, Loader2, Upload } from "lucide-react";
+import { AlertCircle, Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import type { Category } from "./csv-import";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type UploadKind = "receipt" | "statement";
 type UploadStep = "idle" | "extracting" | "error";
 
 interface UploadState {
@@ -33,6 +32,13 @@ const INITIAL_STATE: UploadState = {
 	errorMessage: null,
 };
 
+const ACCEPTED_MIME: Record<string, string[]> = {
+	"application/pdf": [".pdf"],
+	"image/jpeg": [".jpg", ".jpeg"],
+	"image/png": [".png"],
+	"image/webp": [".webp"],
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function readFileAsBase64(file: File): Promise<string> {
@@ -47,10 +53,13 @@ function readFileAsBase64(file: File): Promise<string> {
 	});
 }
 
-// ─── Single upload zone ───────────────────────────────────────────────────────
+function getFileType(file: File): "image" | "pdf" {
+	return file.type === "application/pdf" ? "pdf" : "image";
+}
+
+// ─── Upload zone ──────────────────────────────────────────────────────────────
 
 interface UploadZoneProps {
-	kind: UploadKind;
 	accounts?: Array<{ id: string; accountNumber: string | null }>;
 	onExtracted: (
 		fileUrl: string,
@@ -60,24 +69,8 @@ interface UploadZoneProps {
 	) => void;
 }
 
-function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
+function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 	const [state, setState] = useState<UploadState>(INITIAL_STATE);
-
-	const isReceipt = kind === "receipt";
-	const label = isReceipt ? "Kvittering" : "Kontoutskrift (PDF)";
-	const Icon = isReceipt ? Image : FileText;
-	const acceptedFormats = isReceipt
-		? "JPG, PNG, WEBP — maks 4 MB"
-		: "PDF — maks 16 MB";
-	const acceptMime: Record<string, string[]> = isReceipt
-		? {
-				"image/jpeg": [".jpg", ".jpeg"],
-				"image/png": [".png"],
-				"image/webp": [".webp"],
-			}
-		: { "application/pdf": [".pdf"] };
-
-	const fileType: "image" | "pdf" = isReceipt ? "image" : "pdf";
 
 	const onDrop = useCallback(
 		async (accepted: File[]) => {
@@ -87,16 +80,13 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 			try {
 				const base64 = await readFileAsBase64(file);
 				const mediaType = file.type as SupportedMediaType;
+				const fileType = getFileType(file);
 				const result = await startAiExtraction(base64, mediaType, accounts);
 				if (result.success) {
 					const dataUrl = `data:${file.type};base64,${base64}`;
 					onExtracted(dataUrl, fileType, file.name, result.transactions);
 				} else {
-					setState((s) => ({
-						...s,
-						step: "error",
-						errorMessage: result.error,
-					}));
+					setState((s) => ({ ...s, step: "error", errorMessage: result.error }));
 				}
 			} catch {
 				setState((s) => ({
@@ -106,26 +96,20 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 				}));
 			}
 		},
-		[fileType, accounts, onExtracted],
+		[accounts, onExtracted],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
-		accept: acceptMime,
+		accept: ACCEPTED_MIME,
 		maxFiles: 1,
 		disabled: state.step === "extracting",
 		onDropRejected: () =>
 			setState((s) => ({
 				...s,
-				errorMessage: `Kun ${acceptedFormats.split("—")[0].trim()} er støttet.`,
+				errorMessage: "Kun PDF, JPG, PNG og WEBP er støttet.",
 			})),
 	});
-
-	function reset() {
-		setState(INITIAL_STATE);
-	}
-
-	// ── Extracting: spinner ───────────────────────────────────────────────
 
 	if (state.step === "extracting") {
 		return (
@@ -141,8 +125,6 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 		);
 	}
 
-	// ── Error ─────────────────────────────────────────────────────────────
-
 	if (state.step === "error") {
 		return (
 			<div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-900/20">
@@ -155,7 +137,7 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 				<Button
 					variant="outline"
 					size="sm"
-					onClick={reset}
+					onClick={() => setState(INITIAL_STATE)}
 					className="mt-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
 				>
 					Prøv igjen
@@ -164,11 +146,9 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 		);
 	}
 
-	// ── Idle: dropzone ────────────────────────────────────────────────────
-
 	return (
 		<div>
-			{state.errorMessage && state.step === "idle" && (
+			{state.errorMessage && (
 				<div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
 					<AlertCircle className="h-3.5 w-3.5 shrink-0" />
 					{state.errorMessage}
@@ -176,30 +156,30 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 			)}
 			<div
 				{...getRootProps()}
-				className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+				className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-8 py-16 text-center transition-colors ${
 					isDragActive
 						? "border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/30"
 						: "border-gray-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
 				}`}
 			>
 				<input {...getInputProps()} />
-				<Icon
-					className={`mb-3 h-8 w-8 ${isDragActive ? "text-indigo-500" : "text-gray-400"}`}
+				<Upload
+					className={`mb-4 h-10 w-10 ${isDragActive ? "text-indigo-500" : "text-gray-400"}`}
 				/>
-				<p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-					{label}
-				</p>
 				{isDragActive ? (
-					<p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400">
+					<p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
 						Slipp filen her…
 					</p>
 				) : (
 					<>
-						<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-							Dra og slipp, eller klikk for å velge
+						<p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+							Dra og slipp et dokument her
 						</p>
-						<p className="mt-2 text-xs text-gray-400 dark:text-gray-600">
-							{acceptedFormats}
+						<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+							eller klikk for å velge fil
+						</p>
+						<p className="mt-4 text-xs text-gray-400 dark:text-gray-600">
+							PDF, JPG, PNG, WEBP — Claude trekker ut transaksjoner automatisk
 						</p>
 					</>
 				)}
@@ -209,11 +189,6 @@ function UploadZone({ kind, accounts = [], onExtracted }: UploadZoneProps) {
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-
-interface SavingsAccountOption {
-	id: string;
-	name: string;
-}
 
 interface LoanOption {
 	id: string;
@@ -231,11 +206,16 @@ interface DocumentUploadProps {
 	accountId?: string;
 	accounts?: AccountOption[];
 	scope?: "household" | "personal";
-	savingsAccounts?: SavingsAccountOption[];
 	loans?: LoanOption[];
 }
 
-export function DocumentUpload({ categories, accountId, accounts = [], scope = "household", savingsAccounts = [], loans = [] }: DocumentUploadProps) {
+export function DocumentUpload({
+	categories,
+	accountId,
+	accounts = [],
+	scope = "household",
+	loans = [],
+}: DocumentUploadProps) {
 	const [reviewState, setReviewState] = useState<ReviewState | null>(null);
 
 	function handleExtracted(
@@ -247,12 +227,6 @@ export function DocumentUpload({ categories, accountId, accounts = [], scope = "
 		setReviewState({ fileUrl, fileType, filename, transactions });
 	}
 
-	function handleDiscard() {
-		setReviewState(null);
-	}
-
-	// ── Review mode ───────────────────────────────────────────────────────
-
 	if (reviewState) {
 		return (
 			<div className="mt-8">
@@ -262,48 +236,19 @@ export function DocumentUpload({ categories, accountId, accounts = [], scope = "
 					filename={reviewState.filename}
 					transactions={reviewState.transactions}
 					categories={categories}
-					onDiscard={handleDiscard}
+					onDiscard={() => setReviewState(null)}
 					accountId={accountId}
 					accounts={accounts}
 					scope={scope}
-					savingsAccounts={savingsAccounts}
 					loans={loans}
 				/>
 			</div>
 		);
 	}
 
-	// ── Upload mode ───────────────────────────────────────────────────────
-
 	return (
-		<div className="mt-8 max-w-2xl space-y-8">
-			<div>
-				<p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-					Last opp kvittering
-				</p>
-				<p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-					Bilde av en kvittering — Claude tolker og trekker ut transaksjonsdata.
-				</p>
-				<UploadZone kind="receipt" accounts={accounts} onExtracted={handleExtracted} />
-			</div>
-
-			<div>
-				<p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-					Last opp kontoutskrift
-				</p>
-				<p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-					PDF-kontoutskrift fra din bank — Claude trekker ut alle transaksjoner.
-				</p>
-				<UploadZone kind="statement" accounts={accounts} onExtracted={handleExtracted} />
-			</div>
-
-			<div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-400">
-				<Upload className="mt-0.5 h-4 w-4 shrink-0" />
-				<p>
-					Claude AI analyserer dokumentet direkte og trekker ut transaksjoner
-					for gjennomgang før lagring.
-				</p>
-			</div>
+		<div className="mt-8 max-w-xl">
+			<UploadZone accounts={accounts} onExtracted={handleExtracted} />
 		</div>
 	);
 }

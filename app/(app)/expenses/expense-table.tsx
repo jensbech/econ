@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { ArrowUpDown, BarChart3, Pencil, PiggyBank, Search, Trash2, UserCircle } from "lucide-react";
+import { ArrowUpDown, BarChart3, Pencil, Search, Trash2, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -57,11 +57,9 @@ export type ExpenseRow = {
 	accountName?: string | null;
 	scope: string;
 	uploaderName: string | null;
-	savingsGoalId?: string | null;
 	loanId?: string | null;
 	interestOere?: number | null;
 	principalOere?: number | null;
-	savingsGoalName?: string | null;
 	loanName?: string | null;
 };
 
@@ -93,9 +91,10 @@ const selectClass =
 interface ExpenseTableProps {
 	expenses: ExpenseRow[];
 	categories: CategoryOption[];
+	importBatchId?: string;
 }
 
-export function ExpenseTable({ expenses, categories }: ExpenseTableProps) {
+export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTableProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
@@ -215,14 +214,6 @@ export function ExpenseTable({ expenses, categories }: ExpenseTableProps) {
 							>
 								<UserCircle className="h-3 w-3" />
 								{row.original.uploaderName?.split(" ")[0] ?? "Privat"}
-							</span>
-						)}
-						{row.original.savingsGoalId && (
-							<span
-								className="inline-flex items-center rounded-full bg-emerald-100 p-1 dark:bg-emerald-900/30"
-								title={row.original.savingsGoalName ?? "Sparing"}
-							>
-								<PiggyBank className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
 							</span>
 						)}
 						{row.original.loanId && (
@@ -365,6 +356,21 @@ export function ExpenseTable({ expenses, categories }: ExpenseTableProps) {
 
 	return (
 		<div className="space-y-4">
+			{/* Import batch banner */}
+			{importBatchId && (
+				<div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-900/50 dark:bg-indigo-900/20">
+					<p className="text-sm text-indigo-700 dark:text-indigo-300">
+						Viser <span className="font-semibold">{expenses.length}</span> importerte utgifter
+					</p>
+					<Link
+						href="/expenses"
+						className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
+					>
+						<X className="h-3.5 w-3.5" />
+						Nullstill filter
+					</Link>
+				</div>
+			)}
 			{/* Filters */}
 			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				{/* Search */}
@@ -562,20 +568,6 @@ export function ExpenseTable({ expenses, categories }: ExpenseTableProps) {
 									<Badge variant="secondary">
 										{selectedExpense.categoryName}
 									</Badge>
-								</div>
-							)}
-
-							{selectedExpense.savingsGoalName && (
-								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-										Sparekonto
-									</p>
-									<div className="flex items-center gap-2">
-										<PiggyBank className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-										<p className="text-sm text-gray-700 dark:text-gray-300">
-											{selectedExpense.savingsGoalName}
-										</p>
-									</div>
 								</div>
 							)}
 

@@ -59,7 +59,6 @@ interface EditableRow {
 	aiConfidence: "high" | "medium" | "low";
 	deleted: boolean;
 	accountId: string | null;
-	savingsGoalId: string | null;
 	loanId: string | null;
 }
 
@@ -68,10 +67,6 @@ interface AccountOption {
 	name: string;
 }
 
-interface SavingsAccountOption {
-	id: string;
-	name: string;
-}
 
 interface LoanOption {
 	id: string;
@@ -88,7 +83,6 @@ interface AiReviewProps {
 	accountId?: string;
 	accounts?: AccountOption[];
 	scope?: "household" | "personal";
-	savingsAccounts?: SavingsAccountOption[];
 	loans?: LoanOption[];
 }
 
@@ -149,7 +143,6 @@ export function AiReview({
 	accountId,
 	accounts = [],
 	scope = "household",
-	savingsAccounts = [],
 	loans = [],
 }: AiReviewProps) {
 	const router = useRouter();
@@ -166,7 +159,6 @@ export function AiReview({
 			aiConfidence: tx.aiConfidence,
 			deleted: false,
 			accountId: tx.accountId ?? accountId ?? null,
-			savingsGoalId: null,
 			loanId: null,
 		})),
 	);
@@ -334,7 +326,6 @@ export function AiReview({
 						description: r.description,
 						categoryId: r.categoryId || null,
 						accountId: r.accountId ?? undefined,
-						savingsGoalId: r.savingsGoalId ?? undefined,
 						loanId: r.loanId ?? undefined,
 					}),
 				),
@@ -375,10 +366,10 @@ export function AiReview({
 				<div className="mt-4 flex flex-wrap gap-2">
 					<Button
 						size="sm"
-						onClick={() => router.push("/expenses")}
+						onClick={() => router.push(`/expenses?importBatch=${batchId ?? ""}`)}
 						className="bg-green-600 text-white hover:bg-green-700"
 					>
-						Se utgifter
+						Se importerte utgifter
 					</Button>
 					{batchId && (
 						<Button variant="outline" size="sm" onClick={handleRollback}>
@@ -850,32 +841,6 @@ export function AiReview({
 																const catName = localCategories.find(
 																	(c) => c.id === row.categoryId,
 																)?.name;
-																if (catName === "Sparing" && savingsAccounts.length > 0) {
-																	return (
-																		<Select
-																			value={row.savingsGoalId ?? "none"}
-																			onValueChange={(v) =>
-																				updateRow(row.id, {
-																					savingsGoalId: v === "none" ? null : v,
-																				})
-																			}
-																		>
-																			<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
-																				<SelectValue placeholder="Sparekonto…" />
-																			</SelectTrigger>
-																			<SelectContent>
-																				<SelectItem value="none">
-																					<span className="text-gray-400">Ingen</span>
-																				</SelectItem>
-																				{savingsAccounts.map((sa) => (
-																					<SelectItem key={sa.id} value={sa.id}>
-																						{sa.name}
-																					</SelectItem>
-																				))}
-																			</SelectContent>
-																		</Select>
-																	);
-																}
 																if (catName === "Lån" && loans.length > 0) {
 																	return (
 																		<Select

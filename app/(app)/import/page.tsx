@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { categories, importBatches, loans, savingsGoals, users } from "@/db/schema";
+import { categories, importBatches, loans, users } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { getVisibleAccounts } from "@/lib/accounts";
@@ -15,7 +15,7 @@ export default async function ImportPage() {
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 
-	const [cats, batches, visibleAccounts, savingsAccountRows, loanRows] =
+	const [cats, batches, visibleAccounts, loanRows] =
 		await Promise.all([
 			householdId
 				? db
@@ -53,18 +53,6 @@ export default async function ImportPage() {
 				: [],
 			householdId
 				? db
-						.select({ id: savingsGoals.id, name: savingsGoals.name })
-						.from(savingsGoals)
-						.where(
-							and(
-								eq(savingsGoals.householdId, householdId),
-								isNull(savingsGoals.deletedAt),
-							),
-						)
-						.orderBy(savingsGoals.name)
-				: [],
-			householdId
-				? db
 						.select({ id: loans.id, name: loans.name })
 						.from(loans)
 						.where(
@@ -87,7 +75,6 @@ export default async function ImportPage() {
 			<ImportTabs
 				categories={cats}
 				accounts={visibleAccounts}
-				savingsAccounts={savingsAccountRows}
 				loans={loanRows}
 			/>
 

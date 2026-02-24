@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { categories, expenses, loanPayments, loans } from "@/db/schema";
+import { categories, expenses, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
@@ -252,14 +252,7 @@ export async function addLoanPayment(
 		)
 		.limit(1);
 
-	// Create the loanPayments row
-	await db.insert(loanPayments).values({
-		loanId,
-		amountOere: principalOere ?? amountOere,
-		date: parsed.data.date,
-	});
-
-	// Also create a corresponding expense with "Lån" category
+	// Create expense with "Lån" category (single source of truth for balance)
 	await db.insert(expenses).values({
 		householdId,
 		userId: user.id as string,
@@ -307,18 +300,26 @@ export async function deleteLoanPayment(
 
 	if (!loan) throw new Error("Lån ikke funnet");
 
-	// AUTHORIZATION: Verify payment belongs to this loan
+	// AUTHORIZATION: Verify the expense belongs to this loan and household
 	const [payment] = await db
-		.select({ id: loanPayments.id })
-		.from(loanPayments)
+		.select({ id: expenses.id })
+		.from(expenses)
 		.where(
-			and(eq(loanPayments.id, paymentId), eq(loanPayments.loanId, loanId)),
+			and(
+				eq(expenses.id, paymentId),
+				eq(expenses.loanId, loanId),
+				eq(expenses.householdId, householdId),
+				isNull(expenses.deletedAt),
+			),
 		)
 		.limit(1);
 
 	if (!payment) throw new Error("Payment not found");
 
-	await db.delete(loanPayments).where(eq(loanPayments.id, paymentId));
+	await db
+		.update(expenses)
+		.set({ deletedAt: new Date() })
+		.where(eq(expenses.id, paymentId));
 
 	// Log the deletion
 	await logDelete(householdId, user.id, "loanPayment", paymentId, "User initiated deletion");

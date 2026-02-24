@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { categories, expenses, loanPayments } from "@/db/schema";
+import { categories, expenses } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
@@ -25,7 +25,6 @@ const ExpenseSchema = z.object({
 	categoryId: z.string().optional(),
 	accountId: z.string().optional(),
 	notes: z.string().optional(),
-	savingsGoalId: z.string().optional(),
 	loanId: z.string().optional(),
 	interestAmount: z.string().optional(),
 	principalAmount: z.string().optional(),
@@ -58,7 +57,6 @@ export async function createExpense(
 		categoryId: (formData.get("categoryId") as string) || undefined,
 		accountId: (formData.get("accountId") as string) || undefined,
 		notes: (formData.get("notes") as string) || undefined,
-		savingsGoalId: (formData.get("savingsGoalId") as string) || undefined,
 		loanId: (formData.get("loanId") as string) || undefined,
 		interestAmount: (formData.get("interestAmount") as string) || undefined,
 		principalAmount: (formData.get("principalAmount") as string) || undefined,
@@ -145,21 +143,11 @@ export async function createExpense(
 			amountOere,
 			date: parsed.data.date,
 			notes: parsed.data.notes ?? null,
-			savingsGoalId: parsed.data.savingsGoalId ?? null,
 			loanId: parsed.data.loanId ?? null,
 			interestOere,
 			principalOere,
 		})
 		.returning({ id: expenses.id });
-
-	// Create loanPayments row for backward compat with computeLoanBalance
-	if (parsed.data.loanId && inserted) {
-		await db.insert(loanPayments).values({
-			loanId: parsed.data.loanId,
-			amountOere: principalOere ?? amountOere,
-			date: parsed.data.date,
-		});
-	}
 
 	// Log the expense creation
 	if (inserted) {
@@ -203,7 +191,6 @@ export async function updateExpense(
 		categoryId: (formData.get("categoryId") as string) || undefined,
 		accountId: (formData.get("accountId") as string) || undefined,
 		notes: (formData.get("notes") as string) || undefined,
-		savingsGoalId: (formData.get("savingsGoalId") as string) || undefined,
 		loanId: (formData.get("loanId") as string) || undefined,
 		interestAmount: (formData.get("interestAmount") as string) || undefined,
 		principalAmount: (formData.get("principalAmount") as string) || undefined,
@@ -263,7 +250,6 @@ export async function updateExpense(
 			amountOere,
 			date: parsed.data.date,
 			notes: parsed.data.notes ?? null,
-			savingsGoalId: parsed.data.savingsGoalId ?? null,
 			loanId: parsed.data.loanId ?? null,
 			interestOere,
 			principalOere,

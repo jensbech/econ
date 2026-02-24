@@ -1,8 +1,8 @@
 "use client";
 
-import { addMonths, format, parseISO, subMonths } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -82,8 +82,6 @@ export function ChartsClient({
 	const [categoryView, setCategoryView] = useState<"bar" | "pie">("bar");
 
 	const selectedMonth = parseISO(`${selectedMonthStr}-01`);
-	const prevMonth = format(subMonths(selectedMonth, 1), "yyyy-MM");
-	const nextMonth = format(addMonths(selectedMonth, 1), "yyyy-MM");
 	const monthLabel = format(selectedMonth, "MMMM yyyy", { locale: nb });
 	const monthLabelDisplay =
 		monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
@@ -129,41 +127,7 @@ export function ChartsClient({
 	const hasTrend = trendData.some((d) => d.expenses > 0 || d.income > 0);
 
 	return (
-		<div className="p-8">
-			{/* Header */}
-			<div className="mb-8 flex items-center justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-						Grafer
-					</h1>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-						Visuell oversikt over økonomi
-					</p>
-				</div>
-
-				{/* Month navigation for category charts */}
-				<div className="flex items-center gap-3">
-					<button
-						type="button"
-						onClick={() => router.push(`/charts?month=${prevMonth}`)}
-						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-						aria-label="Forrige måned"
-					>
-						<ChevronLeft className="h-4 w-4" />
-					</button>
-					<span className="min-w-[160px] text-center text-base font-semibold text-gray-900 dark:text-white">
-						{monthLabelDisplay}
-					</span>
-					<button
-						type="button"
-						onClick={() => router.push(`/charts?month=${nextMonth}`)}
-						className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-						aria-label="Neste måned"
-					>
-						<ChevronRight className="h-4 w-4" />
-					</button>
-				</div>
-			</div>
+		<>
 
 			<div className="space-y-6">
 				{/* Category breakdown — bar or pie */}
@@ -461,6 +425,6 @@ export function ChartsClient({
 					)}
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }

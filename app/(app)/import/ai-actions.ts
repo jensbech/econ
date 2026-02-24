@@ -3,7 +3,7 @@
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { categories, expenses, importBatches, loanPayments } from "@/db/schema";
+import { categories, expenses, importBatches } from "@/db/schema";
 import { type SupportedMediaType, extractTransactions } from "@/lib/ai-extract";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
@@ -258,7 +258,6 @@ export interface AiImportRow {
 	description: string;
 	categoryId: string | null;
 	accountId?: string | null;
-	savingsGoalId?: string | null;
 	loanId?: string | null;
 	interestOere?: number | null;
 	principalOere?: number | null;
@@ -282,7 +281,6 @@ export async function confirmAiImport(
 			description: row.description.trim(),
 			categoryId: row.categoryId || null,
 			accountId: row.accountId ?? accountId ?? null,
-			savingsGoalId: row.savingsGoalId || null,
 			loanId: row.loanId || null,
 			interestOere: row.interestOere ?? null,
 			principalOere: row.principalOere ?? null,
@@ -296,7 +294,6 @@ export async function confirmAiImport(
 				description: string;
 				categoryId: string | null;
 				accountId: string | null;
-				savingsGoalId: string | null;
 				loanId: string | null;
 				interestOere: number | null;
 				principalOere: number | null;
@@ -356,24 +353,11 @@ export async function confirmAiImport(
 			scope,
 			isShared: scope === "personal" ? isShared : false,
 			accountId: r.accountId || null,
-			savingsGoalId: r.savingsGoalId || null,
 			loanId: r.loanId || null,
 			interestOere: r.interestOere ?? null,
 			principalOere: r.principalOere ?? null,
 		})),
 	);
-
-	// Create loanPayments rows for backward compat with computeLoanBalance
-	const loanRows = parsed.filter((r) => r.loanId);
-	if (loanRows.length > 0) {
-		await db.insert(loanPayments).values(
-			loanRows.map((r) => ({
-				loanId: r.loanId as string,
-				amountOere: r.principalOere ?? r.amountOere,
-				date: r.isoDate,
-			})),
-		);
-	}
 
 	revalidatePath("/import");
 	revalidatePath("/expenses");

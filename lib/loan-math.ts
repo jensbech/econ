@@ -111,3 +111,45 @@ export function computeLoanBalance(
 		principalPaidPct,
 	};
 }
+
+export interface EarlyPayoffResult {
+	regularMonths: number;
+	newMonths: number;
+	monthsSaved: number;
+	interestSavedOere: number;
+}
+
+export function computeEarlyPayoff(
+	currentBalanceOere: number,
+	annualRatePct: number,
+	regularMonthlyPaymentOere: number,
+	extraMonthlyOere: number,
+): EarlyPayoffResult | null {
+	if (currentBalanceOere <= 0 || regularMonthlyPaymentOere <= 0) return null;
+
+	const r = annualRatePct / 100 / 12;
+
+	function monthsToPayoff(balance: number, payment: number): number | null {
+		if (payment <= 0) return null;
+		if (r === 0) return Math.ceil(balance / payment);
+		const ratio = (r * balance) / payment;
+		if (ratio >= 1) return null;
+		return Math.ceil(-Math.log(1 - ratio) / Math.log(1 + r));
+	}
+
+	const regularMonths = monthsToPayoff(currentBalanceOere, regularMonthlyPaymentOere);
+	if (regularMonths === null) return null;
+
+	const newPayment = regularMonthlyPaymentOere + Math.max(0, extraMonthlyOere);
+	const newMonths = monthsToPayoff(currentBalanceOere, newPayment) ?? regularMonths;
+
+	const interestRegular = regularMonths * regularMonthlyPaymentOere - currentBalanceOere;
+	const interestNew = newMonths * newPayment - currentBalanceOere;
+
+	return {
+		regularMonths,
+		newMonths,
+		monthsSaved: Math.max(0, regularMonths - newMonths),
+		interestSavedOere: Math.max(0, interestRegular - interestNew),
+	};
+}

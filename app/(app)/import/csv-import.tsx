@@ -256,11 +256,6 @@ function delimLabel(d: string): string {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-interface SavingsAccountOption {
-	id: string;
-	name: string;
-}
-
 interface LoanOption {
 	id: string;
 	name: string;
@@ -276,11 +271,10 @@ interface CsvImportProps {
 	headingHidden?: boolean;
 	accountId?: string;
 	accounts?: AccountOption[];
-	savingsAccounts?: SavingsAccountOption[];
 	loans?: LoanOption[];
 }
 
-export function CsvImport({ categories, headingHidden, accountId, accounts = [], savingsAccounts = [], loans = [] }: CsvImportProps) {
+export function CsvImport({ categories, headingHidden, accountId, accounts = [], loans = [] }: CsvImportProps) {
 	const router = useRouter();
 	const [step, setStep] = useState<Step>("idle");
 	const [error, setError] = useState<string | null>(null);
@@ -295,9 +289,6 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 	const [skipped, setSkipped] = useState<Set<number>>(new Set());
 	const [rowCategories, setRowCategories] = useState<(string | null)[]>([]);
 	const [rowAccountIds, setRowAccountIds] = useState<(string | null)[]>([]);
-	const [rowSavingsGoalIds, setRowSavingsGoalIds] = useState<
-		(string | null)[]
-	>([]);
 	const [rowLoanIds, setRowLoanIds] = useState<(string | null)[]>([]);
 	const [importResult, setImportResult] = useState<{
 		batchId: string;
@@ -399,7 +390,6 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 			rows.map((r) => suggestCategory(r.description, categories)),
 		);
 		setRowAccountIds(rows.map(() => accountId ?? null));
-		setRowSavingsGoalIds(rows.map(() => null));
 		setRowLoanIds(rows.map(() => null));
 		setStep("preview");
 	}
@@ -419,7 +409,6 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 					description: mappedRows[i].description,
 					categoryId: rowCategories[i] ?? null,
 					accountId: rowAccountIds[i] ?? null,
-					savingsGoalId: rowSavingsGoalIds[i] ?? null,
 					loanId: rowLoanIds[i] ?? null,
 				});
 			}
@@ -467,7 +456,6 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 		setSkipped(new Set());
 		setRowCategories([]);
 		setRowAccountIds([]);
-		setRowSavingsGoalIds([]);
 		setRowLoanIds([]);
 		setImportResult(null);
 		setIsRollingBack(false);
@@ -566,9 +554,9 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 					</div>
 
 					<div className="flex flex-wrap gap-3">
-						<Link href="/expenses">
+						<Link href={`/expenses?importBatch=${importResult.batchId}`}>
 							<Button className="bg-indigo-600 hover:bg-indigo-700">
-								Se utgifter
+								Se importerte utgifter
 							</Button>
 						</Link>
 						<Button
@@ -629,17 +617,8 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 								return next;
 							})
 						}
-						savingsAccounts={savingsAccounts}
 						loans={loans}
-						rowSavingsGoalIds={rowSavingsGoalIds}
 						rowLoanIds={rowLoanIds}
-						onSavingsGoalChange={(i, sgId) =>
-							setRowSavingsGoalIds((prev) => {
-								const next = [...prev];
-								next[i] = sgId;
-								return next;
-							})
-						}
 						onLoanChange={(i, lId) =>
 							setRowLoanIds((prev) => {
 								const next = [...prev];
@@ -943,11 +922,8 @@ interface MappedPreviewProps {
 	accounts: AccountOption[];
 	rowAccountIds: (string | null)[];
 	onAccountChange: (index: number, accountId: string | null) => void;
-	savingsAccounts: SavingsAccountOption[];
 	loans: LoanOption[];
-	rowSavingsGoalIds: (string | null)[];
 	rowLoanIds: (string | null)[];
-	onSavingsGoalChange: (index: number, id: string | null) => void;
 	onLoanChange: (index: number, id: string | null) => void;
 }
 
@@ -962,11 +938,8 @@ function MappedPreview({
 	accounts,
 	rowAccountIds,
 	onAccountChange,
-	savingsAccounts,
 	loans,
-	rowSavingsGoalIds,
 	rowLoanIds,
-	onSavingsGoalChange,
 	onLoanChange,
 }: MappedPreviewProps) {
 	return (
@@ -1087,26 +1060,6 @@ function MappedPreview({
 										)}
 									</td>
 									<td className="px-4 py-1.5">
-										{!isSkipped && catName === "Sparing" && savingsAccounts.length > 0 && (
-											<Select
-												value={rowSavingsGoalIds[i] ?? "__none"}
-												onValueChange={(v) =>
-													onSavingsGoalChange(i, v === "__none" ? null : v)
-												}
-											>
-												<SelectTrigger className="h-7 min-w-[130px] text-xs">
-													<SelectValue placeholder="Sparekonto…" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="__none">Ingen</SelectItem>
-													{savingsAccounts.map((sa) => (
-														<SelectItem key={sa.id} value={sa.id}>
-															{sa.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										)}
 										{!isSkipped && catName === "Lån" && loans.length > 0 && (
 											<Select
 												value={rowLoanIds[i] ?? "__none"}

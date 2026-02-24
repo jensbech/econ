@@ -33,7 +33,10 @@ export default async function IncomePage({
 	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
 	const view = params.view === "yearly" ? "yearly" : "monthly";
-	const { month, year, categoryId } = params;
+	const { month: monthParam, year, categoryId } = params;
+	// month searchParam overrides cookie; cookie overrides current month
+	const monthCookie = cookieStore.get("selectedMonth")?.value;
+	const month = monthParam ?? monthCookie;
 
 	// Expand recurring income for the viewed month (idempotent)
 	if (householdId) {

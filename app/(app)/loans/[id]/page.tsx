@@ -1,14 +1,15 @@
 import { format, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { expenses, loanPayments, loans } from "@/db/schema";
+import { expenses, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { formatNOK } from "@/lib/format";
 import { getHouseholdId } from "@/lib/households";
 import { computeLoanBalance } from "@/lib/loan-math";
+import { LoanWhatIfPanel } from "@/components/loan-what-if-panel";
 import { addLoanPayment, deleteLoan, deleteLoanPayment } from "../actions";
 import { PaymentForm } from "../payment-form";
 
@@ -44,14 +45,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 
 	if (!loan) notFound();
 
-	// Fetch loanPayments for balance computation
-	const payments = await db
-		.select()
-		.from(loanPayments)
-		.where(eq(loanPayments.loanId, id))
-		.orderBy(asc(loanPayments.date));
-
-	// Fetch expense-sourced payments for display (richer data)
+	// Fetch expense-based payments — single source of truth
 	const expensePayments = await db
 		.select({
 			id: expenses.id,
@@ -71,21 +65,22 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 		)
 		.orderBy(desc(expenses.date));
 
+	// Derive balance from expenses (principalOere ?? amountOere)
 	const balance = computeLoanBalance(
 		loan.principalOere,
 		loan.interestRate,
 		loan.termMonths,
 		loan.startDate,
-		payments.map((p) => ({ date: p.date, amountOere: p.amountOere })),
+		expensePayments.map((p) => ({
+			date: p.date,
+			amountOere: p.principalOere ?? p.amountOere,
+		})),
 	);
 
 	const paymentAction = addLoanPayment.bind(null, id);
 
 	const remainingYears = Math.floor(balance.remainingMonths / 12);
 	const remainingMonthsRemainder = balance.remainingMonths % 12;
-
-	// Use expense-sourced payments if available, otherwise fall back to loanPayments
-	const hasExpensePayments = expensePayments.length > 0;
 
 	return (
 		<div className="p-8">
@@ -187,7 +182,13 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 					<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 						Betalingshistorikk
 					</h3>
-					{hasExpensePayments ? (
+					{expensePayments.length === 0 ? (
+						<div className="rounded-xl border border-dashed border-gray-200 py-12 text-center dark:border-gray-700">
+							<p className="text-sm text-gray-400 dark:text-gray-500">
+								Ingen betalinger registrert ennå
+							</p>
+						</div>
+					) : (
 						<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
 							<table className="w-full text-sm">
 								<thead className="bg-gray-50 dark:bg-gray-800/50">
@@ -204,6 +205,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
 											Avdrag
 										</th>
+										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400" />
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -226,6 +228,21 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 												{p.principalOere !== null
 													? formatNOK(p.principalOere)
 													: "—"}
+											</td>
+											<td className="px-4 py-3 text-right">
+												<form
+													action={async () => {
+														"use server";
+														await deleteLoanPayment(p.id, id);
+													}}
+												>
+													<button
+														type="submit"
+														className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+													>
+														Slett
+													</button>
+												</form>
 											</td>
 										</tr>
 									))}
@@ -259,70 +276,6 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 												),
 											)}
 										</td>
-									</tr>
-								</tfoot>
-							</table>
-						</div>
-					) : payments.length === 0 ? (
-						<div className="rounded-xl border border-dashed border-gray-200 py-12 text-center dark:border-gray-700">
-							<p className="text-sm text-gray-400 dark:text-gray-500">
-								Ingen betalinger registrert ennå
-							</p>
-						</div>
-					) : (
-						/* Fallback: show loanPayments without interest/principal split */
-						<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-							<table className="w-full text-sm">
-								<thead className="bg-gray-50 dark:bg-gray-800/50">
-									<tr>
-										<th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-											Dato
-										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
-											Beløp
-										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400" />
-									</tr>
-								</thead>
-								<tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-									{payments.map((p) => (
-										<tr key={p.id} className="bg-white dark:bg-gray-900">
-											<td className="px-4 py-3 text-gray-900 dark:text-white">
-												{format(parseISO(p.date), "d. MMMM yyyy", {
-													locale: nb,
-												})}
-											</td>
-											<td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
-												{formatNOK(p.amountOere)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												<form
-													action={async () => {
-														"use server";
-														await deleteLoanPayment(p.id, id);
-													}}
-												>
-													<button
-														type="submit"
-														className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-													>
-														Slett
-													</button>
-												</form>
-											</td>
-										</tr>
-									))}
-								</tbody>
-								<tfoot className="bg-gray-50 dark:bg-gray-800/50">
-									<tr>
-										<td className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-											Totalt registrert
-										</td>
-										<td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
-											{formatNOK(
-												payments.reduce((s, p) => s + p.amountOere, 0),
-											)}
-										</td>
 										<td />
 									</tr>
 								</tfoot>
@@ -331,14 +284,29 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 					)}
 				</div>
 
-				{/* Add payment */}
-				<div>
-					<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-						Registrer betaling
-					</h3>
-					<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-						<PaymentForm action={paymentAction} />
+				{/* Add payment + what-if */}
+				<div className="space-y-6">
+					<div>
+						<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+							Registrer betaling
+						</h3>
+						<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+							<PaymentForm action={paymentAction} />
+						</div>
 					</div>
+
+					{balance.currentBalanceOere > 0 && (
+						<div>
+							<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+								Ekstra nedbetaling
+							</h3>
+							<LoanWhatIfPanel
+								currentBalanceOere={balance.currentBalanceOere}
+								annualRatePct={loan.interestRate}
+								monthlyPaymentOere={balance.monthlyPaymentOere}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

@@ -1,10 +1,10 @@
 import { format, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/db";
-import { loanPayments, loans } from "@/db/schema";
+import { expenses, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { formatNOK } from "@/lib/format";
 import { getHouseholdId } from "@/lib/households";
@@ -29,30 +29,36 @@ export default async function LoansPage() {
 				.where(and(eq(loans.householdId, householdId), isNull(loans.deletedAt)))
 		: [];
 
-	// Fetch all payments for household loans via join
+	// Fetch all expense-based payments for household loans
 	const allPayments =
 		allLoans.length > 0 && householdId
 			? await db
 					.select({
-						loanId: loanPayments.loanId,
-						date: loanPayments.date,
-						amountOere: loanPayments.amountOere,
+						loanId: expenses.loanId,
+						date: expenses.date,
+						amountOere: expenses.amountOere,
+						principalOere: expenses.principalOere,
 					})
-					.from(loanPayments)
-					.innerJoin(loans, eq(loanPayments.loanId, loans.id))
+					.from(expenses)
 					.where(
-						and(eq(loans.householdId, householdId), isNull(loans.deletedAt)),
+						and(
+							eq(expenses.householdId, householdId),
+							isNull(expenses.deletedAt),
+							isNotNull(expenses.loanId),
+						),
 					)
 			: [];
 
-	// Group payments by loan id
+	// Filter to only loan-linked expenses and group by loan id
 	const paymentsByLoan = new Map<
 		string,
 		Array<{ date: string; amountOere: number }>
 	>();
 	for (const p of allPayments) {
+		if (!p.loanId) continue;
 		const arr = paymentsByLoan.get(p.loanId) ?? [];
-		arr.push({ date: p.date, amountOere: p.amountOere });
+		// Use principalOere if available, otherwise amountOere
+		arr.push({ date: p.date, amountOere: p.principalOere ?? p.amountOere });
 		paymentsByLoan.set(p.loanId, arr);
 	}
 
@@ -149,15 +155,20 @@ export default async function LoansPage() {
 								</p>
 
 								{/* Progress bar */}
-								<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+								<div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
 									<div
 										className="h-full rounded-full bg-indigo-500 transition-all"
 										style={{ width: `${balance.principalPaidPct}%` }}
 									/>
 								</div>
-								<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-									{balance.principalPaidPct}% nedbetalt
-								</p>
+								<div className="mt-1 flex items-center justify-between">
+									<p className="text-xs text-gray-500 dark:text-gray-400">
+										{balance.principalPaidPct}% nedbetalt
+									</p>
+									<p className="text-xs text-gray-400 dark:text-gray-500">
+										{100 - balance.principalPaidPct}% igjen
+									</p>
+								</div>
 
 								{/* Footer stats */}
 								<div className="mt-4 flex justify-between border-t border-gray-100 pt-4 text-xs text-gray-600 dark:border-gray-800 dark:text-gray-400">

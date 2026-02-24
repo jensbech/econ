@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
-import { categories, expenses, loans, savingsGoals, users } from "@/db/schema";
+import { categories, expenses, loans, users } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { expandRecurringExpenses } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
@@ -21,6 +21,7 @@ export default async function ExpensesPage({
 		categoryId?: string;
 		from?: string;
 		to?: string;
+		importBatch?: string;
 	}>;
 }) {
 	const params = await searchParams;
@@ -32,7 +33,10 @@ export default async function ExpensesPage({
 	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
 	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
-	const { month, categoryId, from, to } = params;
+	// month searchParam overrides cookie; cookie overrides current month
+	const monthCookie = cookieStore.get("selectedMonth")?.value;
+	const { month: monthParam, categoryId, from, to, importBatch } = params;
+	const month = monthParam ?? (monthCookie && monthCookie !== "all" ? monthCookie : undefined);
 
 	// Expand recurring expenses for the viewed month (idempotent)
 	if (householdId) {
@@ -90,7 +94,10 @@ export default async function ExpensesPage({
 		conditions.push(or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)));
 	}
 
-	if (month === "all") {
+	if (importBatch) {
+		// Filter to only rows from this import batch; skip month filter
+		conditions.push(eq(expenses.importBatchId, importBatch));
+	} else if (month === "all") {
 		if (from) conditions.push(gte(expenses.date, from));
 		if (to) conditions.push(lte(expenses.date, to));
 	} else if (month) {
@@ -124,11 +131,9 @@ export default async function ExpensesPage({
 				categoryName: categories.name,
 				accountId: expenses.accountId,
 				uploaderName: users.name,
-				savingsGoalId: expenses.savingsGoalId,
 				loanId: expenses.loanId,
 				interestOere: expenses.interestOere,
 				principalOere: expenses.principalOere,
-				savingsGoalName: savingsGoals.name,
 				loanName: loans.name,
 			})
 			.from(expenses)
@@ -140,7 +145,6 @@ export default async function ExpensesPage({
 				),
 			)
 			.leftJoin(users, eq(expenses.userId, users.id))
-			.leftJoin(savingsGoals, eq(expenses.savingsGoalId, savingsGoals.id))
 			.leftJoin(loans, eq(expenses.loanId, loans.id))
 			.where(and(...conditions))
 			.orderBy(desc(expenses.date), desc(expenses.createdAt)),
@@ -198,7 +202,7 @@ export default async function ExpensesPage({
 					</div>
 				}
 			>
-				<ExpenseTable expenses={expenseRowsWithAccount} categories={categoryRows} />
+				<ExpenseTable expenses={expenseRowsWithAccount} categories={categoryRows} importBatchId={importBatch} />
 			</Suspense>
 		</div>
 	);

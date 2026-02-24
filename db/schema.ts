@@ -198,7 +198,6 @@ export const expenses = pgTable("expenses", {
 	scope: text("scope").notNull().default("household"), // 'household' | 'personal'
 	isShared: boolean("is_shared").notNull().default(false), // personal only: visible to household?
 	accountId: text("account_id").references(() => accounts.id),
-	savingsGoalId: text("savings_goal_id").references(() => savingsGoals.id),
 	loanId: text("loan_id").references(() => loans.id),
 	interestOere: integer("interest_oere"),
 	principalOere: integer("principal_oere"),
@@ -271,6 +270,8 @@ export const loans = pgTable("loans", {
 // ---------------------------------------------------------------------------
 // Loan payments
 // ---------------------------------------------------------------------------
+// TODO: Drop this table once confirmed empty. Loan balance is now derived
+// from expenses (principalOere ?? amountOere) where loanId IS NOT NULL.
 
 export const loanPayments = pgTable("loan_payments", {
 	id: text("id")
@@ -284,33 +285,6 @@ export const loanPayments = pgTable("loan_payments", {
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
-});
-
-// ---------------------------------------------------------------------------
-// Savings goals
-// ---------------------------------------------------------------------------
-// TODO: This table is deprecated. Savings are now represented by accounts with kind='savings'.
-// Remove this table and the savingsGoalId FK on expenses in a future migration.
-
-export const savingsGoals = pgTable("savings_goals", {
-	id: text("id")
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	householdId: text("household_id")
-		.notNull()
-		.references(() => households.id, { onDelete: "cascade" }),
-	userId: text("user_id")
-		.notNull()
-		.references(() => users.id),
-	name: text("name").notNull(),
-	targetOere: integer("target_oere"),
-	currentOere: integer("current_oere").notNull().default(0),
-	targetDate: date("target_date"),
-	accountId: text("account_id").references(() => accounts.id),
-	createdAt: timestamp("created_at", { withTimezone: true })
-		.notNull()
-		.defaultNow(),
-	deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 // ---------------------------------------------------------------------------
