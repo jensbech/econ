@@ -269,7 +269,7 @@ export function DocumentUpload({
 	}
 
 	return (
-		<div className="mt-8 max-w-xl">
+		<div className="mt-6 max-w-xl">
 			<UploadZone accounts={accounts} onExtracted={handleExtracted} />
 		</div>
 	);

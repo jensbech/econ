@@ -37,7 +37,7 @@ export function ImportTabs({
 	);
 
 	return (
-		<div className="p-8">
+		<div className="px-4 py-6 sm:p-8">
 			<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
 				Importer
 			</h2>

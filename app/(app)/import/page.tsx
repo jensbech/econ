@@ -83,7 +83,7 @@ export default async function ImportPage() {
 					<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
 						Importhistorikk
 					</h3>
-					<div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+					<div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
 						<table className="min-w-full text-sm">
 							<thead className="bg-gray-50 dark:bg-gray-800">
 								<tr>

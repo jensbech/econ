@@ -134,8 +134,6 @@ function SourceBadge({ source }: { source: EditableRow["categorySource"] }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AiReview({
-	fileUrl,
-	fileType,
 	filename,
 	transactions,
 	categories,
@@ -416,6 +414,129 @@ export function AiReview({
 		);
 	}
 
+	// ── Shared category cell renderer ─────────────────────────────────────────
+
+	function CategoryCell({ row }: { row: EditableRow }) {
+		const isCreating = creatingCategoryFor === row.id;
+		const isInlineInputRow = inlineInput?.rowId === row.id;
+
+		if (isCreating) {
+			return (
+				<div className="flex h-7 items-center gap-1.5 text-xs text-gray-500">
+					<Loader2 className="h-3.5 w-3.5 animate-spin" />
+					Oppretter&hellip;
+				</div>
+			);
+		}
+		if (isInlineInputRow) {
+			return (
+				<div className="flex items-center gap-1">
+					<input
+						// biome-ignore lint/a11y/noAutofocus: intentional focus for inline input
+						autoFocus
+						type="text"
+						value={inlineInput.value}
+						onChange={(e) =>
+							setInlineInput((prev) =>
+								prev ? { ...prev, value: e.target.value } : null,
+							)
+						}
+						onKeyDown={(e) => {
+							if (e.key === "Enter")
+								handleCreateCategory(row.id, inlineInput.value);
+							if (e.key === "Escape") setInlineInput(null);
+						}}
+						placeholder="Kategorinavn&hellip;"
+						className="w-full rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-xs text-gray-700 focus:border-indigo-500 focus:outline-none dark:border-indigo-700 dark:bg-gray-900 dark:text-gray-300"
+					/>
+					<button
+						type="button"
+						onClick={() => handleCreateCategory(row.id, inlineInput.value)}
+						className="rounded p-0.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+						title="Opprett kategori"
+					>
+						<Check className="h-3.5 w-3.5" />
+					</button>
+					<button
+						type="button"
+						onClick={() => setInlineInput(null)}
+						className="rounded p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+						title="Avbryt"
+					>
+						<X className="h-3.5 w-3.5" />
+					</button>
+				</div>
+			);
+		}
+		return (
+			<Select
+				value={row.categoryId || "none"}
+				onValueChange={(v) => {
+					if (v === "__add_new__") {
+						setInlineInput({
+							rowId: row.id,
+							value: row.suggestedNewCategory ?? "",
+						});
+					} else {
+						updateRow(row.id, {
+							categoryId: v === "none" ? "" : v,
+							categorySource: v === "none" ? "none" : "ai",
+						});
+					}
+				}}
+			>
+				<SelectTrigger className="h-7 w-full border-gray-200 text-xs dark:border-gray-700">
+					<SelectValue placeholder="Velg&hellip;" />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="none">
+						<span className="text-gray-400">Ingen</span>
+					</SelectItem>
+					{localCategories.map((cat) => (
+						<SelectItem key={cat.id} value={cat.id}>
+							{cat.name}
+						</SelectItem>
+					))}
+					<SelectItem value="__add_new__">
+						<span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
+							<Plus className="h-3 w-3" />
+							{row.suggestedNewCategory
+								? `Opprett «${row.suggestedNewCategory}»…`
+								: "Ny kategori…"}
+						</span>
+					</SelectItem>
+				</SelectContent>
+			</Select>
+		);
+	}
+
+	function LoanCell({ row }: { row: EditableRow }) {
+		const catName = localCategories.find((c) => c.id === row.categoryId)?.name;
+		if (catName !== "Lån" || loans.length === 0) return null;
+		return (
+			<Select
+				value={row.loanId ?? "none"}
+				onValueChange={(v) =>
+					updateRow(row.id, { loanId: v === "none" ? null : v })
+				}
+			>
+				<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
+					<SelectValue placeholder="Lån…" />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="none">
+						<span className="text-gray-400">Ingen</span>
+					</SelectItem>
+					{loans.map((l) => (
+						<SelectItem key={l.id} value={l.id}>
+							{l.name}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		);
+	}
+
 	// ── Main review layout ────────────────────────────────────────────────────
 
 	return (
@@ -489,450 +610,429 @@ export function AiReview({
 				</DialogContent>
 			</Dialog>
 
-			<div className="flex gap-6">
-				{/* Left: document viewer */}
-				<div className="w-[44%] shrink-0">
-					<p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-						Dokument
-					</p>
-					<div className="sticky top-4 h-[calc(100vh-260px)] overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-						{fileType === "pdf" ? (
-							<iframe src={fileUrl} className="h-full w-full" title="Kontoutskrift" />
-						) : (
-							<img
-								src={fileUrl}
-								alt="Kvittering"
-								className="h-full w-full object-contain"
-							/>
-						)}
+			<div>
+				{/* Personal import: privacy toggle */}
+				{scope === "personal" && (
+					<div className="mb-4 flex items-center justify-between rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-900/50 dark:bg-purple-900/20">
+						<div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-300">
+							{isShared ? (
+								<Eye className="h-4 w-4 shrink-0" />
+							) : (
+								<Lock className="h-4 w-4 shrink-0" />
+							)}
+							<span>
+								{isShared
+									? "Delt med husholdning — vises i utgiftslisten for alle"
+									: "Privat — kun synlig for deg"}
+							</span>
+						</div>
+						<button
+							type="button"
+							onClick={() => setIsShared((v) => !v)}
+							className="ml-4 shrink-0 rounded-full border border-purple-300 bg-white px-3 py-1 text-xs font-medium text-purple-700 transition hover:bg-purple-100 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/60"
+						>
+							{isShared ? "Gjør privat" : "Del med husholdning"}
+						</button>
 					</div>
-				</div>
+				)}
 
-				{/* Right: editable transactions */}
-				<div className="min-w-0 flex-1">
-					{/* Personal import: privacy toggle */}
-					{scope === "personal" && (
-						<div className="mb-4 flex items-center justify-between rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-900/50 dark:bg-purple-900/20">
-							<div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-300">
-								{isShared ? (
-									<Eye className="h-4 w-4 shrink-0" />
-								) : (
-									<Lock className="h-4 w-4 shrink-0" />
-								)}
-								<span>
-									{isShared
-										? "Delt med husholdning — vises i utgiftslisten for alle"
-										: "Privat — kun synlig for deg"}
-								</span>
-							</div>
-							<button
-								type="button"
-								onClick={() => setIsShared((v) => !v)}
-								className="ml-4 shrink-0 rounded-full border border-purple-300 bg-white px-3 py-1 text-xs font-medium text-purple-700 transition hover:bg-purple-100 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/60"
-							>
-								{isShared ? "Gjør privat" : "Del med husholdning"}
-							</button>
-						</div>
-					)}
+				{/* Header + action buttons */}
+				<div className="mb-3 flex flex-wrap items-center gap-2">
+					<div className="mr-auto">
+						<p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+							Transaksjoner ({visibleRows.length})
+						</p>
+						<p className="text-xs tabular-nums text-gray-400 dark:text-gray-500">
+							Totalsum: {totalAmountNok.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
+						</p>
+					</div>
 
-					{/* Header + action buttons */}
-					<div className="mb-3 flex flex-wrap items-center gap-2">
-						<div className="mr-auto">
-							<p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-								Transaksjoner ({visibleRows.length})
-							</p>
-							<p className="text-xs tabular-nums text-gray-400 dark:text-gray-500">
-								Totalsum: {totalAmountNok.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
-							</p>
-						</div>
-
-						{selectedCount > 0 && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={deleteSelected}
-								className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-							>
-								<Trash2 className="mr-1.5 h-3.5 w-3.5" />
-								Slett valgte ({selectedCount})
-							</Button>
-						)}
-
-						{duplicateCount > 0 && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={discardAllSuspicious}
-								className="border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-400 dark:hover:bg-orange-900/20"
-							>
-								<AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
-								Forkast mistenkelige ({duplicateCount})
-							</Button>
-						)}
-
+					{selectedCount > 0 && (
 						<Button
 							variant="outline"
 							size="sm"
-							onClick={onDiscard}
-							disabled={isSubmitting}
+							onClick={deleteSelected}
+							className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
 						>
-							Forkast alt
+							<Trash2 className="mr-1.5 h-3.5 w-3.5" />
+							Slett valgte ({selectedCount})
 						</Button>
-
-						<Button
-							size="sm"
-							onClick={() => setShowConfirmModal(true)}
-							disabled={visibleRows.length === 0 || isSubmitting}
-							className="bg-indigo-600 text-white hover:bg-indigo-700"
-						>
-							Bekreft import ({visibleRows.length} rader)
-						</Button>
-					</div>
-
-					{/* Empty state */}
-					{visibleRows.length === 0 ? (
-						<div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
-							Ingen transaksjoner igjen. Klikk &laquo;Forkast alt&raquo; for &aring; avbryte.
-						</div>
-					) : (
-						<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-							<div className="max-h-[calc(100vh-320px)] overflow-y-auto">
-								<table className="w-full text-sm">
-									<thead className="sticky top-0 z-10">
-										<tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-											<th className="w-8 px-2 py-2.5">
-												<input
-													type="checkbox"
-													checked={allVisibleSelected}
-													ref={(el) => {
-														if (el)
-															el.indeterminate =
-																!allVisibleSelected && someVisibleSelected;
-													}}
-													onChange={toggleSelectAll}
-													className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
-												/>
-											</th>
-											<th className="w-6 px-1 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-gray-500">
-												#
-											</th>
-											<th className="w-[104px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-												Dato
-											</th>
-											<th className="w-[96px] px-2 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
-												Beløp
-											</th>
-											<th className="px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-												Beskrivelse
-											</th>
-											<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-												Konto
-											</th>
-											<th className="w-[172px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-												Kategori
-											</th>
-											<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
-												Kobling
-											</th>
-											<th className="w-[30px] px-1 py-2.5" />
-											<th className="w-[30px] px-1 py-2.5" />
-											<th className="w-[30px] px-1 py-2.5" />
-										</tr>
-									</thead>
-									<tbody>
-										{rows
-											.filter((r) => !r.deleted)
-											.map((row, visibleIndex) => {
-												const originalIndex = rows.indexOf(row);
-												const isDuplicate = duplicateFlags[originalIndex] ?? false;
-												const isSelected = selectedIds.has(row.id);
-												const isCreating = creatingCategoryFor === row.id;
-												const isInlineInput = inlineInput?.rowId === row.id;
-												const isEven = visibleIndex % 2 === 0;
-
-												return (
-													<tr
-														key={row.id}
-														className={`border-b border-gray-100 last:border-b-0 transition-colors dark:border-gray-800 ${
-															isSelected
-																? "bg-indigo-50 dark:bg-indigo-900/15"
-																: row.categorySource === "none"
-																	? isEven
-																		? "bg-amber-50/60 dark:bg-amber-900/10"
-																		: "bg-amber-50/30 dark:bg-amber-900/5"
-																	: isEven
-																		? "bg-white dark:bg-gray-900"
-																		: "bg-gray-50/50 dark:bg-gray-900/50"
-														}`}
-													>
-														{/* Checkbox */}
-														<td className="px-2 py-1.5 text-center">
-															<input
-																type="checkbox"
-																checked={isSelected}
-																onChange={() => toggleSelectRow(row.id)}
-																className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
-															/>
-														</td>
-
-														{/* Row number */}
-														<td className="px-1 py-1.5 text-center text-[10px] tabular-nums text-gray-400 dark:text-gray-600">
-															{visibleIndex + 1}
-														</td>
-
-														{/* Date */}
-														<td className="px-2 py-1.5">
-															<input
-																type="text"
-																value={row.date}
-																onChange={(e) =>
-																	updateRow(row.id, { date: e.target.value })
-																}
-																placeholder="dd.mm.yyyy"
-																className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
-															/>
-														</td>
-
-														{/* Amount */}
-														<td className="px-2 py-1.5">
-															<input
-																type="number"
-																value={row.amountNok}
-																onChange={(e) =>
-																	updateRow(row.id, { amountNok: e.target.value })
-																}
-																step="0.01"
-																min="0"
-																className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
-															/>
-														</td>
-
-														{/* Description */}
-														<td className="px-2 py-1.5">
-															<input
-																type="text"
-																value={row.description}
-																onChange={(e) =>
-																	updateRow(row.id, { description: e.target.value })
-																}
-																className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
-															/>
-														</td>
-
-														{/* Account */}
-														<td className="px-2 py-1.5">
-															{accounts.length > 0 && (
-																<Select
-																	value={row.accountId ?? "none"}
-																	onValueChange={(v) =>
-																		updateRow(row.id, {
-																			accountId: v === "none" ? null : v,
-																		})
-																	}
-																>
-																	<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
-																		<SelectValue placeholder="Konto…" />
-																	</SelectTrigger>
-																	<SelectContent>
-																		<SelectItem value="none">
-																			<span className="text-gray-400">Ingen</span>
-																		</SelectItem>
-																		{accounts.map((a) => (
-																			<SelectItem key={a.id} value={a.id}>
-																				{a.name}
-																			</SelectItem>
-																		))}
-																	</SelectContent>
-																</Select>
-															)}
-														</td>
-
-														{/* Category */}
-														<td className="px-2 py-1.5">
-															{isCreating ? (
-																<div className="flex h-7 items-center gap-1.5 text-xs text-gray-500">
-																	<Loader2 className="h-3.5 w-3.5 animate-spin" />
-																	Oppretter&hellip;
-																</div>
-															) : isInlineInput ? (
-																<div className="flex items-center gap-1">
-																	<input
-																		// biome-ignore lint/a11y/noAutofocus: intentional focus for inline input
-																		autoFocus
-																		type="text"
-																		value={inlineInput.value}
-																		onChange={(e) =>
-																			setInlineInput((prev) =>
-																				prev ? { ...prev, value: e.target.value } : null,
-																			)
-																		}
-																		onKeyDown={(e) => {
-																			if (e.key === "Enter")
-																				handleCreateCategory(row.id, inlineInput.value);
-																			if (e.key === "Escape") setInlineInput(null);
-																		}}
-																		placeholder="Kategorinavn&hellip;"
-																		className="w-full rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-xs text-gray-700 focus:border-indigo-500 focus:outline-none dark:border-indigo-700 dark:bg-gray-900 dark:text-gray-300"
-																	/>
-																	<button
-																		type="button"
-																		onClick={() =>
-																			handleCreateCategory(row.id, inlineInput.value)
-																		}
-																		className="rounded p-0.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-																		title="Opprett kategori"
-																	>
-																		<Check className="h-3.5 w-3.5" />
-																	</button>
-																	<button
-																		type="button"
-																		onClick={() => setInlineInput(null)}
-																		className="rounded p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-																		title="Avbryt"
-																	>
-																		<X className="h-3.5 w-3.5" />
-																	</button>
-																</div>
-															) : (
-																<Select
-																	value={row.categoryId || "none"}
-																	onValueChange={(v) => {
-																		if (v === "__add_new__") {
-																			setInlineInput({
-																				rowId: row.id,
-																				value: row.suggestedNewCategory ?? "",
-																			});
-																		} else {
-																			updateRow(row.id, {
-																				categoryId: v === "none" ? "" : v,
-																				categorySource: v === "none" ? "none" : "ai",
-																			});
-																		}
-																	}}
-																>
-																	<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
-																		<SelectValue placeholder="Velg&hellip;" />
-																	</SelectTrigger>
-																	<SelectContent>
-																		<SelectItem value="none">
-																			<span className="text-gray-400">Ingen</span>
-																		</SelectItem>
-																		{localCategories.map((cat) => (
-																			<SelectItem key={cat.id} value={cat.id}>
-																				{cat.name}
-																			</SelectItem>
-																		))}
-																		<SelectItem value="__add_new__">
-																			<span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
-																				<Plus className="h-3 w-3" />
-																				{row.suggestedNewCategory
-																					? `Opprett «${row.suggestedNewCategory}»…`
-																					: "Ny kategori…"}
-																			</span>
-																		</SelectItem>
-																	</SelectContent>
-																</Select>
-															)}
-														</td>
-
-														{/* Linking: savings or loan */}
-														<td className="px-2 py-1.5">
-															{(() => {
-																const catName = localCategories.find(
-																	(c) => c.id === row.categoryId,
-																)?.name;
-																if (catName === "Lån" && loans.length > 0) {
-																	return (
-																		<Select
-																			value={row.loanId ?? "none"}
-																			onValueChange={(v) =>
-																				updateRow(row.id, {
-																					loanId: v === "none" ? null : v,
-																				})
-																			}
-																		>
-																			<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
-																				<SelectValue placeholder="Lån…" />
-																			</SelectTrigger>
-																			<SelectContent>
-																				<SelectItem value="none">
-																					<span className="text-gray-400">Ingen</span>
-																				</SelectItem>
-																				{loans.map((l) => (
-																					<SelectItem key={l.id} value={l.id}>
-																						{l.name}
-																					</SelectItem>
-																				))}
-																			</SelectContent>
-																		</Select>
-																	);
-																}
-																return null;
-															})()}
-														</td>
-
-														{/* Source indicator */}
-														<td className="px-1 py-1.5 text-center">
-															<SourceBadge source={row.categorySource} />
-														</td>
-
-														{/* Duplicate warning */}
-														<td className="px-1 py-1.5 text-center">
-															{isDuplicate && (
-																<Tooltip>
-																	<TooltipTrigger asChild>
-																		<AlertTriangle className="mx-auto h-4 w-4 cursor-default text-orange-400" />
-																	</TooltipTrigger>
-																	<TooltipContent>
-																		Mulig duplikat — samme dato og beløp finnes allerede
-																	</TooltipContent>
-																</Tooltip>
-															)}
-														</td>
-
-														{/* Delete button */}
-														<td className="px-1 py-1.5 text-center">
-															<Tooltip>
-																<TooltipTrigger asChild>
-																	<button
-																		type="button"
-																		onClick={() => deleteRow(row.id)}
-																		className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-																	>
-																		<Trash2 className="h-3.5 w-3.5" />
-																	</button>
-																</TooltipTrigger>
-																<TooltipContent>Fjern rad</TooltipContent>
-															</Tooltip>
-														</td>
-													</tr>
-												);
-											})}
-									</tbody>
-								</table>
-							</div>
-						</div>
 					)}
 
-					{/* Legend */}
-					<div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
-						<span className="flex items-center gap-1.5">
-							<CheckCircle className="h-3.5 w-3.5 text-green-500" />
-							Gjenkjent fra historikk
-						</span>
-						<span className="flex items-center gap-1.5">
-							<span className="inline-block h-2 w-2 rounded-full bg-yellow-400" />
-							AI-forslag — bør sjekkes
-						</span>
-						<span className="flex items-center gap-1.5">
-							<span className="inline-block h-2 w-2 rounded-full bg-red-400" />
-							Ingen kategori
-						</span>
-						<span className="flex items-center gap-1.5">
-							<AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
-							Mulig duplikat
-						</span>
+					{duplicateCount > 0 && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={discardAllSuspicious}
+							className="border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-400 dark:hover:bg-orange-900/20"
+						>
+							<AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
+							Forkast mistenkelige ({duplicateCount})
+						</Button>
+					)}
+
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={onDiscard}
+						disabled={isSubmitting}
+					>
+						Forkast alt
+					</Button>
+
+					<Button
+						size="sm"
+						onClick={() => setShowConfirmModal(true)}
+						disabled={visibleRows.length === 0 || isSubmitting}
+						className="bg-indigo-600 text-white hover:bg-indigo-700"
+					>
+						Bekreft import ({visibleRows.length} rader)
+					</Button>
+				</div>
+
+				{/* Empty state */}
+				{visibleRows.length === 0 ? (
+					<div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+						Ingen transaksjoner igjen. Klikk &laquo;Forkast alt&raquo; for &aring; avbryte.
 					</div>
+				) : (
+					<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+						{/* ── Desktop table (sm and up) ── */}
+						<div className="hidden sm:block max-h-[calc(100vh-320px)] overflow-y-auto">
+							<table className="w-full text-sm">
+								<thead className="sticky top-0 z-10">
+									<tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+										<th className="w-8 px-2 py-2.5">
+											<input
+												type="checkbox"
+												checked={allVisibleSelected}
+												ref={(el) => {
+													if (el)
+														el.indeterminate =
+															!allVisibleSelected && someVisibleSelected;
+												}}
+												onChange={toggleSelectAll}
+												className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
+											/>
+										</th>
+										<th className="w-6 px-1 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-gray-500">
+											#
+										</th>
+										<th className="w-[104px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+											Dato
+										</th>
+										<th className="w-[96px] px-2 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+											Beløp
+										</th>
+										<th className="px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+											Beskrivelse
+										</th>
+										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+											Konto
+										</th>
+										<th className="w-[172px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+											Kategori
+										</th>
+										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+											Kobling
+										</th>
+										<th className="w-[30px] px-1 py-2.5" />
+										<th className="w-[30px] px-1 py-2.5" />
+										<th className="w-[30px] px-1 py-2.5" />
+									</tr>
+								</thead>
+								<tbody>
+									{rows
+										.filter((r) => !r.deleted)
+										.map((row, visibleIndex) => {
+											const originalIndex = rows.indexOf(row);
+											const isDuplicate = duplicateFlags[originalIndex] ?? false;
+											const isSelected = selectedIds.has(row.id);
+											const isEven = visibleIndex % 2 === 0;
+
+											return (
+												<tr
+													key={row.id}
+													className={`border-b border-gray-100 last:border-b-0 transition-colors dark:border-gray-800 ${
+														isSelected
+															? "bg-indigo-50 dark:bg-indigo-900/15"
+															: row.categorySource === "none"
+																? isEven
+																	? "bg-amber-50/60 dark:bg-amber-900/10"
+																	: "bg-amber-50/30 dark:bg-amber-900/5"
+																: isEven
+																	? "bg-white dark:bg-gray-900"
+																	: "bg-gray-50/50 dark:bg-gray-900/50"
+													}`}
+												>
+													<td className="px-2 py-1.5 text-center">
+														<input
+															type="checkbox"
+															checked={isSelected}
+															onChange={() => toggleSelectRow(row.id)}
+															className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
+														/>
+													</td>
+													<td className="px-1 py-1.5 text-center text-[10px] tabular-nums text-gray-400 dark:text-gray-600">
+														{visibleIndex + 1}
+													</td>
+													<td className="px-2 py-1.5">
+														<input
+															type="text"
+															value={row.date}
+															onChange={(e) =>
+																updateRow(row.id, { date: e.target.value })
+															}
+															placeholder="dd.mm.yyyy"
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+														/>
+													</td>
+													<td className="px-2 py-1.5">
+														<input
+															type="number"
+															value={row.amountNok}
+															onChange={(e) =>
+																updateRow(row.id, { amountNok: e.target.value })
+															}
+															step="0.01"
+															min="0"
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+														/>
+													</td>
+													<td className="px-2 py-1.5">
+														<input
+															type="text"
+															value={row.description}
+															onChange={(e) =>
+																updateRow(row.id, { description: e.target.value })
+															}
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+														/>
+													</td>
+													<td className="px-2 py-1.5">
+														{accounts.length > 0 && (
+															<Select
+																value={row.accountId ?? "none"}
+																onValueChange={(v) =>
+																	updateRow(row.id, {
+																		accountId: v === "none" ? null : v,
+																	})
+																}
+															>
+																<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
+																	<SelectValue placeholder="Konto…" />
+																</SelectTrigger>
+																<SelectContent>
+																	<SelectItem value="none">
+																		<span className="text-gray-400">Ingen</span>
+																	</SelectItem>
+																	{accounts.map((a) => (
+																		<SelectItem key={a.id} value={a.id}>
+																			{a.name}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+														)}
+													</td>
+													<td className="px-2 py-1.5">
+														<CategoryCell row={row} />
+													</td>
+													<td className="px-2 py-1.5">
+														<LoanCell row={row} />
+													</td>
+													<td className="px-1 py-1.5 text-center">
+														<SourceBadge source={row.categorySource} />
+													</td>
+													<td className="px-1 py-1.5 text-center">
+														{isDuplicate && (
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<AlertTriangle className="mx-auto h-4 w-4 cursor-default text-orange-400" />
+																</TooltipTrigger>
+																<TooltipContent>
+																	Mulig duplikat — samme dato og beløp finnes allerede
+																</TooltipContent>
+															</Tooltip>
+														)}
+													</td>
+													<td className="px-1 py-1.5 text-center">
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<button
+																	type="button"
+																	onClick={() => deleteRow(row.id)}
+																	className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+																>
+																	<Trash2 className="h-3.5 w-3.5" />
+																</button>
+															</TooltipTrigger>
+															<TooltipContent>Fjern rad</TooltipContent>
+														</Tooltip>
+													</td>
+												</tr>
+											);
+										})}
+								</tbody>
+							</table>
+						</div>
+
+						{/* ── Mobile cards (below sm) ── */}
+						<div className="sm:hidden divide-y divide-gray-100 dark:divide-gray-800 max-h-[70svh] overflow-y-auto">
+							{/* Mobile select-all bar */}
+							<div className="flex items-center gap-2 bg-gray-50 px-3 py-2 dark:bg-gray-800">
+								<input
+									type="checkbox"
+									checked={allVisibleSelected}
+									ref={(el) => {
+										if (el)
+											el.indeterminate =
+												!allVisibleSelected && someVisibleSelected;
+									}}
+									onChange={toggleSelectAll}
+									className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-indigo-600"
+								/>
+								<span className="text-xs text-gray-500 dark:text-gray-400">
+									Velg alle
+								</span>
+							</div>
+
+							{rows
+								.filter((r) => !r.deleted)
+								.map((row, visibleIndex) => {
+									const originalIndex = rows.indexOf(row);
+									const isDuplicate = duplicateFlags[originalIndex] ?? false;
+									const isSelected = selectedIds.has(row.id);
+
+									return (
+										<div
+											key={row.id}
+											className={`space-y-2 p-3 transition-colors ${
+												isSelected
+													? "bg-indigo-50 dark:bg-indigo-900/15"
+													: row.categorySource === "none"
+														? "bg-amber-50/60 dark:bg-amber-900/10"
+														: "bg-white dark:bg-gray-900"
+											}`}
+										>
+											{/* Row 1: checkbox + number + date + amount + badges + delete */}
+											<div className="flex items-center gap-2">
+												<input
+													type="checkbox"
+													checked={isSelected}
+													onChange={() => toggleSelectRow(row.id)}
+													className="h-4 w-4 shrink-0 cursor-pointer rounded border-gray-300 accent-indigo-600"
+												/>
+												<span className="w-5 shrink-0 text-center text-[10px] tabular-nums text-gray-400 dark:text-gray-600">
+													{visibleIndex + 1}
+												</span>
+												<input
+													type="text"
+													value={row.date}
+													onChange={(e) =>
+														updateRow(row.id, { date: e.target.value })
+													}
+													placeholder="dd.mm.yyyy"
+													className="w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600"
+												/>
+												<input
+													type="number"
+													value={row.amountNok}
+													onChange={(e) =>
+														updateRow(row.id, { amountNok: e.target.value })
+													}
+													step="0.01"
+													min="0"
+													className="ml-auto w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300"
+												/>
+												<span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">kr</span>
+												<SourceBadge source={row.categorySource} />
+												{isDuplicate && (
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<AlertTriangle className="h-4 w-4 shrink-0 cursor-default text-orange-400" />
+														</TooltipTrigger>
+														<TooltipContent>
+															Mulig duplikat — samme dato og beløp finnes allerede
+														</TooltipContent>
+													</Tooltip>
+												)}
+												<button
+													type="button"
+													onClick={() => deleteRow(row.id)}
+													className="shrink-0 rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+												>
+													<Trash2 className="h-4 w-4" />
+												</button>
+											</div>
+
+											{/* Row 2: description */}
+											<input
+												type="text"
+												value={row.description}
+												onChange={(e) =>
+													updateRow(row.id, { description: e.target.value })
+												}
+												placeholder="Beskrivelse"
+												className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600"
+											/>
+
+											{/* Row 3: category */}
+											<CategoryCell row={row} />
+
+											{/* Row 4: account + loan */}
+											<div className="flex gap-2">
+												{accounts.length > 0 && (
+													<Select
+														value={row.accountId ?? "none"}
+														onValueChange={(v) =>
+															updateRow(row.id, {
+																accountId: v === "none" ? null : v,
+															})
+														}
+													>
+														<SelectTrigger className="h-8 flex-1 border-gray-200 text-xs dark:border-gray-700">
+															<SelectValue placeholder="Konto…" />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectItem value="none">
+																<span className="text-gray-400">Ingen</span>
+															</SelectItem>
+															{accounts.map((a) => (
+																<SelectItem key={a.id} value={a.id}>
+																	{a.name}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												)}
+												<LoanCell row={row} />
+											</div>
+										</div>
+									);
+								})}
+						</div>
+					</div>
+				)}
+
+				{/* Legend */}
+				<div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+					<span className="flex items-center gap-1.5">
+						<CheckCircle className="h-3.5 w-3.5 text-green-500" />
+						Gjenkjent fra historikk
+					</span>
+					<span className="flex items-center gap-1.5">
+						<span className="inline-block h-2 w-2 rounded-full bg-yellow-400" />
+						AI-forslag — bør sjekkes
+					</span>
+					<span className="flex items-center gap-1.5">
+						<span className="inline-block h-2 w-2 rounded-full bg-red-400" />
+						Ingen kategori
+					</span>
+					<span className="flex items-center gap-1.5">
+						<AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
+						Mulig duplikat
+					</span>
 				</div>
 			</div>
 		</TooltipProvider>
