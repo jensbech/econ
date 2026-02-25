@@ -12,6 +12,10 @@ RUN npm ci
 COPY . .
 
 # Build the Next.js application (standalone output)
+# DATABASE_URL must be set to satisfy the module-load check in db/index.ts,
+# but no actual connection is made during build.
+ARG DATABASE_URL=postgresql://localhost:5432/dummy
+ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
 
 # Runtime stage
