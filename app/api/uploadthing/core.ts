@@ -42,9 +42,9 @@ export const ourFileRouter = {
 			return { url: file.ufsUrl, uploadedBy: metadata.userId };
 		}),
 
-	// Route for AI document extraction — images up to 5 MB (Anthropic limit), PDFs up to 16 MB
+	// Route for AI document extraction — images up to 4 MB, PDFs up to 16 MB
 	aiDocument: f({
-		image: { maxFileSize: "5MB", maxFileCount: 1 },
+		image: { maxFileSize: "4MB", maxFileCount: 1 },
 		pdf: { maxFileSize: "16MB", maxFileCount: 1 },
 	})
 		.middleware(async () => {

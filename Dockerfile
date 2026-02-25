@@ -2,11 +2,14 @@
 FROM node:22.13-alpine3.21 AS builder
 WORKDIR /app
 
+# Enable pnpm via corepack
+RUN corepack enable pnpm
+
 # Copy lockfile and package.json first for layer caching
-COPY package-lock.json package.json ./
+COPY pnpm-lock.yaml package.json ./
 
 # Install all dependencies (including devDeps needed for build)
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -16,7 +19,7 @@ COPY . .
 # but no actual connection is made during build.
 ARG DATABASE_URL=postgresql://localhost:5432/dummy
 ENV DATABASE_URL=${DATABASE_URL}
-RUN npm run build
+RUN pnpm build
 
 # Runtime stage
 FROM node:22.13-alpine3.21
