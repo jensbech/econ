@@ -48,10 +48,17 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Docker
 
-```bash
-# Build
-just build
+Run with the included `compose.yml` (includes Postgres):
 
-# Run (reads from .env.local)
+```bash
+cp .env.example .env
+# fill in .env, then:
+docker compose up -d
+```
+
+Or build locally:
+
+```bash
+just build
 just run
 ```

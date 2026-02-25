@@ -1,0 +1,61 @@
+services:
+  econ:
+    image: jensbech/econ:latest
+    container_name: econ
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://econ:${POSTGRES_PASSWORD}@econ-db:5432/econ
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET}
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      econ-db:
+        condition: service_healthy
+    networks:
+      - econ-internal
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  econ-db:
+    image: postgres:17-alpine
+    container_name: econ-db
+    restart: always
+    environment:
+      POSTGRES_DB: econ
+      POSTGRES_USER: econ
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - econ-db-data:/var/lib/postgresql/data
+    networks:
+      - econ-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U econ -d econ"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  econ-internal:
+
+volumes:
+  econ-db-data:
