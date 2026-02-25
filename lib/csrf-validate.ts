@@ -17,10 +17,11 @@ export async function validateCsrfOrigin(): Promise<void> {
 	}
 
 	// Validate origin matches expected host
-	const rawUrl = process.env.NEXTAUTH_URL;
+	// NextAuth v5 uses AUTH_URL; fall back to NEXTAUTH_URL for compat
+	const rawUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
 	if (!rawUrl) {
 		if (process.env.NODE_ENV === "production") {
-			throw new Error("NEXTAUTH_URL is not configured");
+			throw new Error("CSRF protection: AUTH_URL is not configured");
 		}
 		return;
 	}
@@ -29,7 +30,7 @@ export async function validateCsrfOrigin(): Promise<void> {
 	try {
 		expectedHost = new URL(rawUrl).host;
 	} catch {
-		throw new Error("NEXTAUTH_URL is not a valid URL");
+		throw new Error("CSRF protection: AUTH_URL is not a valid URL");
 	}
 
 	let incomingHost: string;

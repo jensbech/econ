@@ -215,7 +215,7 @@ export async function POST(request: Request) {
 					{ status: 401 },
 				);
 			}
-			if (error.message.includes("CSRF")) {
+			if (error.message.startsWith("CSRF protection")) {
 				return Response.json(
 					{ success: false, error: "Ugyldig forespørsel." },
 					{ status: 403 },
