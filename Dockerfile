@@ -1,9 +1,8 @@
 # Build stage
-FROM node:22.13-alpine3.21 AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Enable pnpm via corepack
-RUN corepack enable pnpm
+RUN npm install -g pnpm
 
 # Copy lockfile and package.json first for layer caching
 COPY pnpm-lock.yaml package.json ./
@@ -22,7 +21,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 RUN pnpm build
 
 # Runtime stage
-FROM node:22.13-alpine3.21
+FROM node:22-alpine
 WORKDIR /app
 
 # Install dumb-init for proper signal handling
