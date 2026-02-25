@@ -27,7 +27,11 @@ const nextConfig: NextConfig = {
 					},
 					{
 						key: "X-XSS-Protection",
-						value: "1; mode=block",
+						value: "0",
+					},
+					{
+						key: "Strict-Transport-Security",
+						value: "max-age=63072000; includeSubDomains; preload",
 					},
 					{
 						key: "Referrer-Policy",
@@ -39,7 +43,7 @@ const nextConfig: NextConfig = {
 					},
 					{
 						key: "Content-Security-Policy",
-						value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none';",
+						value: "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://lh3.googleusercontent.com https://*.utfs.io https://*.uploadthing.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://*.uploadthing.com https://*.utfs.io; frame-ancestors 'none';",
 					},
 				],
 			},

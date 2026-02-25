@@ -1,6 +1,10 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
+
+const VALID_KINDS = ["checking", "savings", "credit", "investment"] as const;
+const MAX_ACCOUNTS = 50;
+const ICON_RE = /^[a-z][a-z0-9-]{0,49}$/;
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
@@ -32,6 +36,14 @@ export async function createAccount(
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
+	// Validate kind and icon (MED-12)
+	if (!VALID_KINDS.includes(kind as (typeof VALID_KINDS)[number])) {
+		throw new Error("Ugyldig kontotype");
+	}
+	if (!ICON_RE.test(icon)) {
+		throw new Error("Ugyldig ikon");
+	}
+
 	const trimmedAccountNumber = accountNumber?.trim() || null;
 
 	// Validate account number format if provided (Norwegian format: XXXX.XX.XXXXX)
@@ -50,6 +62,13 @@ export async function createAccount(
 			throw new Error("Ugyldig inngående saldo");
 		}
 	}
+
+	// Enforce account count cap (MED-10)
+	const [{ cnt }] = await db
+		.select({ cnt: sql<number>`count(*)::int` })
+		.from(accounts)
+		.where(and(eq(accounts.householdId, householdId), isNull(accounts.deletedAt)));
+	if (cnt >= MAX_ACCOUNTS) throw new Error(`Maks ${MAX_ACCOUNTS} kontoer per husholdning`);
 
 	const [inserted] = await db
 		.insert(accounts)
@@ -140,6 +159,12 @@ export async function updateAccount(
 		}
 	}
 
+	// Validate kind and icon if provided (MED-12)
+	if (icon && !ICON_RE.test(icon)) throw new Error("Ugyldig ikon");
+	if (kind && !VALID_KINDS.includes(kind as (typeof VALID_KINDS)[number])) {
+		throw new Error("Ugyldig kontotype");
+	}
+
 	const set: Record<string, string | number | null> = { name: name.trim() };
 	if (icon) set.icon = icon;
 	if (accountNumber !== undefined) set.accountNumber = trimmedAccountNumber;
@@ -155,6 +180,7 @@ export async function updateAccount(
 				eq(accounts.id, id),
 				eq(accounts.householdId, householdId),
 				eq(accounts.userId, user.id),
+				isNull(accounts.deletedAt),
 			),
 		);
 
@@ -198,7 +224,13 @@ export async function deleteAccount(id: string): Promise<void> {
 	await db
 		.update(accounts)
 		.set({ deletedAt: new Date() })
-		.where(eq(accounts.id, id));
+		.where(
+			and(
+				eq(accounts.id, id),
+				eq(accounts.householdId, householdId),
+				eq(accounts.userId, user.id),
+			),
+		);
 
 	// Log the deletion
 	await logDelete(householdId, user.id, "account", id, "User initiated deletion");

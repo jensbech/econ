@@ -4,11 +4,15 @@ import type { z } from "zod";
  * Convert a NOK string (e.g. "12.50" or "12,50") to øre (integer).
  * Throws if the value is not a valid non-negative number.
  */
+const MAX_OERE = 2_000_000_000;
+
 export function nokToOere(nokStr: string): number {
 	const normalized = nokStr.replace(",", ".");
 	const value = Number.parseFloat(normalized);
 	if (Number.isNaN(value) || value < 0) throw new Error("Ugyldig beløp");
-	return Math.round(value * 100);
+	const oere = Math.round(value * 100);
+	if (oere > MAX_OERE) throw new Error("Beløp er for stort");
+	return oere;
 }
 
 /**

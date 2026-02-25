@@ -17,11 +17,30 @@ export async function validateCsrfOrigin(): Promise<void> {
 	}
 
 	// Validate origin matches expected host
-	const expectedOrigin = process.env.NEXTAUTH_URL?.split("://")[1] || "localhost";
-	const incomingHost = origin.split("://")[1];
+	const rawUrl = process.env.NEXTAUTH_URL;
+	if (!rawUrl) {
+		if (process.env.NODE_ENV === "production") {
+			throw new Error("NEXTAUTH_URL is not configured");
+		}
+		return;
+	}
 
-	if (incomingHost !== expectedOrigin && process.env.NODE_ENV === "production") {
-		throw new Error(`CSRF protection: Invalid origin ${origin}`);
+	let expectedHost: string;
+	try {
+		expectedHost = new URL(rawUrl).host;
+	} catch {
+		throw new Error("NEXTAUTH_URL is not a valid URL");
+	}
+
+	let incomingHost: string;
+	try {
+		incomingHost = new URL(origin).host;
+	} catch {
+		throw new Error("CSRF protection: Invalid origin format");
+	}
+
+	if (incomingHost !== expectedHost) {
+		throw new Error("CSRF protection: Invalid origin");
 	}
 }
 

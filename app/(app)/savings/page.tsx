@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import Link from "next/link";
 import { PiggyBank } from "lucide-react";
 import { db } from "@/db";
@@ -12,7 +12,7 @@ export default async function SavingsPage() {
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 
-	// Get all savings accounts (kind = 'savings')
+	// Get savings accounts visible to this user (public + own private)
 	const savingsAccounts = householdId
 		? await db
 				.select()
@@ -22,6 +22,10 @@ export default async function SavingsPage() {
 						eq(accounts.householdId, householdId),
 						eq(accounts.kind, "savings"),
 						isNull(accounts.deletedAt),
+						or(
+							eq(accounts.type, "public"),
+							eq(accounts.userId, user.id),
+						),
 					),
 				)
 				.orderBy(accounts.name)

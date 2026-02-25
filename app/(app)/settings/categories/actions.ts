@@ -1,17 +1,19 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const MAX_CATEGORIES = 200;
 
 const validateCategoryName = (name: string): boolean => {
-	// Reject control characters and other problematic patterns
 	if (/[\x00-\x1f\x7f-\x9f]/.test(name)) return false;
-	// Prevent excessive whitespace
 	if (/\s{2,}/.test(name)) return false;
 	return true;
 };
@@ -35,7 +37,9 @@ const RenameCategorySchema = z.object({
 });
 
 export async function addCategory(formData: FormData) {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`category:add:${user.id}`, 20, 60);
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -46,6 +50,13 @@ export async function addCategory(formData: FormData) {
 	if (!parsed.success) throw new Error("Ugyldig skjemadata");
 
 	const categoryName = parsed.data.name.trim();
+
+	// Enforce category count cap (HIGH-08)
+	const [{ cnt }] = await db
+		.select({ cnt: sql<number>`count(*)::int` })
+		.from(categories)
+		.where(and(eq(categories.householdId, householdId), isNull(categories.deletedAt)));
+	if (cnt >= MAX_CATEGORIES) throw new Error(`Maks ${MAX_CATEGORIES} kategorier per husholdning`);
 
 	// Check for duplicate category name
 	const [existing] = await db
@@ -76,7 +87,9 @@ export async function addCategory(formData: FormData) {
 }
 
 export async function renameCategory(formData: FormData) {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`category:rename:${user.id}`, 20, 60);
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -138,7 +151,9 @@ export async function renameCategory(formData: FormData) {
 }
 
 export async function deleteCategory(formData: FormData) {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`category:delete:${user.id}`, 10, 60);
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 

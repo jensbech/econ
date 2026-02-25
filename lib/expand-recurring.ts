@@ -173,8 +173,10 @@ export async function expandRecurringExpenses(
 
 	if (toInsert.length === 0) return;
 
+	const limited = toInsert.slice(0, 500);
+
 	await db.insert(expenses).values(
-		toInsert.map(({ dateStr, template }) => ({
+		limited.map(({ dateStr, template }) => ({
 			householdId,
 			userId: template.userId,
 			categoryId: template.categoryId ?? null,
@@ -258,8 +260,10 @@ export async function expandRecurringIncome(
 
 	if (toInsert.length === 0) return;
 
+	const limited = toInsert.slice(0, 500);
+
 	await db.insert(incomeEntries).values(
-		toInsert.map(({ dateStr, template }) => ({
+		limited.map(({ dateStr, template }) => ({
 			householdId,
 			userId: template.userId,
 			categoryId: template.categoryId ?? null,

@@ -28,7 +28,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			return token;
 		},
 		async signIn({ user, account }) {
-			if (account?.provider === "google" && account.providerAccountId && user.email) {
+			if (account?.provider === "google") {
+				if (!account.providerAccountId || !user.email) {
+					return false;
+				}
 				// Dynamic import to keep middleware Edge-runtime compatible
 				const { ensureUserAndHousehold } = await import("@/lib/households");
 				await ensureUserAndHousehold(

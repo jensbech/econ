@@ -3,13 +3,14 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { categories, expenses, importBatches } from "@/db/schema";
+import { accounts, categories, expenses, importBatches, loans } from "@/db/schema";
+import { logCreate, logDelete } from "@/lib/audit";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import type { DecimalSeparator } from "@/lib/csv-detect";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { parseDateToIso } from "@/lib/server-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { logDelete } from "@/lib/audit";
+import { parseDateToIso } from "@/lib/server-utils";
 
 export interface CheckRow {
 	date: string;
@@ -114,21 +115,33 @@ export async function confirmImport(
 	decimalSeparator: DecimalSeparator,
 	accountId: string | null = null,
 ): Promise<{ batchId: string; inserted: number }> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`import:confirm:${user.id}`, 10, 3600);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	const safeFilename = filename.trim().slice(0, 255).replace(/[\x00-\x1f\x7f]/g, "");
+	if (!safeFilename) throw new Error("Ugyldig filnavn");
+
+	const MAX_IMPORT_ROWS = 500;
+	if (rows.length > MAX_IMPORT_ROWS) throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
 
 	// Parse and filter out unparseable rows
 	const parsed = rows
 		.map((row) => ({
 			isoDate: parseDateToIso(row.date),
 			amountOere: parseAmountToOere(row.amount, decimalSeparator),
-			description: row.description.trim(),
+			description: row.description.trim().slice(0, 500),
 			categoryId: row.categoryId || null,
 			accountId: row.accountId ?? accountId ?? null,
 			loanId: row.loanId || null,
-			interestOere: row.interestOere ?? null,
-			principalOere: row.principalOere ?? null,
+			interestOere: Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
+				? Math.round(row.interestOere as number)
+				: null,
+			principalOere: Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
+				? Math.round(row.principalOere as number)
+				: null,
 		}))
 		.filter(
 			(
@@ -174,15 +187,69 @@ export async function confirmImport(
 		}
 	}
 
+	// Validate accountId and loanId ownership (CRIT-02)
+	const allAccountIds = [
+		...new Set(
+			[accountId, ...parsed.map((r) => r.accountId)].filter(
+				(id): id is string => id !== null,
+			),
+		),
+	];
+	const validAccountIds = new Set<string>();
+	if (allAccountIds.length > 0) {
+		const validAccts = await db
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(
+				and(
+					inArray(accounts.id, allAccountIds),
+					eq(accounts.householdId, householdId),
+					isNull(accounts.deletedAt),
+				),
+			);
+		for (const a of validAccts) validAccountIds.add(a.id);
+	}
+
+	const allLoanIds = [
+		...new Set(
+			parsed.map((r) => r.loanId).filter((id): id is string => id !== null),
+		),
+	];
+	const validLoanIds = new Set<string>();
+	if (allLoanIds.length > 0) {
+		const validLoans = await db
+			.select({ id: loans.id })
+			.from(loans)
+			.where(
+				and(
+					inArray(loans.id, allLoanIds),
+					eq(loans.householdId, householdId),
+					isNull(loans.deletedAt),
+				),
+			);
+		for (const l of validLoans) validLoanIds.add(l.id);
+	}
+
+	const safeTopLevelAccountId =
+		accountId && validAccountIds.has(accountId) ? accountId : null;
+	for (const r of parsed) {
+		if (r.accountId !== null && !validAccountIds.has(r.accountId)) {
+			r.accountId = null;
+		}
+		if (r.loanId !== null && !validLoanIds.has(r.loanId)) {
+			r.loanId = null;
+		}
+	}
+
 	// Create the import batch record
 	const [batch] = await db
 		.insert(importBatches)
 		.values({
 			householdId,
 			userId: user.id as string,
-			filename,
+			filename: safeFilename,
 			rowCount: parsed.length,
-			accountId: accountId || null,
+			accountId: safeTopLevelAccountId,
 		})
 		.returning({ id: importBatches.id });
 
@@ -203,6 +270,12 @@ export async function confirmImport(
 		})),
 	);
 
+	await logCreate(householdId, user.id as string, "importBatch", batch.id, {
+		filename: safeFilename,
+		rowCount: parsed.length,
+		source: "csv",
+	});
+
 	revalidatePath("/import");
 	revalidatePath("/expenses");
 	revalidatePath("/savings");
@@ -216,6 +289,7 @@ export async function confirmImport(
  * rolled back.
  */
 export async function rollbackImport(batchId: string): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
 

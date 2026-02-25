@@ -34,9 +34,11 @@ export default async function ExpensesPage({
 	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
 	// month searchParam overrides cookie; cookie overrides current month
+	const MONTH_RE = /^\d{4}-(?:0[1-9]|1[0-2])$/;
 	const monthCookie = cookieStore.get("selectedMonth")?.value;
 	const { month: monthParam, categoryId, from, to, importBatch } = params;
-	const month = monthParam ?? (monthCookie && monthCookie !== "all" ? monthCookie : undefined);
+	const rawMonth = monthParam ?? (monthCookie && monthCookie !== "all" ? monthCookie : undefined);
+	const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : rawMonth === "all" ? "all" : undefined;
 
 	// Expand recurring expenses for the viewed month (idempotent)
 	if (householdId) {

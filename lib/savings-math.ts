@@ -10,7 +10,8 @@ export function calcSavingsProjection(
 		return initialOere + monthlyContribOere * months;
 	}
 	const growth = (1 + r) ** months;
-	return Math.round(
+	const result = Math.round(
 		initialOere * growth + monthlyContribOere * ((growth - 1) / r),
 	);
+	return Number.isFinite(result) ? result : Number.MAX_SAFE_INTEGER;
 }

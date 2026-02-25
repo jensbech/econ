@@ -5,10 +5,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { categories, incomeEntries } from "@/db/schema";
+import { accounts, categories, incomeEntries } from "@/db/schema";
+import { logCreate, logDelete, logUpdate } from "@/lib/audit";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
 
 export type IncomeFormState = {
 	error?: string | null;
@@ -18,9 +21,12 @@ export type IncomeFormState = {
 } | null;
 
 const IncomeSchema = z.object({
-	date: z.string().min(1, "Dato er påkrevd"),
+	date: z
+		.string()
+		.min(1, "Dato er påkrevd")
+		.refine((d) => parseDateToIso(d) !== null, "Ugyldig dato"),
 	amount: z.string().min(1, "Beløp er påkrevd"),
-	source: z.string().optional(),
+	source: z.string().max(500).optional(),
 	type: z.enum(["salary", "variable"]),
 	categoryId: z.string().optional(),
 	accountId: z.string().optional(),
@@ -30,7 +36,15 @@ export async function createIncome(
 	_prevState: IncomeFormState,
 	formData: FormData,
 ): Promise<IncomeFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+
+	try {
+		checkRateLimit(`income:create:${user.id}`, 20, 60);
+	} catch {
+		return { error: "Too many income creations. Please try again later." };
+	}
+
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -73,6 +87,22 @@ export async function createIncome(
 		if (!cat) return { fieldErrors: { categoryId: ["Ugyldig kategori"] } };
 	}
 
+	// Validate accountId belongs to this household (CRIT-02)
+	if (parsed.data.accountId) {
+		const [acct] = await db
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.id, parsed.data.accountId),
+					eq(accounts.householdId, householdId),
+					isNull(accounts.deletedAt),
+				),
+			)
+			.limit(1);
+		if (!acct) return { fieldErrors: { accountId: ["Ugyldig konto"] } };
+	}
+
 	// Duplicate check: warn if same amount+date already exists
 	if (!force) {
 		const [dup] = await db
@@ -98,16 +128,28 @@ export async function createIncome(
 		}
 	}
 
-	await db.insert(incomeEntries).values({
-		householdId,
-		userId: user.id as string,
-		categoryId: parsed.data.categoryId ?? null,
-		accountId: parsed.data.accountId ?? null,
-		amountOere,
-		date: parsed.data.date,
-		source: parsed.data.source ?? null,
-		type: parsed.data.type,
-	});
+	const [inserted] = await db
+		.insert(incomeEntries)
+		.values({
+			householdId,
+			userId: user.id as string,
+			categoryId: parsed.data.categoryId ?? null,
+			accountId: parsed.data.accountId ?? null,
+			amountOere,
+			date: parsed.data.date,
+			source: parsed.data.source ?? null,
+			type: parsed.data.type,
+		})
+		.returning({ id: incomeEntries.id });
+
+	if (inserted) {
+		await logCreate(householdId, user.id as string, "income", inserted.id, {
+			amount: amountOere,
+			date: parsed.data.date,
+			type: parsed.data.type,
+			category: parsed.data.categoryId,
+		});
+	}
 
 	revalidatePath("/income");
 	redirect("/income");
@@ -118,7 +160,15 @@ export async function updateIncome(
 	_prevState: IncomeFormState,
 	formData: FormData,
 ): Promise<IncomeFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+
+	try {
+		checkRateLimit(`income:update:${user.id}`, 20, 60);
+	} catch {
+		return { error: "Too many income updates. Please try again later." };
+	}
+
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -159,6 +209,22 @@ export async function updateIncome(
 		if (!cat) return { fieldErrors: { categoryId: ["Ugyldig kategori"] } };
 	}
 
+	// Validate accountId belongs to this household (CRIT-02)
+	if (parsed.data.accountId) {
+		const [acct] = await db
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.id, parsed.data.accountId),
+					eq(accounts.householdId, householdId),
+					isNull(accounts.deletedAt),
+				),
+			)
+			.limit(1);
+		if (!acct) return { fieldErrors: { accountId: ["Ugyldig konto"] } };
+	}
+
 	await db
 		.update(incomeEntries)
 		.set({
@@ -179,14 +245,43 @@ export async function updateIncome(
 			),
 		);
 
+	await logUpdate(householdId, user.id as string, "income", id, {
+		amount: amountOere,
+		date: parsed.data.date,
+		type: parsed.data.type,
+		category: parsed.data.categoryId,
+	});
+
 	revalidatePath("/income");
 	redirect("/income");
 }
 
 export async function deleteIncome(id: string): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+
+	try {
+		checkRateLimit(`income:delete:${user.id}`, 10, 60);
+	} catch {
+		throw new Error("Rate limit exceeded. Please try again later.");
+	}
+
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	const [income] = await db
+		.select({ id: incomeEntries.id })
+		.from(incomeEntries)
+		.where(
+			and(
+				eq(incomeEntries.id, id),
+				eq(incomeEntries.householdId, householdId),
+				isNull(incomeEntries.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!income) throw new Error("Income not found or access denied");
 
 	await db
 		.update(incomeEntries)
@@ -198,6 +293,8 @@ export async function deleteIncome(id: string): Promise<void> {
 				isNull(incomeEntries.deletedAt),
 			),
 		);
+
+	await logDelete(householdId, user.id as string, "income", id, "User initiated deletion");
 
 	revalidatePath("/income");
 	redirect("/income");
@@ -205,9 +302,31 @@ export async function deleteIncome(id: string): Promise<void> {
 
 // Deletes without redirect — used from the income list table
 export async function deleteIncomeNoRedirect(id: string): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+
+	try {
+		checkRateLimit(`income:delete:${user.id}`, 10, 60);
+	} catch {
+		throw new Error("Rate limit exceeded. Please try again later.");
+	}
+
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	const [income] = await db
+		.select({ id: incomeEntries.id })
+		.from(incomeEntries)
+		.where(
+			and(
+				eq(incomeEntries.id, id),
+				eq(incomeEntries.householdId, householdId),
+				isNull(incomeEntries.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!income) throw new Error("Income not found or access denied");
 
 	await db
 		.update(incomeEntries)
@@ -219,6 +338,8 @@ export async function deleteIncomeNoRedirect(id: string): Promise<void> {
 				isNull(incomeEntries.deletedAt),
 			),
 		);
+
+	await logDelete(householdId, user.id as string, "income", id, "User initiated deletion");
 
 	revalidatePath("/income");
 }

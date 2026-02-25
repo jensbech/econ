@@ -41,6 +41,29 @@ export const ourFileRouter = {
 			}
 			return { url: file.ufsUrl, uploadedBy: metadata.userId };
 		}),
+
+	// Route for AI document extraction — images up to 5 MB (Anthropic limit), PDFs up to 16 MB
+	aiDocument: f({
+		image: { maxFileSize: "5MB", maxFileCount: 1 },
+		pdf: { maxFileSize: "16MB", maxFileCount: 1 },
+	})
+		.middleware(async () => {
+			const session = await auth();
+			if (!session?.user?.id) throw new Error("Unauthorized");
+			return { userId: session.user.id as string };
+		})
+		.onUploadComplete(async ({ file }) => {
+			const validMimes = new Set([
+				"application/pdf",
+				"image/jpeg",
+				"image/png",
+				"image/webp",
+			]);
+			if (!validMimes.has(file.type)) {
+				throw new Error(`Invalid file type: ${file.type}`);
+			}
+			return { url: file.ufsUrl };
+		}),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

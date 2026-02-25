@@ -6,11 +6,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories, expenses, loans } from "@/db/schema";
+import { logCreate, logDelete } from "@/lib/audit";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { logCreate, logUpdate, logDelete } from "@/lib/audit";
+import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
 
 export type LoanFormState = {
 	error?: string | null;
@@ -45,6 +46,7 @@ export async function createLoan(
 	_prevState: LoanFormState,
 	formData: FormData,
 ): Promise<LoanFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) return { error: "User ID not available" };
 
@@ -161,6 +163,7 @@ export async function createLoan(
 }
 
 export async function deleteLoan(id: string): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
 
@@ -190,7 +193,7 @@ export async function deleteLoan(id: string): Promise<void> {
 	await db
 		.update(loans)
 		.set({ deletedAt: new Date() })
-		.where(eq(loans.id, id));
+		.where(and(eq(loans.id, id), eq(loans.householdId, householdId)));
 
 	// Log the deletion
 	await logDelete(householdId, user.id, "loan", id, "User initiated deletion");
@@ -204,7 +207,13 @@ export async function addLoanPayment(
 	_prevState: PaymentFormState,
 	formData: FormData,
 ): Promise<PaymentFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	try {
+		checkRateLimit(`loan:payment:create:${user.id}`, 10, 60);
+	} catch {
+		return { error: "Too many payment submissions. Please try again later." };
+	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -299,6 +308,7 @@ export async function deleteLoanPayment(
 	paymentId: string,
 	loanId: string,
 ): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
 
@@ -342,7 +352,7 @@ export async function deleteLoanPayment(
 	await db
 		.update(expenses)
 		.set({ deletedAt: new Date() })
-		.where(eq(expenses.id, paymentId));
+		.where(and(eq(expenses.id, paymentId), eq(expenses.householdId, householdId)));
 
 	// Log the deletion
 	await logDelete(householdId, user.id, "loanPayment", paymentId, "User initiated deletion");

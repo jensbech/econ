@@ -114,13 +114,15 @@ export function computeLoanBalance(
 		}
 	}
 
-	const principalPaidPct = Math.max(
-		0,
-		Math.min(
-			100,
-			Math.round(((principalOere - balance) / principalOere) * 100),
-		),
-	);
+	const principalPaidPct = principalOere > 0
+		? Math.max(
+			0,
+			Math.min(
+				100,
+				Math.round(((principalOere - balance) / principalOere) * 100),
+			),
+		)
+		: 100;
 
 	return {
 		currentBalanceOere: Math.max(0, balance),

@@ -55,12 +55,7 @@ export function checkRateLimit(
 
 	// Within existing bucket
 	if (entry.count >= maxRequests) {
-		const secondsUntilReset = Math.ceil(
-			(entry.resetTime - now) / 1000,
-		);
-		throw new Error(
-			`Rate limit exceeded. Try again in ${secondsUntilReset} seconds.`,
-		);
+		throw new Error("Rate limit exceeded. Please try again later.");
 	}
 
 	entry.count++;

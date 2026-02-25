@@ -1,13 +1,38 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { categories, expenses, importBatches } from "@/db/schema";
+import { accounts, categories, expenses, importBatches, loans } from "@/db/schema";
 import { type SupportedMediaType, extractTransactions } from "@/lib/ai-extract";
+import { logCreate, logDelete } from "@/lib/audit";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { parseDateToIso } from "@/lib/server-utils";
+
+const ALLOWED_FILE_HOSTS = [".utfs.io", ".uploadthing.com"];
+const SUPPORTED_MEDIA_TYPES: SupportedMediaType[] = [
+	"application/pdf",
+	"image/jpeg",
+	"image/png",
+	"image/webp",
+];
+
+function isAllowedFileUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "https:") return false;
+		return ALLOWED_FILE_HOSTS.some(
+			(host) =>
+				parsed.hostname === host.replace(/^\./, "") ||
+				parsed.hostname.endsWith(host),
+		);
+	} catch {
+		return false;
+	}
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,16 +98,35 @@ function findCategoryInDb(
 // ─── AI extraction + enrichment ───────────────────────────────────────────────
 
 export async function startAiExtraction(
-	base64: string,
+	fileUrl: string,
 	mediaType: SupportedMediaType,
-	accounts: Array<{ id: string; accountNumber: string | null }> = [],
+	userAccounts: Array<{ id: string; accountNumber: string | null }> = [],
 ): Promise<EnrichedExtractionResult> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+
+	checkRateLimit(`ai:extract:${user.id}`, 10, 600);
+
+	if (!isAllowedFileUrl(fileUrl)) {
+		return { success: false, error: "Ugyldig filkilde." };
+	}
+
+	if (!SUPPORTED_MEDIA_TYPES.includes(mediaType)) {
+		return { success: false, error: "Ustøttet filformat." };
+	}
+
+	const fileResponse = await fetch(fileUrl);
+	if (!fileResponse.ok) {
+		return { success: false, error: "Klarte ikke hente filen. Prøv igjen." };
+	}
+	const buffer = await fileResponse.arrayBuffer();
+	const base64 = Buffer.from(buffer).toString("base64");
+
 	const householdId = await getHouseholdId(user.id as string);
 
 	// Build account number → id lookup
 	const accountNumberMap = new Map<string, string>();
-	for (const a of accounts) {
+	for (const a of userAccounts) {
 		if (a.accountNumber) {
 			accountNumberMap.set(a.accountNumber.replace(/[\s.]/g, ""), a.id);
 		}
@@ -221,7 +265,7 @@ export async function checkAiDuplicates(
 			and(
 				eq(expenses.householdId, householdId),
 				isNull(expenses.deletedAt),
-				isNotNull(expenses.date),
+				inArray(expenses.date, isoDates),
 			),
 		);
 
@@ -239,13 +283,27 @@ export async function checkAiDuplicates(
 export async function createExpenseCategory(
 	name: string,
 ): Promise<{ id: string; name: string }> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`category:create:${user.id}`, 20, 60);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
+	const trimmedName = name.trim().slice(0, 100);
+	if (!trimmedName || /[\x00-\x1f\x7f-\x9f]/.test(trimmedName)) {
+		throw new Error("Ugyldig kategorinavn");
+	}
+
+	// Enforce category count cap (HIGH-08)
+	const [{ cnt }] = await db
+		.select({ cnt: sql<number>`count(*)::int` })
+		.from(categories)
+		.where(and(eq(categories.householdId, householdId), isNull(categories.deletedAt)));
+	if (cnt >= 200) throw new Error("Maks 200 kategorier per husholdning");
+
 	const [cat] = await db
 		.insert(categories)
-		.values({ householdId, name: name.trim(), type: "expense" })
+		.values({ householdId, name: trimmedName, type: "expense" })
 		.returning({ id: categories.id, name: categories.name });
 
 	revalidatePath("/import");
@@ -273,20 +331,34 @@ export async function confirmAiImport(
 	scope: "household" | "personal" = "household",
 	isShared = false,
 ): Promise<{ batchId: string; inserted: number }> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`ai:import:${user.id}`, 5, 3600);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	const safeFilename = filename.trim().slice(0, 255).replace(/[\x00-\x1f\x7f]/g, "");
+	if (!safeFilename) throw new Error("Ugyldig filnavn");
+
+	if (scope !== "household" && scope !== "personal") throw new Error("Ugyldig scope");
+
+	const MAX_IMPORT_ROWS = 500;
+	if (rows.length > MAX_IMPORT_ROWS) throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
 
 	const parsed = rows
 		.map((row) => ({
 			isoDate: parseDateToIso(row.date),
 			amountOere: Math.round(row.amountOere),
-			description: row.description.trim(),
+			description: row.description.trim().slice(0, 500),
 			categoryId: row.categoryId || null,
 			accountId: row.accountId ?? accountId ?? null,
 			loanId: row.loanId || null,
-			interestOere: row.interestOere ?? null,
-			principalOere: row.principalOere ?? null,
+			interestOere: Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
+				? Math.round(row.interestOere as number)
+				: null,
+			principalOere: Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
+				? Math.round(row.principalOere as number)
+				: null,
 		}))
 		.filter(
 			(
@@ -303,7 +375,8 @@ export async function confirmAiImport(
 			} =>
 				r.isoDate !== null &&
 				Number.isFinite(r.amountOere) &&
-				r.amountOere >= 0,
+				r.amountOere >= 0 &&
+				r.amountOere <= 2_000_000_000,
 		);
 
 	if (parsed.length === 0) return { batchId: "", inserted: 0 };
@@ -332,15 +405,69 @@ export async function confirmAiImport(
 		}
 	}
 
+	// Validate accountId and loanId ownership (CRIT-02)
+	const allAccountIds = [
+		...new Set(
+			[accountId, ...parsed.map((r) => r.accountId)].filter(
+				(id): id is string => id !== null,
+			),
+		),
+	];
+	const validAccountIds = new Set<string>();
+	if (allAccountIds.length > 0) {
+		const validAccts = await db
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(
+				and(
+					inArray(accounts.id, allAccountIds),
+					eq(accounts.householdId, householdId),
+					isNull(accounts.deletedAt),
+				),
+			);
+		for (const a of validAccts) validAccountIds.add(a.id);
+	}
+
+	const allLoanIds = [
+		...new Set(
+			parsed.map((r) => r.loanId).filter((id): id is string => id !== null),
+		),
+	];
+	const validLoanIds = new Set<string>();
+	if (allLoanIds.length > 0) {
+		const validLoans = await db
+			.select({ id: loans.id })
+			.from(loans)
+			.where(
+				and(
+					inArray(loans.id, allLoanIds),
+					eq(loans.householdId, householdId),
+					isNull(loans.deletedAt),
+				),
+			);
+		for (const l of validLoans) validLoanIds.add(l.id);
+	}
+
+	const safeTopLevelAccountId =
+		accountId && validAccountIds.has(accountId) ? accountId : null;
+	for (const r of parsed) {
+		if (r.accountId !== null && !validAccountIds.has(r.accountId)) {
+			r.accountId = null;
+		}
+		if (r.loanId !== null && !validLoanIds.has(r.loanId)) {
+			r.loanId = null;
+		}
+	}
+
 	const [batch] = await db
 		.insert(importBatches)
 		.values({
 			householdId,
 			userId: user.id as string,
-			filename,
+			filename: safeFilename,
 			rowCount: parsed.length,
 			scope,
-			accountId: accountId || null,
+			accountId: safeTopLevelAccountId,
 		})
 		.returning({ id: importBatches.id });
 
@@ -361,6 +488,13 @@ export async function confirmAiImport(
 			principalOere: r.principalOere ?? null,
 		})),
 	);
+
+	await logCreate(householdId, user.id as string, "importBatch", batch.id, {
+		filename: safeFilename,
+		rowCount: parsed.length,
+		scope,
+		source: "ai",
+	});
 
 	revalidatePath("/import");
 	revalidatePath("/expenses");

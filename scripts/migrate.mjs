@@ -11,6 +11,12 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_MIGRATE !== 'true') {
+  console.error('ERROR: Refusing to run migrations in production without ALLOW_MIGRATE=true.');
+  console.error('Set ALLOW_MIGRATE=true to confirm you intend to migrate the production database.');
+  process.exit(1);
+}
+
 const client = postgres(process.env.DATABASE_URL, { max: 1 });
 const db = drizzle(client);
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { AlertCircle, Loader2, Upload } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import type { SupportedMediaType } from "@/lib/ai-extract";
+import { useUploadThing } from "@/lib/uploadthing";
 import { type EnrichedTransaction, startAiExtraction } from "./ai-actions";
 import { AiReview } from "./ai-review";
 import type { Category } from "./csv-import";
@@ -71,20 +72,25 @@ interface UploadZoneProps {
 
 function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 	const [state, setState] = useState<UploadState>(INITIAL_STATE);
+	const pendingRef = useRef<{ file: File; dataUrl: string } | null>(null);
+	const accountsRef = useRef(accounts);
+	accountsRef.current = accounts;
 
-	const onDrop = useCallback(
-		async (accepted: File[]) => {
-			const file = accepted[0];
-			if (!file) return;
-			setState({ step: "extracting", filename: file.name, errorMessage: null });
+	const { startUpload } = useUploadThing("aiDocument", {
+		onClientUploadComplete: async (res) => {
+			const uploaded = res[0];
+			const pending = pendingRef.current;
+			if (!uploaded || !pending) return;
+			const mediaType = pending.file.type as SupportedMediaType;
+			const fileType = getFileType(pending.file);
 			try {
-				const base64 = await readFileAsBase64(file);
-				const mediaType = file.type as SupportedMediaType;
-				const fileType = getFileType(file);
-				const result = await startAiExtraction(base64, mediaType, accounts);
+				const result = await startAiExtraction(
+					uploaded.url,
+					mediaType,
+					accountsRef.current,
+				);
 				if (result.success) {
-					const dataUrl = `data:${file.type};base64,${base64}`;
-					onExtracted(dataUrl, fileType, file.name, result.transactions);
+					onExtracted(pending.dataUrl, fileType, pending.file.name, result.transactions);
 				} else {
 					setState((s) => ({ ...s, step: "error", errorMessage: result.error }));
 				}
@@ -96,19 +102,50 @@ function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 				}));
 			}
 		},
-		[accounts, onExtracted],
+		onUploadError: (err) => {
+			setState((s) => ({
+				...s,
+				step: "error",
+				errorMessage: err.message || "Opplasting mislyktes.",
+			}));
+		},
+	});
+
+	const onDrop = useCallback(
+		async (accepted: File[]) => {
+			const file = accepted[0];
+			if (!file) return;
+			if (file.type !== "application/pdf" && file.size > 5 * 1024 * 1024) {
+				setState((s) => ({
+					...s,
+					errorMessage: "Bilder kan maks være 5 MB.",
+				}));
+				return;
+			}
+			setState({ step: "extracting", filename: file.name, errorMessage: null });
+			const base64 = await readFileAsBase64(file);
+			pendingRef.current = { file, dataUrl: `data:${file.type};base64,${base64}` };
+			await startUpload([file]);
+		},
+		[startUpload],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
 		accept: ACCEPTED_MIME,
 		maxFiles: 1,
+		maxSize: 16 * 1024 * 1024,
 		disabled: state.step === "extracting",
-		onDropRejected: () =>
+		onDropRejected: (files) => {
+			const code = files[0]?.errors[0]?.code;
 			setState((s) => ({
 				...s,
-				errorMessage: "Kun PDF, JPG, PNG og WEBP er støttet.",
-			})),
+				errorMessage:
+					code === "file-too-large"
+						? "Filen er for stor. Maks 16 MB for PDF, 5 MB for bilde."
+						: "Kun PDF, JPG, PNG og WEBP er støttet.",
+			}));
+		},
 	});
 
 	if (state.step === "extracting") {

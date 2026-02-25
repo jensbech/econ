@@ -35,16 +35,29 @@ export async function ensureUserAndHousehold(
 	}
 
 	// Create personal household for new user
+	const displayName = (name ?? email).slice(0, 100);
 	const [household] = await db
 		.insert(households)
-		.values({ name: `${name ?? email}s husholdning` })
+		.values({ name: `${displayName}s husholdning` })
 		.returning();
 
-	await db.insert(householdMembers).values({
-		householdId: household.id,
-		userId,
-		role: "owner",
-	});
+	// Use onConflictDoNothing to handle the race condition where two concurrent
+	// sign-in requests both pass the membership check and try to create households
+	const [member] = await db
+		.insert(householdMembers)
+		.values({ householdId: household.id, userId, role: "owner" })
+		.onConflictDoNothing()
+		.returning({ householdId: householdMembers.householdId });
+
+	if (!member) {
+		// Another concurrent request already created the household — return that one
+		const [found] = await db
+			.select({ householdId: householdMembers.householdId })
+			.from(householdMembers)
+			.where(eq(householdMembers.userId, userId))
+			.limit(1);
+		return found.householdId;
+	}
 
 	await seedDefaultCategories(household.id);
 

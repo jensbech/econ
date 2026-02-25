@@ -22,7 +22,8 @@ export function MonthSelector({ initialMonth }: MonthSelectorProps) {
 		monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
 	function setMonth(month: string) {
-		document.cookie = `selectedMonth=${month}; path=/; max-age=31536000; SameSite=Lax`;
+		const secure = window.location.protocol === "https:" ? "; Secure" : "";
+		document.cookie = `selectedMonth=${month}; path=/; max-age=7776000; SameSite=Lax${secure}`;
 		startTransition(() => {
 			router.refresh();
 		});

@@ -37,6 +37,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/db/migrations ./db/migrations
 COPY --from=builder /app/scripts ./scripts
 
+# Copy packages needed by migrate.mjs (not included in standalone bundle)
+COPY --from=builder /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+COPY --from=builder /app/node_modules/postgres ./node_modules/postgres
+
 # Copy entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R nextjs:nodejs /app

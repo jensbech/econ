@@ -41,7 +41,8 @@ export function AccountSelector({
 
 	function persist(next: Set<string>) {
 		const value = Array.from(next).join(",");
-		document.cookie = `selectedAccounts=${value}; path=/; max-age=31536000; SameSite=Lax`;
+		const secure = window.location.protocol === "https:" ? "; Secure" : "";
+		document.cookie = `selectedAccounts=${value}; path=/; max-age=7776000; SameSite=Lax${secure}`;
 	}
 
 	function apply(next: Set<string>) {

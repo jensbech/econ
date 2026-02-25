@@ -14,21 +14,31 @@ export interface AuditLogEntry {
  * Log an audit event for financial data changes.
  * This creates a permanent record of who did what and when.
  */
-export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
-	try {
-		await db.insert(auditLog).values({
-			householdId: entry.householdId,
-			userId: entry.userId,
-			action: entry.action,
-			resourceType: entry.resourceType,
-			resourceId: entry.resourceId,
-			changes: entry.changes ? JSON.stringify(entry.changes) : null,
-			timestamp: new Date(),
-		});
-	} catch (error) {
-		// Log error but don't fail the main operation
-		console.error("Failed to log audit event:", error);
+const REDACTED_FIELDS = new Set(["accountNumber", "accountNumberEncrypted"]);
+
+function sanitizeChanges(changes: Record<string, any>): Record<string, any> {
+	const result: Record<string, any> = {};
+	for (const [key, value] of Object.entries(changes)) {
+		if (REDACTED_FIELDS.has(key) && typeof value === "string" && value.length > 0) {
+			result[key] = `***${value.slice(-4)}`;
+		} else {
+			result[key] = value;
+		}
 	}
+	return result;
+}
+
+export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
+	const sanitized = entry.changes ? sanitizeChanges(entry.changes) : undefined;
+	await db.insert(auditLog).values({
+		householdId: entry.householdId,
+		userId: entry.userId,
+		action: entry.action,
+		resourceType: entry.resourceType,
+		resourceId: entry.resourceId,
+		changes: sanitized ? JSON.stringify(sanitized) : null,
+		timestamp: new Date(),
+	});
 }
 
 /**

@@ -20,7 +20,7 @@ import { MobileSidebar } from "@/components/mobile-sidebar";
 import { NavLink } from "@/components/nav-link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getVisibleAccounts } from "@/lib/accounts";
-import { ensureUserAndHousehold, getHouseholdId } from "@/lib/households";
+import { getHouseholdId } from "@/lib/households";
 
 const navItems = [
 	{ href: "/dashboard", label: "Oversikt", icon: LayoutDashboard },
@@ -58,16 +58,7 @@ export default async function AppLayout({
 
 	const user = session.user;
 
-	let householdId = await getHouseholdId(user.id as string);
-	if (!householdId && user.email) {
-		await ensureUserAndHousehold(
-			user.id as string,
-			user.email,
-			user.name ?? null,
-			user.image ?? null,
-		);
-		householdId = await getHouseholdId(user.id as string);
-	}
+	const householdId = await getHouseholdId(user.id as string);
 
 	const visibleAccounts = householdId
 		? await getVisibleAccounts(user.id as string, householdId)
@@ -77,12 +68,15 @@ export default async function AppLayout({
 	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
 	const initialSelected = selectedRaw
 		.split(",")
+		.slice(0, 20)
 		.filter((id) => visibleAccounts.some((a) => a.id === id));
 
 	const now = new Date();
 	const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-	const initialMonth =
-		cookieStore.get("selectedMonth")?.value ?? currentMonthStr;
+	const cookieMonth = cookieStore.get("selectedMonth")?.value ?? "";
+	const initialMonth = /^\d{4}-(?:0[1-9]|1[0-2])$/.test(cookieMonth)
+		? cookieMonth
+		: currentMonthStr;
 
 	return (
 		<div className="flex min-h-screen bg-[#F5F3EF] dark:bg-gray-950">

@@ -6,8 +6,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories, expenses, recurringTemplates } from "@/db/schema";
+import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
 
 export type TemplateFormState = {
@@ -33,7 +35,13 @@ export async function createRecurringTemplate(
 	_prevState: TemplateFormState,
 	formData: FormData,
 ): Promise<TemplateFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	try {
+		checkRateLimit(`recurring:create:${user.id}`, 5, 3600);
+	} catch {
+		return { error: "Too many template creations. Please try again later." };
+	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -96,7 +104,13 @@ export async function updateRecurringTemplate(
 	_prevState: TemplateFormState,
 	formData: FormData,
 ): Promise<TemplateFormState> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	try {
+		checkRateLimit(`recurring:update:${user.id}`, 10, 60);
+	} catch {
+		return { error: "Too many template updates. Please try again later." };
+	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -177,7 +191,9 @@ export async function updateRecurringTemplate(
 }
 
 export async function deleteRecurringTemplate(id: string): Promise<void> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
+	checkRateLimit(`recurring:delete:${user.id}`, 5, 3600);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 

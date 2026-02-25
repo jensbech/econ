@@ -1,5 +1,11 @@
 import postgres from "postgres";
 
+if (process.env.ALLOW_SEED !== "true") {
+	console.error("ERROR: Refusing to seed. This permanently deletes all household data.");
+	console.error("Set ALLOW_SEED=true to confirm. Never run against production data.");
+	process.exit(1);
+}
+
 if (!process.env.DATABASE_URL) {
 	console.error("ERROR: DATABASE_URL environment variable is not set");
 	process.exit(1);
