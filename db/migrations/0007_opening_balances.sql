@@ -1,7 +1,7 @@
-ALTER TABLE "loans" ADD COLUMN "opening_balance_oere" integer;
+ALTER TABLE "loans" ADD COLUMN IF NOT EXISTS "opening_balance_oere" integer;
 --> statement-breakpoint
-ALTER TABLE "loans" ADD COLUMN "opening_balance_date" date;
+ALTER TABLE "loans" ADD COLUMN IF NOT EXISTS "opening_balance_date" date;
 --> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "opening_balance_oere" integer;
+ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "opening_balance_oere" integer;
 --> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "opening_balance_date" date;
+ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "opening_balance_date" date;
