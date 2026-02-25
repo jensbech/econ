@@ -8,7 +8,6 @@ services:
       DATABASE_URL: postgresql://econ:${POSTGRES_PASSWORD}@econ-db:5432/econ
       DATABASE_SSL: "false"
       ALLOW_MIGRATE: "true"
-      AUTH_URL: ${AUTH_URL}
       AUTH_TRUST_HOST: "true"
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID}

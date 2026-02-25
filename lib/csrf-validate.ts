@@ -16,21 +16,25 @@ export async function validateCsrfOrigin(): Promise<void> {
 		return;
 	}
 
-	// Validate origin matches expected host
-	// NextAuth v5 uses AUTH_URL; fall back to NEXTAUTH_URL for compat
+	// Validate origin matches expected host.
+	// Prefer explicit env var; fall back to the Host header (set by nginx-proxy).
 	const rawUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
-	if (!rawUrl) {
-		if (process.env.NODE_ENV === "production") {
-			throw new Error("CSRF protection: AUTH_URL is not configured");
-		}
-		return;
-	}
-
 	let expectedHost: string;
-	try {
-		expectedHost = new URL(rawUrl).host;
-	} catch {
-		throw new Error("CSRF protection: AUTH_URL is not a valid URL");
+	if (rawUrl) {
+		try {
+			expectedHost = new URL(rawUrl).host;
+		} catch {
+			throw new Error("CSRF protection: AUTH_URL is not a valid URL");
+		}
+	} else {
+		const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
+		if (!host) {
+			if (process.env.NODE_ENV === "production") {
+				throw new Error("CSRF protection: cannot determine expected host");
+			}
+			return;
+		}
+		expectedHost = host.split(",")[0].trim();
 	}
 
 	let incomingHost: string;
