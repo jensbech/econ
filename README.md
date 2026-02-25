@@ -1,6 +1,6 @@
 # econ
 
-Personal finance tracker. Track expenses, income, loans, and savings — with CSV import and AI-assisted categorization.
+Personal finance tracker. Track expenses, income, loans, and savings — with import and AI-assisted categorization.
 
 ## Stack
 
