@@ -141,24 +141,59 @@ export default async function AppLayout({
 			{/* Main content area */}
 			<div className="flex flex-1 flex-col min-w-0">
 				{/* Top bar */}
-				<header className="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200/70 bg-white/90 px-4 py-3 backdrop-blur-md md:px-6 dark:border-gray-800 dark:bg-gray-900/90">
-					{/* Mobile hamburger + sidebar drawer */}
-					<MobileSidebar>
-						<SidebarNav />
-						<div className="border-t border-white/[0.06] p-3">
-							<ThemeToggle onDark />
+				<header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/90">
+					<div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 md:flex-nowrap md:px-6 md:py-3">
+						{/* Mobile hamburger + sidebar drawer */}
+						<MobileSidebar>
+							<SidebarNav />
+							<div className="border-t border-white/[0.06] p-3">
+								<div className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2">
+									{user.image ? (
+										<Image
+											src={user.image}
+											alt={user.name ?? ""}
+											width={32}
+											height={32}
+											className="rounded-full object-cover"
+										/>
+									) : (
+										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-300">
+											{(user.name ?? "?")[0].toUpperCase()}
+										</div>
+									)}
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm font-medium text-white">{user.name}</p>
+										<p className="truncate text-xs text-gray-400">{user.email}</p>
+									</div>
+								</div>
+								<ThemeToggle onDark />
+								<form
+									action={async () => {
+										"use server";
+										await signOut({ redirectTo: "/" });
+									}}
+								>
+									<button
+										type="submit"
+										className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+									>
+										<LogOut className="h-4 w-4 flex-shrink-0" />
+										Logg ut
+									</button>
+								</form>
+							</div>
+						</MobileSidebar>
+
+						{/* Month selector */}
+						<MonthSelector initialMonth={initialMonth} />
+
+						{/* Account selector — full-width second row on mobile, inline on desktop */}
+						<div className="basis-full overflow-x-auto pb-0.5 md:min-w-0 md:flex-1 md:basis-auto md:pb-0">
+							<AccountSelector
+								accounts={visibleAccounts}
+								initialSelected={initialSelected}
+							/>
 						</div>
-					</MobileSidebar>
-
-					{/* Month selector */}
-					<MonthSelector initialMonth={initialMonth} />
-
-					{/* Account selector */}
-					<div className="flex-1 overflow-x-auto">
-						<AccountSelector
-							accounts={visibleAccounts}
-							initialSelected={initialSelected}
-						/>
 					</div>
 				</header>
 

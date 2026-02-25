@@ -59,7 +59,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 					</div>
 
 					{/* Nav content (injected from layout) */}
-					<div onClick={() => setOpen(false)} className="flex-1 overflow-y-auto">
+					<div onClick={() => setOpen(false)} className="flex flex-1 flex-col overflow-y-auto">
 						{children}
 					</div>
 				</div>
