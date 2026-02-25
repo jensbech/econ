@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
 					},
 					{
 						key: "Content-Security-Policy",
-						value: "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://lh3.googleusercontent.com https://*.utfs.io https://*.uploadthing.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://*.uploadthing.com https://*.utfs.io; frame-ancestors 'none';",
+						value: "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://lh3.googleusercontent.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none';",
 					},
 				],
 			},

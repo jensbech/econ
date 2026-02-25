@@ -1,12 +1,10 @@
 "use client";
 
 import { AlertCircle, Loader2, Upload } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import type { SupportedMediaType } from "@/lib/ai-extract";
-import { useUploadThing } from "@/lib/uploadthing";
-import { type EnrichedTransaction, startAiExtraction } from "./ai-actions";
+import type { EnrichedTransaction } from "./ai-actions";
 import { AiReview } from "./ai-review";
 import type { Category } from "./csv-import";
 
@@ -42,13 +40,10 @@ const ACCEPTED_MIME: Record<string, string[]> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function readFileAsBase64(file: File): Promise<string> {
+function readFileAsDataUrl(file: File): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
-		reader.onload = (e) => {
-			const dataUrl = e.target?.result as string;
-			resolve(dataUrl.split(",")[1]);
-		};
+		reader.onload = (e) => resolve(e.target?.result as string);
 		reader.onerror = reject;
 		reader.readAsDataURL(file);
 	});
@@ -72,44 +67,6 @@ interface UploadZoneProps {
 
 function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 	const [state, setState] = useState<UploadState>(INITIAL_STATE);
-	const pendingRef = useRef<{ file: File; dataUrl: string } | null>(null);
-	const accountsRef = useRef(accounts);
-	accountsRef.current = accounts;
-
-	const { startUpload } = useUploadThing("aiDocument", {
-		onClientUploadComplete: async (res) => {
-			const uploaded = res[0];
-			const pending = pendingRef.current;
-			if (!uploaded || !pending) return;
-			const mediaType = pending.file.type as SupportedMediaType;
-			const fileType = getFileType(pending.file);
-			try {
-				const result = await startAiExtraction(
-					uploaded.url,
-					mediaType,
-					accountsRef.current,
-				);
-				if (result.success) {
-					onExtracted(pending.dataUrl, fileType, pending.file.name, result.transactions);
-				} else {
-					setState((s) => ({ ...s, step: "error", errorMessage: result.error }));
-				}
-			} catch {
-				setState((s) => ({
-					...s,
-					step: "error",
-					errorMessage: "Klarte ikke starte AI-analyse.",
-				}));
-			}
-		},
-		onUploadError: (err) => {
-			setState((s) => ({
-				...s,
-				step: "error",
-				errorMessage: err.message || "Opplasting mislyktes.",
-			}));
-		},
-	});
 
 	const onDrop = useCallback(
 		async (accepted: File[]) => {
@@ -123,11 +80,39 @@ function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 				return;
 			}
 			setState({ step: "extracting", filename: file.name, errorMessage: null });
-			const base64 = await readFileAsBase64(file);
-			pendingRef.current = { file, dataUrl: `data:${file.type};base64,${base64}` };
-			await startUpload([file]);
+
+			try {
+				const dataUrl = await readFileAsDataUrl(file);
+
+				const formData = new FormData();
+				formData.append("file", file);
+				formData.append("accounts", JSON.stringify(accounts));
+
+				const response = await fetch("/api/ai-extract", {
+					method: "POST",
+					body: formData,
+				});
+
+				const result = await response.json();
+
+				if (result.success) {
+					onExtracted(dataUrl, getFileType(file), file.name, result.transactions);
+				} else {
+					setState((s) => ({
+						...s,
+						step: "error",
+						errorMessage: result.error ?? "Noe gikk galt.",
+					}));
+				}
+			} catch {
+				setState((s) => ({
+					...s,
+					step: "error",
+					errorMessage: "Klarte ikke starte AI-analyse.",
+				}));
+			}
 		},
-		[startUpload],
+		[accounts, onExtracted],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
