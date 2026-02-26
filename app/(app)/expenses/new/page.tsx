@@ -61,20 +61,20 @@ export default async function NewExpensePage() {
 			<div>
 				<Link
 					href="/expenses"
-					className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+					className="mb-3 inline-flex items-center gap-1.5 text-sm text-foreground/60 transition-colors hover:text-foreground dark:text-foreground/50 dark:hover:text-card-foreground"
 				>
 					<ArrowLeft className="h-3.5 w-3.5" />
 					Tilbake til utgifter
 				</Link>
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Ny utgift
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					Registrer en ny utgift for husholdningen.
 				</p>
 			</div>
 
-			<div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+			<div className="rounded-xl border border-border bg-card p-6 dark:border-border/40 dark:bg-card">
 				<ExpenseForm
 					action={createExpense}
 					categories={expenseCategories}

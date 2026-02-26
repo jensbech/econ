@@ -43,7 +43,7 @@ export function CategoryItem({ id, name, isDefault }: CategoryItemProps) {
 	}
 
 	return (
-		<div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+		<div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 dark:border-border/40 dark:bg-card">
 			{editing ? (
 				<form action={handleRename} className="flex flex-1 items-center gap-2">
 					<input type="hidden" name="id" value={id} />
@@ -66,7 +66,7 @@ export function CategoryItem({ id, name, isDefault }: CategoryItemProps) {
 						type="button"
 						size="sm"
 						variant="ghost"
-						className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+						className="h-8 w-8 p-0 text-foreground/50 hover:text-foreground/70"
 						onClick={cancelEdit}
 					>
 						<X className="h-4 w-4" />
@@ -74,11 +74,11 @@ export function CategoryItem({ id, name, isDefault }: CategoryItemProps) {
 				</form>
 			) : (
 				<>
-					<span className="flex-1 text-sm text-gray-900 dark:text-white">
+					<span className="flex-1 text-sm text-foreground dark:text-card-foreground">
 						{name}
 					</span>
 					{isDefault && (
-						<span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+						<span className="rounded-full bg-primary/8 px-2 py-0.5 text-xs text-foreground/60 dark:bg-card dark:text-foreground/50">
 							standard
 						</span>
 					)}
@@ -86,7 +86,7 @@ export function CategoryItem({ id, name, isDefault }: CategoryItemProps) {
 						type="button"
 						size="sm"
 						variant="ghost"
-						className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+						className="h-8 w-8 p-0 text-foreground/50 hover:text-foreground/70"
 						onClick={startEdit}
 					>
 						<Pencil className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function CategoryItem({ id, name, isDefault }: CategoryItemProps) {
 								type="button"
 								size="sm"
 								variant="ghost"
-								className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+								className="h-8 w-8 p-0 text-foreground/50 hover:text-red-600"
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>

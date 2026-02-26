@@ -80,61 +80,61 @@ export default async function ImportPage() {
 
 			{batches.length > 0 && (
 				<div className="max-w-4xl px-4 pb-12 sm:px-8">
-					<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+					<h3 className="mb-4 text-sm font-medium text-foreground/60 dark:text-foreground/50">
 						Importhistorikk
 					</h3>
-					<div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+					<div className="overflow-x-auto rounded-lg border border-border dark:border-border/40">
 						<table className="min-w-full text-sm">
-							<thead className="bg-gray-50 dark:bg-gray-800">
+							<thead className="bg-background dark:bg-card">
 								<tr>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Fil
 									</th>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Dato
 									</th>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Opplastet av
 									</th>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Konto
 									</th>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Rader
 									</th>
-									<th className="px-4 py-2.5 text-left font-medium text-gray-500 dark:text-gray-400">
+									<th className="px-4 py-2.5 text-left font-medium text-foreground/60 dark:text-foreground/50">
 										Status
 									</th>
 									<th className="px-4 py-2.5" />
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+							<tbody className="divide-y divide-gray-100 bg-card dark:divide-gray-800 dark:bg-card">
 								{batches.map((batch) => {
 									const rollbackAction = rollbackImport.bind(null, batch.id);
 									return (
 										<tr key={batch.id}>
-											<td className="max-w-[200px] truncate px-4 py-2.5 text-gray-700 dark:text-gray-300">
+											<td className="max-w-[200px] truncate px-4 py-2.5 text-foreground/80 dark:text-foreground/80">
 												<span title={batch.filename}>{batch.filename}</span>
 											</td>
-											<td className="whitespace-nowrap px-4 py-2.5 text-gray-700 dark:text-gray-300">
+											<td className="whitespace-nowrap px-4 py-2.5 text-foreground/80 dark:text-foreground/80">
 												{format(batch.createdAt, "d. MMM yyyy HH:mm", {
 													locale: nb,
 												})}
 											</td>
-											<td className="whitespace-nowrap px-4 py-2.5 text-gray-600 dark:text-gray-400">
+											<td className="whitespace-nowrap px-4 py-2.5 text-foreground/70 dark:text-foreground/50">
 												{batch.uploaderName ?? batch.uploaderEmail ?? "—"}
 											</td>
-											<td className="px-4 py-2.5 text-gray-600 dark:text-gray-400">
+											<td className="px-4 py-2.5 text-foreground/70 dark:text-foreground/50">
 												{batch.accountId
 													? (accountMap[batch.accountId] ?? "—")
 													: "—"}
 											</td>
-											<td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">
+											<td className="px-4 py-2.5 text-foreground/80 dark:text-foreground/80">
 												{batch.rowCount}
 											</td>
 											<td className="px-4 py-2.5">
 												{batch.rolledBackAt ? (
-													<span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+													<span className="inline-flex items-center rounded-full bg-primary/8 px-2 py-0.5 text-xs font-medium text-foreground/70 dark:bg-card dark:text-foreground/50">
 														Angret
 													</span>
 												) : (

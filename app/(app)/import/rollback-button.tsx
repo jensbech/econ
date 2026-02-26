@@ -24,8 +24,12 @@ export function RollbackButton({ action, filename }: RollbackButtonProps) {
 
 	function handleRollback() {
 		startTransition(async () => {
-			await action();
-			toast.success(`Import "${filename}" ble angret`);
+			try {
+				await action();
+				toast.success(`Import "${filename}" ble angret`);
+			} catch (error) {
+				toast.error(error instanceof Error ? error.message : "Noe gikk galt");
+			}
 		});
 	}
 

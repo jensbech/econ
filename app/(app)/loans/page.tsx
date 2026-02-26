@@ -84,11 +84,11 @@ export default async function LoansPage() {
 		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
-					<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h2 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Lån
 					</h2>
 					{allLoans.length > 0 && (
-						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 							Total gjeld:{" "}
 							<span className="font-medium text-red-600 dark:text-red-400">
 								{formatNOK(totalBalance)}
@@ -98,7 +98,7 @@ export default async function LoansPage() {
 				</div>
 				<Link
 					href="/loans/new"
-					className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+					className="inline-flex items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-card-foreground transition-colors hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 				>
 					<Plus className="h-4 w-4" />
 					Legg til lån
@@ -106,14 +106,14 @@ export default async function LoansPage() {
 			</div>
 
 			{allLoans.length === 0 ? (
-				<div className="rounded-xl border border-dashed border-gray-200 py-20 text-center dark:border-gray-700">
-					<p className="text-gray-400 dark:text-gray-500">Ingen lån ennå</p>
-					<p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+				<div className="rounded-xl border border-dashed border-border py-20 text-center dark:border-border/40">
+					<p className="text-foreground/50 dark:text-foreground/60">Ingen lån ennå</p>
+					<p className="mt-1 text-sm text-foreground/50 dark:text-foreground/60">
 						Legg til et lån for å spore nedbetalingen.
 					</p>
 					<Link
 						href="/loans/new"
-						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-card-foreground transition-colors hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 					>
 						<Plus className="h-4 w-4" />
 						Legg til lån
@@ -129,21 +129,21 @@ export default async function LoansPage() {
 							<Link
 								key={loan.id}
 								href={`/loans/${loan.id}`}
-								className="block rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/50"
+								className="block rounded-xl border border-border bg-card p-5 transition-colors hover:bg-background/50 dark:border-border/40 dark:bg-card dark:hover:bg-card/50"
 							>
 								<div className="mb-4 flex items-start justify-between">
 									<div>
-										<h3 className="font-semibold text-gray-900 dark:text-white">
+										<h3 className="font-semibold text-foreground dark:text-card-foreground">
 											{loan.name}
 										</h3>
-										<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+										<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 											{LOAN_TYPE_LABELS[loan.type] ?? loan.type} · Startet{" "}
 											{format(parseISO(loan.startDate), "MMM yyyy", {
 												locale: nb,
 											})}
 										</p>
 									</div>
-									<span className="rounded-full border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
+									<span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-foreground/60 dark:border-border/40 dark:text-foreground/50">
 										{loan.interestRate}%
 									</span>
 								</div>
@@ -152,36 +152,36 @@ export default async function LoansPage() {
 								<p className="text-2xl font-bold text-red-600 dark:text-red-400">
 									{formatNOK(balance.currentBalanceOere)}
 								</p>
-								<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+								<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 									gjenstående av {formatNOK(loan.principalOere)}
 								</p>
 
 								{/* Progress bar */}
-								<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+								<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-card">
 									<div
-										className="h-full rounded-full bg-gray-500 dark:bg-gray-400 transition-all"
+										className="h-full rounded-full bg-background0 dark:bg-gray-400 transition-all"
 										style={{ width: `${balance.principalPaidPct}%` }}
 									/>
 								</div>
 								<div className="mt-1 flex items-center justify-between">
-									<p className="text-xs text-gray-500 dark:text-gray-400">
+									<p className="text-xs text-foreground/60 dark:text-foreground/50">
 										{balance.principalPaidPct}% nedbetalt
 									</p>
-									<p className="text-xs text-gray-400 dark:text-gray-500">
+									<p className="text-xs text-foreground/50 dark:text-foreground/60">
 										{100 - balance.principalPaidPct}% igjen
 									</p>
 								</div>
 
 								{/* Footer stats */}
-								<div className="mt-4 flex justify-between border-t border-gray-100 pt-4 text-xs text-gray-600 dark:border-gray-800 dark:text-gray-400">
+								<div className="mt-4 flex justify-between border-t border-gray-100 pt-4 text-xs text-foreground/70 dark:border-border/40 dark:text-foreground/50">
 									<div>
-										<span className="block font-medium text-gray-900 dark:text-white">
+										<span className="block font-medium text-foreground dark:text-card-foreground">
 											{formatNOK(balance.monthlyPaymentOere)}
 										</span>
 										<span>/ mnd</span>
 									</div>
 									<div className="text-right">
-										<span className="block font-medium text-gray-900 dark:text-white">
+										<span className="block font-medium text-foreground dark:text-card-foreground">
 											{balance.remainingMonths === 0
 												? "Nedbetalt"
 												: remainingYears > 0

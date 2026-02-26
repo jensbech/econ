@@ -158,10 +158,10 @@ export function LoanForm({
 			/>
 
 			{/* Opening balance */}
-			<div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+			<div className="space-y-3 rounded-lg border border-border p-4 dark:border-border/40">
 				<div>
-					<p className="text-sm font-medium text-gray-900 dark:text-white">Åpningssaldo (valgfritt)</p>
-					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Fyll ut hvis lånet eksisterte før du begynte å bruke appen</p>
+					<p className="text-sm font-medium text-foreground dark:text-card-foreground">Åpningssaldo (valgfritt)</p>
+					<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">Fyll ut hvis lånet eksisterte før du begynte å bruke appen</p>
 				</div>
 				<div className="space-y-1.5">
 					<Label htmlFor="openingBalance">Gjeldende restgjeld (NOK)</Label>
@@ -211,7 +211,7 @@ export function LoanForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+					className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 				>
 					{pending ? "Lagrer..." : submitLabel}
 				</Button>

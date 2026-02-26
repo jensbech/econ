@@ -27,15 +27,15 @@ export default async function NewRecurringExpensePage() {
 	return (
 		<div className="mx-auto max-w-lg space-y-6 p-8">
 			<div>
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Ny gjentagende utgift
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					Sett opp en fast eller gjentagende utgift som genereres automatisk.
 				</p>
 			</div>
 
-			<div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+			<div className="rounded-xl border border-border bg-card p-6 dark:border-border/40 dark:bg-card">
 				<RecurringForm
 					action={createRecurringTemplate}
 					categories={expenseCategories}

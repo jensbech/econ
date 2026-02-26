@@ -32,17 +32,17 @@ export default async function CategoriesPage() {
 	return (
 		<div className="mx-auto max-w-2xl space-y-8 p-8">
 			<div>
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Kategorier
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					Administrer utgifts- og inntektskategorier for husholdningen.
 				</p>
 			</div>
 
 			{/* Add category form */}
-			<section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-				<h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+			<section className="rounded-xl border border-border bg-card p-6 dark:border-border/40 dark:bg-card">
+				<h2 className="mb-4 text-sm font-semibold text-foreground/80 dark:text-foreground/80">
 					Legg til kategori
 				</h2>
 				<form action={addCategory} className="flex items-end gap-3">
@@ -62,7 +62,7 @@ export default async function CategoriesPage() {
 							id="type"
 							name="type"
 							defaultValue="expense"
-							className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+							className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 						>
 							<option value="expense">Utgift</option>
 							<option value="income">Inntekt</option>
@@ -70,7 +70,7 @@ export default async function CategoriesPage() {
 					</div>
 					<Button
 						type="submit"
-						className="h-9 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+						className="h-9 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 					>
 						Legg til
 					</Button>
@@ -80,7 +80,7 @@ export default async function CategoriesPage() {
 			{/* Expense categories */}
 			<section className="space-y-3">
 				<div className="flex items-center gap-2">
-					<h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+					<h2 className="text-sm font-semibold text-foreground/80 dark:text-foreground/80">
 						Utgiftskategorier
 					</h2>
 					<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
@@ -88,7 +88,7 @@ export default async function CategoriesPage() {
 					</span>
 				</div>
 				{expenseCategories.length === 0 ? (
-					<p className="py-4 text-center text-sm text-gray-400">
+					<p className="py-4 text-center text-sm text-foreground/50">
 						Ingen utgiftskategorier ennå.
 					</p>
 				) : (
@@ -108,7 +108,7 @@ export default async function CategoriesPage() {
 			{/* Income categories */}
 			<section className="space-y-3">
 				<div className="flex items-center gap-2">
-					<h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+					<h2 className="text-sm font-semibold text-foreground/80 dark:text-foreground/80">
 						Inntektskategorier
 					</h2>
 					<span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600 dark:bg-green-900/20 dark:text-green-400">
@@ -116,7 +116,7 @@ export default async function CategoriesPage() {
 					</span>
 				</div>
 				{incomeCategories.length === 0 ? (
-					<p className="py-4 text-center text-sm text-gray-400">
+					<p className="py-4 text-center text-sm text-foreground/50">
 						Ingen inntektskategorier ennå.
 					</p>
 				) : (

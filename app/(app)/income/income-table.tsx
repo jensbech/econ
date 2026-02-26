@@ -90,7 +90,7 @@ function parseLocalDate(dateStr: string): Date {
 }
 
 const selectClass =
-	"h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+	"h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground";
 
 const typeLabels: Record<string, string> = {
 	salary: "Lønn",
@@ -112,7 +112,7 @@ const columns: ColumnDef<IncomeRow>[] = [
 			</Button>
 		),
 		cell: ({ row }) => (
-			<span className="whitespace-nowrap text-gray-900 dark:text-white">
+			<span className="whitespace-nowrap text-foreground dark:text-card-foreground">
 				{format(parseLocalDate(row.original.date), "d. MMM yyyy", {
 					locale: nb,
 				})}
@@ -124,11 +124,11 @@ const columns: ColumnDef<IncomeRow>[] = [
 		header: "Kilde",
 		cell: ({ row }) =>
 			row.original.source ? (
-				<span className="text-gray-700 dark:text-gray-300">
+				<span className="text-foreground/80 dark:text-foreground/80">
 					{row.original.source}
 				</span>
 			) : (
-				<span className="italic text-gray-400">—</span>
+				<span className="italic text-foreground/50">—</span>
 			),
 	},
 	{
@@ -154,7 +154,7 @@ const columns: ColumnDef<IncomeRow>[] = [
 			row.original.categoryName ? (
 				<Badge variant="secondary">{row.original.categoryName}</Badge>
 			) : (
-				<span className="text-sm text-gray-400">—</span>
+				<span className="text-sm text-foreground/50">—</span>
 			),
 	},
 	{
@@ -190,7 +190,7 @@ const columns: ColumnDef<IncomeRow>[] = [
 							href={`/income/${income.id}/edit`}
 							onClick={(e) => e.stopPropagation()}
 						>
-							<Pencil className="h-4 w-4 text-gray-500" />
+							<Pencil className="h-4 w-4 text-foreground/60" />
 						</Link>
 					</Button>
 					<AlertDialog>
@@ -306,21 +306,21 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 	return (
 		<div className="space-y-4">
 			{/* View toggle + Filters */}
-			<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-		<div className="flex flex-wrap items-end gap-4 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+			<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+		<div className="flex flex-wrap items-end gap-4 border-b border-gray-100 px-4 py-3 dark:border-border/40">
 				{/* Monthly / Yearly toggle */}
 				<div className="space-y-1">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Visning
 					</p>
-					<div className="flex rounded-md border border-gray-200 bg-gray-50 p-0.5 dark:border-gray-700 dark:bg-gray-800">
+					<div className="flex rounded-md border border-border bg-background p-0.5 dark:border-border/40 dark:bg-card">
 						<button
 							type="button"
 							onClick={() => handleViewChange("monthly")}
 							className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
 								viewParam === "monthly"
-									? "bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
-									: "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+									? "bg-card text-foreground dark:bg-gray-700 dark:text-card-foreground"
+									: "text-foreground/60 hover:text-foreground/80 dark:text-foreground/50 dark:hover:text-gray-200"
 							}`}
 						>
 							Månedlig
@@ -330,8 +330,8 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							onClick={() => handleViewChange("yearly")}
 							className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
 								viewParam === "yearly"
-									? "bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
-									: "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+									? "bg-card text-foreground dark:bg-gray-700 dark:text-card-foreground"
+									: "text-foreground/60 hover:text-foreground/80 dark:text-foreground/50 dark:hover:text-gray-200"
 							}`}
 						>
 							Årlig
@@ -341,7 +341,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 
 				{/* Period picker */}
 				<div className="space-y-1">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Periode
 					</p>
 					{viewParam === "monthly" ? (
@@ -373,7 +373,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 
 				{/* Category filter */}
 				<div className="space-y-1">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Kategori
 					</p>
 					<select
@@ -398,7 +398,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow
 								key={headerGroup.id}
-								className="border-b border-gray-100 hover:bg-transparent dark:border-gray-800"
+								className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 							>
 								{headerGroup.headers.map((header) => (
 									<TableHead key={header.id}>
@@ -419,7 +419,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								<TableRow
 									key={row.id}
 									onClick={() => setSelectedIncome(row.original)}
-									className="cursor-pointer border-b border-gray-50 last:border-0 hover:bg-gray-50 dark:border-gray-800/50 dark:hover:bg-gray-800/50"
+									className="cursor-pointer border-b border-gray-50 last:border-0 hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
@@ -435,7 +435,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-32 text-center text-sm text-gray-400"
+									className="h-32 text-center text-sm text-foreground/50"
 								>
 									Ingen inntekter funnet for valgt periode.
 								</TableCell>
@@ -443,10 +443,10 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 						)}
 					</TableBody>
 					<TableFooter>
-						<TableRow className="border-t border-gray-100 dark:border-gray-800">
+						<TableRow className="border-t border-gray-100 dark:border-border/40">
 							<TableCell
 								colSpan={4}
-								className="text-sm font-medium text-gray-600 dark:text-gray-400"
+								className="text-sm font-medium text-foreground/70 dark:text-foreground/50"
 							>
 								Totalt for {viewLabel} ({incomes.length}{" "}
 								{incomes.length === 1 ? "inntekt" : "inntekter"})
@@ -475,10 +475,10 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 					{selectedIncome && (
 						<div className="mt-6 space-y-5 px-1">
 							<div>
-								<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Dato
 								</p>
-								<p className="text-sm font-medium text-gray-900 dark:text-white">
+								<p className="text-sm font-medium text-foreground dark:text-card-foreground">
 									{format(parseLocalDate(selectedIncome.date), "d. MMMM yyyy", {
 										locale: nb,
 									})}
@@ -486,7 +486,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							</div>
 
 							<div>
-								<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Beløp
 								</p>
 								<p className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -495,7 +495,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							</div>
 
 							<div>
-								<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Type
 								</p>
 								<Badge
@@ -512,10 +512,10 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 
 							{selectedIncome.source && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Kilde
 									</p>
-									<p className="text-sm text-gray-700 dark:text-gray-300">
+									<p className="text-sm text-foreground/80 dark:text-foreground/80">
 										{selectedIncome.source}
 									</p>
 								</div>
@@ -523,7 +523,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 
 							{selectedIncome.categoryName && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Kategori
 									</p>
 									<Badge variant="secondary">
@@ -535,7 +535,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							<div className="pt-2">
 								<Button
 									asChild
-									className="w-full gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+									className="w-full gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 								>
 									<Link href={`/income/${selectedIncome.id}/edit`}>
 										<Pencil className="h-4 w-4" />

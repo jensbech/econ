@@ -62,16 +62,16 @@ export default async function ExpensesPage({
 			<div className="p-4 sm:p-8">
 				<div className="mb-6 flex items-center justify-between">
 					<div>
-						<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+						<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 							Utgifter
 						</h1>
-						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 							Oversikt over utgifter.
 						</p>
 					</div>
 				</div>
-				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
-					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
+					<p className="text-base font-medium text-foreground/60 dark:text-foreground/50">
 						Ingen husholdning funnet.
 					</p>
 				</div>
@@ -174,10 +174,10 @@ export default async function ExpensesPage({
 		<div className="p-4 sm:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Utgifter
 					</h1>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 						Oversikt over utgifter.
 					</p>
 				</div>
@@ -188,7 +188,7 @@ export default async function ExpensesPage({
 							Gjentagende
 						</Link>
 					</Button>
-					<Button asChild className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+					<Button asChild className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
 						<Link href="/expenses/new">
 							<Plus className="h-4 w-4" />
 							Ny utgift
@@ -199,7 +199,7 @@ export default async function ExpensesPage({
 
 			<Suspense
 				fallback={
-					<div className="flex h-64 items-center justify-center text-sm text-gray-400">
+					<div className="flex h-64 items-center justify-center text-sm text-foreground/50">
 						Laster utgifter…
 					</div>
 				}

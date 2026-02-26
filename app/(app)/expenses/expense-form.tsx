@@ -93,7 +93,7 @@ export function ExpenseForm({
 							<Button
 								type="button"
 								size="sm"
-								className="bg-amber-600 hover:bg-amber-700 text-white"
+								className="bg-amber-600 hover:bg-amber-700 text-card-foreground"
 								onClick={() => {
 									if (forceInputRef.current) forceInputRef.current.value = "true";
 									formRef.current?.requestSubmit();
@@ -260,7 +260,7 @@ export function ExpenseForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 				>
 					{pending && <Loader2 className="h-4 w-4 animate-spin" />}
 					{pending ? "Lagrer..." : submitLabel}

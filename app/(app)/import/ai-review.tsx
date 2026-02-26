@@ -371,7 +371,7 @@ export function AiReview({
 					<Button
 						size="sm"
 						onClick={() => router.push(`/expenses?importBatch=${batchId ?? ""}`)}
-						className="bg-green-600 text-white hover:bg-green-700"
+						className="bg-green-600 text-card-foreground hover:bg-green-700"
 					>
 						Se importerte utgifter
 					</Button>
@@ -413,7 +413,7 @@ export function AiReview({
 
 	if (isSubmitting) {
 		return (
-			<div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-6 text-sm text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-900/20 dark:text-indigo-300">
+			<div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-primary/8 p-6 text-sm text-primary dark:border-indigo-900/50 dark:bg-primary/15/20 dark:text-primary/60">
 				<Loader2 className="h-5 w-5 shrink-0 animate-spin" />
 				<p className="font-medium">Lagrer transaksjoner&hellip;</p>
 			</div>
@@ -428,7 +428,7 @@ export function AiReview({
 
 		if (isCreating) {
 			return (
-				<div className="flex h-7 items-center gap-1.5 text-xs text-gray-500">
+				<div className="flex h-7 items-center gap-1.5 text-xs text-foreground/60">
 					<Loader2 className="h-3.5 w-3.5 animate-spin" />
 					Oppretter&hellip;
 				</div>
@@ -453,7 +453,7 @@ export function AiReview({
 							if (e.key === "Escape") setInlineInput(null);
 						}}
 						placeholder="Kategorinavn&hellip;"
-						className="w-full rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-xs text-gray-700 focus:border-indigo-500 focus:outline-none dark:border-indigo-700 dark:bg-gray-900 dark:text-gray-300"
+						className="w-full rounded border border-indigo-300 bg-card px-1.5 py-0.5 text-xs text-foreground/80 focus:border-indigo-500 focus:outline-none dark:border-indigo-700 dark:bg-card dark:text-foreground/80"
 					/>
 					<button
 						type="button"
@@ -466,7 +466,7 @@ export function AiReview({
 					<button
 						type="button"
 						onClick={() => setInlineInput(null)}
-						className="rounded p-0.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+						className="rounded p-0.5 text-foreground/50 hover:bg-primary/8 dark:hover:bg-card"
 						title="Avbryt"
 					>
 						<X className="h-3.5 w-3.5" />
@@ -491,12 +491,12 @@ export function AiReview({
 					}
 				}}
 			>
-				<SelectTrigger className="h-7 w-full border-gray-200 text-xs dark:border-gray-700">
+				<SelectTrigger className="h-7 w-full border-border text-xs dark:border-border/40">
 					<SelectValue placeholder="Velg&hellip;" />
 				</SelectTrigger>
 				<SelectContent>
 					<SelectItem value="none">
-						<span className="text-gray-400">Ingen</span>
+						<span className="text-foreground/50">Ingen</span>
 					</SelectItem>
 					{localCategories.map((cat) => (
 						<SelectItem key={cat.id} value={cat.id}>
@@ -504,7 +504,7 @@ export function AiReview({
 						</SelectItem>
 					))}
 					<SelectItem value="__add_new__">
-						<span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
+						<span className="flex items-center gap-1 text-primary dark:text-indigo-400">
 							<Plus className="h-3 w-3" />
 							{row.suggestedNewCategory
 								? `Opprett «${row.suggestedNewCategory}»…`
@@ -526,12 +526,12 @@ export function AiReview({
 					updateRow(row.id, { loanId: v === "none" ? null : v })
 				}
 			>
-				<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
+				<SelectTrigger className="h-7 border-border text-xs dark:border-border/40">
 					<SelectValue placeholder="Lån…" />
 				</SelectTrigger>
 				<SelectContent>
 					<SelectItem value="none">
-						<span className="text-gray-400">Ingen</span>
+						<span className="text-foreground/50">Ingen</span>
 					</SelectItem>
 					{loans.map((l) => (
 						<SelectItem key={l.id} value={l.id}>
@@ -562,28 +562,28 @@ export function AiReview({
 
 					<div className="space-y-1.5 text-sm">
 						<div className="flex justify-between rounded-md px-2 py-1">
-							<span className="text-gray-500 dark:text-gray-400">Totalt</span>
-							<span className="font-semibold dark:text-white">{confirmSummary.total}</span>
+							<span className="text-foreground/60 dark:text-foreground/50">Totalt</span>
+							<span className="font-semibold dark:text-card-foreground">{confirmSummary.total}</span>
 						</div>
 						<div className="flex justify-between rounded-md px-2 py-1">
-							<span className="text-gray-500 dark:text-gray-400">Med kategori</span>
+							<span className="text-foreground/60 dark:text-foreground/50">Med kategori</span>
 							<span className="font-medium text-green-600 dark:text-green-400">{confirmSummary.categorized}</span>
 						</div>
 						{confirmSummary.fromHistory > 0 && (
 							<div className="flex justify-between rounded-md px-2 py-0.5 pl-6">
-								<span className="text-gray-400">Fra historikk</span>
-								<span className="text-gray-600 dark:text-gray-300">{confirmSummary.fromHistory}</span>
+								<span className="text-foreground/50">Fra historikk</span>
+								<span className="text-foreground/70 dark:text-foreground/80">{confirmSummary.fromHistory}</span>
 							</div>
 						)}
 						{confirmSummary.fromAi > 0 && (
 							<div className="flex justify-between rounded-md px-2 py-0.5 pl-6">
-								<span className="text-gray-400">AI-forslag</span>
-								<span className="text-gray-600 dark:text-gray-300">{confirmSummary.fromAi}</span>
+								<span className="text-foreground/50">AI-forslag</span>
+								<span className="text-foreground/70 dark:text-foreground/80">{confirmSummary.fromAi}</span>
 							</div>
 						)}
 						{confirmSummary.uncategorized > 0 && (
 							<div className="flex justify-between rounded-md px-2 py-1">
-								<span className="text-gray-500 dark:text-gray-400">Uten kategori</span>
+								<span className="text-foreground/60 dark:text-foreground/50">Uten kategori</span>
 								<span className="font-medium text-amber-600 dark:text-amber-400">
 									{confirmSummary.uncategorized}
 								</span>
@@ -608,7 +608,7 @@ export function AiReview({
 						</Button>
 						<Button
 							onClick={handleConfirm}
-							className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+							className="bg-card text-card-foreground hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 						>
 							Bekreft og importer
 						</Button>
@@ -635,7 +635,7 @@ export function AiReview({
 						<button
 							type="button"
 							onClick={() => setIsShared((v) => !v)}
-							className="ml-4 shrink-0 rounded-full border border-purple-300 bg-white px-3 py-1 text-xs font-medium text-purple-700 transition hover:bg-purple-100 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/60"
+							className="ml-4 shrink-0 rounded-full border border-purple-300 bg-card px-3 py-1 text-xs font-medium text-purple-700 transition hover:bg-purple-100 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/60"
 						>
 							{isShared ? "Gjør privat" : "Del med husholdning"}
 						</button>
@@ -645,10 +645,10 @@ export function AiReview({
 				{/* Header + action buttons */}
 				<div className="mb-3 flex flex-wrap items-center gap-2">
 					<div className="mr-auto">
-						<p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+						<p className="text-xs font-medium uppercase tracking-wide text-foreground/60 dark:text-foreground/50">
 							Transaksjoner ({visibleRows.length})
 						</p>
-						<p className="text-xs tabular-nums text-gray-400 dark:text-gray-500">
+						<p className="text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
 							Totalsum: {totalAmountNok.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
 						</p>
 					</div>
@@ -690,7 +690,7 @@ export function AiReview({
 						size="sm"
 						onClick={() => setShowConfirmModal(true)}
 						disabled={visibleRows.length === 0 || isSubmitting}
-						className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+						className="bg-card text-card-foreground hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 					>
 						Bekreft import ({visibleRows.length} rader)
 					</Button>
@@ -698,16 +698,16 @@ export function AiReview({
 
 				{/* Empty state */}
 				{visibleRows.length === 0 ? (
-					<div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+					<div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-foreground/60 dark:border-gray-600 dark:text-foreground/50">
 						Ingen transaksjoner igjen. Klikk &laquo;Forkast alt&raquo; for &aring; avbryte.
 					</div>
 				) : (
-					<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+					<div className="overflow-hidden rounded-xl border border-border dark:border-border/40">
 						{/* ── Desktop table (sm and up) ── */}
 						<div className="hidden sm:block max-h-[calc(100vh-320px)] overflow-y-auto">
 							<table className="w-full text-sm">
 								<thead className="sticky top-0 z-10">
-									<tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+									<tr className="border-b border-border bg-background dark:border-border/40 dark:bg-card">
 										<th className="w-8 px-2 py-2.5">
 											<input
 												type="checkbox"
@@ -718,28 +718,28 @@ export function AiReview({
 															!allVisibleSelected && someVisibleSelected;
 												}}
 												onChange={toggleSelectAll}
-												className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
+												className="h-3.5 w-3.5 cursor-pointer rounded border-border accent-indigo-600"
 											/>
 										</th>
-										<th className="w-6 px-1 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-gray-500">
+										<th className="w-6 px-1 py-2.5 text-center text-[10px] font-medium text-foreground/50 dark:text-foreground/60">
 											#
 										</th>
-										<th className="w-[104px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="w-[104px] px-2 py-2.5 text-left text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Dato
 										</th>
-										<th className="w-[96px] px-2 py-2.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="w-[96px] px-2 py-2.5 text-right text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Beløp
 										</th>
-										<th className="px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="px-2 py-2.5 text-left text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Beskrivelse
 										</th>
-										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Konto
 										</th>
-										<th className="w-[172px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="w-[172px] px-2 py-2.5 text-left text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Kategori
 										</th>
-										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+										<th className="w-[150px] px-2 py-2.5 text-left text-xs font-medium text-foreground/60 dark:text-foreground/50">
 											Kobling
 										</th>
 										<th className="w-[30px] px-1 py-2.5" />
@@ -759,16 +759,16 @@ export function AiReview({
 											return (
 												<tr
 													key={row.id}
-													className={`border-b border-gray-100 last:border-b-0 transition-colors dark:border-gray-800 ${
+													className={`border-b border-gray-100 last:border-b-0 transition-colors dark:border-border/40 ${
 														isSelected
-															? "bg-indigo-50 dark:bg-indigo-900/15"
+															? "bg-primary/8 dark:bg-primary/15/15"
 															: row.categorySource === "none"
 																? isEven
 																	? "bg-amber-50/60 dark:bg-amber-900/10"
 																	: "bg-amber-50/30 dark:bg-amber-900/5"
 																: isEven
-																	? "bg-white dark:bg-gray-900"
-																	: "bg-gray-50/50 dark:bg-gray-900/50"
+																	? "bg-card dark:bg-card"
+																	: "bg-background/50 dark:bg-card/50"
 													}`}
 												>
 													<td className="px-2 py-1.5 text-center">
@@ -776,10 +776,10 @@ export function AiReview({
 															type="checkbox"
 															checked={isSelected}
 															onChange={() => toggleSelectRow(row.id)}
-															className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 accent-indigo-600"
+															className="h-3.5 w-3.5 cursor-pointer rounded border-border accent-indigo-600"
 														/>
 													</td>
-													<td className="px-1 py-1.5 text-center text-[10px] tabular-nums text-gray-400 dark:text-gray-600">
+													<td className="px-1 py-1.5 text-center text-[10px] tabular-nums text-foreground/50 dark:text-foreground/70">
 														{visibleIndex + 1}
 													</td>
 													<td className="px-2 py-1.5">
@@ -790,7 +790,7 @@ export function AiReview({
 																updateRow(row.id, { date: e.target.value })
 															}
 															placeholder="dd.mm.yyyy"
-															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600 dark:focus:border-indigo-500"
 														/>
 													</td>
 													<td className="px-2 py-1.5">
@@ -802,7 +802,7 @@ export function AiReview({
 															}
 															step="0.01"
 															min="0"
-															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600 dark:focus:border-indigo-500"
 														/>
 													</td>
 													<td className="px-2 py-1.5">
@@ -812,7 +812,7 @@ export function AiReview({
 															onChange={(e) =>
 																updateRow(row.id, { description: e.target.value })
 															}
-															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600 dark:focus:border-indigo-500"
+															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600 dark:focus:border-indigo-500"
 														/>
 													</td>
 													<td className="px-2 py-1.5">
@@ -825,12 +825,12 @@ export function AiReview({
 																	})
 																}
 															>
-																<SelectTrigger className="h-7 border-gray-200 text-xs dark:border-gray-700">
+																<SelectTrigger className="h-7 border-border text-xs dark:border-border/40">
 																	<SelectValue placeholder="Konto…" />
 																</SelectTrigger>
 																<SelectContent>
 																	<SelectItem value="none">
-																		<span className="text-gray-400">Ingen</span>
+																		<span className="text-foreground/50">Ingen</span>
 																	</SelectItem>
 																	{accounts.map((a) => (
 																		<SelectItem key={a.id} value={a.id}>
@@ -868,7 +868,7 @@ export function AiReview({
 																<button
 																	type="button"
 																	onClick={() => deleteRow(row.id)}
-																	className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+																	className="rounded p-0.5 text-foreground/50 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
 																>
 																	<Trash2 className="h-3.5 w-3.5" />
 																</button>
@@ -886,7 +886,7 @@ export function AiReview({
 						{/* ── Mobile cards (below sm) ── */}
 						<div className="sm:hidden divide-y divide-gray-100 dark:divide-gray-800 max-h-[70svh] overflow-y-auto">
 							{/* Mobile select-all bar */}
-							<div className="flex items-center gap-2 bg-gray-50 px-3 py-2 dark:bg-gray-800">
+							<div className="flex items-center gap-2 bg-background px-3 py-2 dark:bg-card">
 								<input
 									type="checkbox"
 									checked={allVisibleSelected}
@@ -896,9 +896,9 @@ export function AiReview({
 												!allVisibleSelected && someVisibleSelected;
 									}}
 									onChange={toggleSelectAll}
-									className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-indigo-600"
+									className="h-4 w-4 cursor-pointer rounded border-border accent-indigo-600"
 								/>
-								<span className="text-xs text-gray-500 dark:text-gray-400">
+								<span className="text-xs text-foreground/60 dark:text-foreground/50">
 									Velg alle
 								</span>
 							</div>
@@ -915,10 +915,10 @@ export function AiReview({
 											key={row.id}
 											className={`space-y-2 p-3 transition-colors ${
 												isSelected
-													? "bg-indigo-50 dark:bg-indigo-900/15"
+													? "bg-primary/8 dark:bg-primary/15/15"
 													: row.categorySource === "none"
 														? "bg-amber-50/60 dark:bg-amber-900/10"
-														: "bg-white dark:bg-gray-900"
+														: "bg-card dark:bg-card"
 											}`}
 										>
 											{/* Row 1: checkbox + number + date + amount + badges + delete */}
@@ -927,9 +927,9 @@ export function AiReview({
 													type="checkbox"
 													checked={isSelected}
 													onChange={() => toggleSelectRow(row.id)}
-													className="h-4 w-4 shrink-0 cursor-pointer rounded border-gray-300 accent-indigo-600"
+													className="h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-indigo-600"
 												/>
-												<span className="w-5 shrink-0 text-center text-[10px] tabular-nums text-gray-400 dark:text-gray-600">
+												<span className="w-5 shrink-0 text-center text-[10px] tabular-nums text-foreground/50 dark:text-foreground/70">
 													{visibleIndex + 1}
 												</span>
 												<input
@@ -939,7 +939,7 @@ export function AiReview({
 														updateRow(row.id, { date: e.target.value })
 													}
 													placeholder="dd.mm.yyyy"
-													className="w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600"
+													className="w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600"
 												/>
 												<input
 													type="number"
@@ -949,9 +949,9 @@ export function AiReview({
 													}
 													step="0.01"
 													min="0"
-													className="ml-auto w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300"
+													className="ml-auto w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80"
 												/>
-												<span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">kr</span>
+												<span className="shrink-0 text-xs text-foreground/50 dark:text-foreground/60">kr</span>
 												<SourceBadge source={row.categorySource} />
 												{isDuplicate && (
 													<Tooltip>
@@ -966,7 +966,7 @@ export function AiReview({
 												<button
 													type="button"
 													onClick={() => deleteRow(row.id)}
-													className="shrink-0 rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+													className="shrink-0 rounded p-0.5 text-foreground/50 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
 												>
 													<Trash2 className="h-4 w-4" />
 												</button>
@@ -980,7 +980,7 @@ export function AiReview({
 													updateRow(row.id, { description: e.target.value })
 												}
 												placeholder="Beskrivelse"
-												className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-gray-700 hover:border-gray-200 focus:border-indigo-400 focus:outline-none dark:text-gray-300 dark:hover:border-gray-600"
+												className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600"
 											/>
 
 											{/* Row 3: category */}
@@ -997,12 +997,12 @@ export function AiReview({
 															})
 														}
 													>
-														<SelectTrigger className="h-8 flex-1 border-gray-200 text-xs dark:border-gray-700">
+														<SelectTrigger className="h-8 flex-1 border-border text-xs dark:border-border/40">
 															<SelectValue placeholder="Konto…" />
 														</SelectTrigger>
 														<SelectContent>
 															<SelectItem value="none">
-																<span className="text-gray-400">Ingen</span>
+																<span className="text-foreground/50">Ingen</span>
 															</SelectItem>
 															{accounts.map((a) => (
 																<SelectItem key={a.id} value={a.id}>
@@ -1022,7 +1022,7 @@ export function AiReview({
 				)}
 
 				{/* Legend */}
-				<div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+				<div className="mt-3 flex flex-wrap gap-4 text-xs text-foreground/60 dark:text-foreground/50">
 					<span className="flex items-center gap-1.5">
 						<CheckCircle className="h-3.5 w-3.5 text-green-500" />
 						Gjenkjent fra historikk

@@ -50,7 +50,7 @@ export function PaymentForm({ action }: PaymentFormProps) {
 							variant="outline"
 							className="w-full justify-start text-left font-normal"
 						>
-							<CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+							<CalendarIcon className="mr-2 h-4 w-4 text-foreground/50" />
 							{date
 								? format(date, "d. MMMM yyyy", { locale: nb })
 								: "Velg dato"}
@@ -137,7 +137,7 @@ export function PaymentForm({ action }: PaymentFormProps) {
 			<Button
 				type="submit"
 				disabled={pending}
-				className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+				className="w-full bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 			>
 				{pending ? "Registrerer..." : "Registrer betaling"}
 			</Button>

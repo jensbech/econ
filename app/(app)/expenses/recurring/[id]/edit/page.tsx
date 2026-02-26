@@ -58,10 +58,10 @@ export default async function EditRecurringExpensePage({
 	return (
 		<div className="mx-auto max-w-lg space-y-6 p-8">
 			<div>
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Rediger gjentagende utgift
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					Fremtidige forekomster vil oppdateres. Tidligere utgifter beholdes.
 				</p>
 			</div>
@@ -71,7 +71,7 @@ export default async function EditRecurringExpensePage({
 				basert på de oppdaterte verdiene.
 			</div>
 
-			<div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+			<div className="rounded-xl border border-border bg-card p-6 dark:border-border/40 dark:bg-card">
 				<RecurringForm
 					action={updateAction}
 					defaultDescription={template.description}

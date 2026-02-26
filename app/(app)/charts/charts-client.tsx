@@ -131,19 +131,19 @@ export function ChartsClient({
 
 			<div className="space-y-6">
 				{/* Category breakdown — bar or pie */}
-				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-					<div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-						<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+				<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+					<div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-border/40">
+						<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 							Utgifter per kategori — {monthLabelDisplay}
 						</h2>
-						<div className="flex gap-1 rounded-lg border border-gray-200 p-0.5 dark:border-gray-700">
+						<div className="flex gap-1 rounded-lg border border-border p-0.5 dark:border-border/40">
 							<button
 								type="button"
 								onClick={() => setCategoryView("bar")}
 								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									categoryView === "bar"
-										? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-										: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+										? "bg-card text-card-foreground dark:bg-card dark:text-foreground"
+										: "text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-card-foreground"
 								}`}
 							>
 								Søylediagram
@@ -153,8 +153,8 @@ export function ChartsClient({
 								onClick={() => setCategoryView("pie")}
 								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									categoryView === "pie"
-										? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-										: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+										? "bg-card text-card-foreground dark:bg-card dark:text-foreground"
+										: "text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-card-foreground"
 								}`}
 							>
 								Kakediagram
@@ -163,7 +163,7 @@ export function ChartsClient({
 					</div>
 
 					{!hasCategories ? (
-						<div className="flex h-64 items-center justify-center text-sm text-gray-400 dark:text-gray-500">
+						<div className="flex h-64 items-center justify-center text-sm text-foreground/50 dark:text-foreground/60">
 							Ingen utgiftsdata for {monthLabelDisplay}
 						</div>
 					) : categoryView === "bar" ? (
@@ -260,7 +260,7 @@ export function ChartsClient({
 										<button
 											type="button"
 											key={entry.name}
-											className="flex w-full items-center gap-2 text-left text-xs text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+											className="flex w-full items-center gap-2 text-left text-xs text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-card-foreground"
 											onClick={() =>
 												handleCategoryClick(entry.categoryId, selectedMonthStr)
 											}
@@ -288,14 +288,14 @@ export function ChartsClient({
 				</div>
 
 				{/* Spending trend over 6 months */}
-				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-					<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-						<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+				<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+					<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+						<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 							Utgiftstrend — 6 måneder
 						</h2>
 					</div>
 					{!hasTrend ? (
-						<div className="flex h-64 items-center justify-center text-sm text-gray-400 dark:text-gray-500">
+						<div className="flex h-64 items-center justify-center text-sm text-foreground/50 dark:text-foreground/60">
 							Ingen data for perioden
 						</div>
 					) : (
@@ -358,14 +358,14 @@ export function ChartsClient({
 				</div>
 
 				{/* Income vs expenses comparison */}
-				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-					<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-						<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+				<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+					<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+						<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 							Inntekt vs. utgifter — siste 6 måneder
 						</h2>
 					</div>
 					{!hasTrend ? (
-						<div className="flex h-64 items-center justify-center text-sm text-gray-400 dark:text-gray-500">
+						<div className="flex h-64 items-center justify-center text-sm text-foreground/50 dark:text-foreground/60">
 							Ingen data for perioden
 						</div>
 					) : (

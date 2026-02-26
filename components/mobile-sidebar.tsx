@@ -16,7 +16,6 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 		setMounted(true);
 	}, []);
 
-	// Escape key + scroll lock when drawer is open
 	useEffect(() => {
 		if (!open) return;
 		const prevOverflow = document.body.style.overflow;
@@ -37,7 +36,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 md:hidden"
+				className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary dark:text-foreground/70 dark:hover:bg-primary/10 dark:hover:text-primary md:hidden"
 				aria-label="Åpne meny"
 				aria-expanded={open}
 				aria-controls="mobile-sidebar-drawer"
@@ -52,7 +51,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 						{/* Backdrop */}
 						{open && (
 							<div
-								className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+								className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
 								onClick={() => setOpen(false)}
 								aria-hidden="true"
 							/>
@@ -66,21 +65,21 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 								open ? "translate-x-0" : "-translate-x-full"
 							}`}
 						>
-							<div className="flex h-full flex-col bg-[#0C0E14]">
+							<div className="flex h-full flex-col bg-card dark:bg-card border-r border-border/40">
 								{/* Header */}
-								<div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+								<div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
 									<div className="flex items-center gap-2.5">
-										<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-indigo-600 text-[11px] font-bold tracking-tight text-white">
+										<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold tracking-tight text-white">
 											kr
 										</div>
-										<h1 className="text-sm font-semibold leading-tight text-white">
+										<h1 className="text-sm font-semibold leading-tight text-foreground">
 											Pengene mine
 										</h1>
 									</div>
 									<button
 										type="button"
 										onClick={() => setOpen(false)}
-										className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+										className="rounded-lg p-1 text-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary"
 										aria-label="Lukk meny"
 									>
 										<X className="h-4 w-4" />

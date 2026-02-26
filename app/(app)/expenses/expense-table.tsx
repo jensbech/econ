@@ -86,7 +86,7 @@ function parseLocalDate(dateStr: string): Date {
 }
 
 const selectClass =
-	"h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+	"h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground";
 
 interface ExpenseTableProps {
 	expenses: ExpenseRow[];
@@ -169,11 +169,15 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 
 	function handleDelete(id: string, notes: string | null) {
 		startTransition(async () => {
-			await deleteExpenseNoRedirect(id);
-			toast.success("Utgift slettet", {
-				description: notes ?? undefined,
-			});
-			router.refresh();
+			try {
+				await deleteExpenseNoRedirect(id);
+				toast.success("Utgift slettet", {
+					description: notes ?? undefined,
+				});
+				router.refresh();
+			} catch (error) {
+				toast.error(error instanceof Error ? error.message : "Noe gikk galt");
+			}
 		});
 	}
 
@@ -195,7 +199,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					</Button>
 				),
 				cell: ({ row }) => (
-					<span className="whitespace-nowrap text-gray-900 dark:text-white">
+					<span className="whitespace-nowrap text-foreground dark:text-card-foreground">
 						{format(parseLocalDate(row.original.date), "d. MMM yyyy", {
 							locale: nb,
 						})}
@@ -225,11 +229,11 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							</span>
 						)}
 						{row.original.notes ? (
-							<span className="text-gray-700 dark:text-gray-300">
+							<span className="text-foreground/80 dark:text-foreground/80">
 								{row.original.notes}
 							</span>
 						) : (
-							<span className="italic text-gray-400">—</span>
+							<span className="italic text-foreground/50">—</span>
 						)}
 					</div>
 				),
@@ -241,7 +245,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					row.original.categoryName ? (
 						<Badge variant="secondary">{row.original.categoryName}</Badge>
 					) : (
-						<span className="text-sm text-gray-400">—</span>
+						<span className="text-sm text-foreground/50">—</span>
 					),
 			},
 			{
@@ -249,11 +253,11 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				header: "Konto",
 				cell: ({ row }) =>
 					row.original.accountName ? (
-						<span className="text-sm text-gray-600 dark:text-gray-400">
+						<span className="text-sm text-foreground/70 dark:text-foreground/50">
 							{row.original.accountName}
 						</span>
 					) : (
-						<span className="text-sm text-gray-400">—</span>
+						<span className="text-sm text-foreground/50">—</span>
 					),
 			},
 			{
@@ -295,7 +299,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 									href={`/expenses/${expense.id}/edit`}
 									onClick={(e) => e.stopPropagation()}
 								>
-									<Pencil className="h-4 w-4 text-gray-500" />
+									<Pencil className="h-4 w-4 text-foreground/60" />
 								</Link>
 							</Button>
 							<AlertDialog>
@@ -358,13 +362,13 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 		<div className="space-y-4">
 			{/* Import batch banner */}
 			{importBatchId && (
-				<div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-900/50 dark:bg-indigo-900/20">
-					<p className="text-sm text-indigo-700 dark:text-indigo-300">
+				<div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-primary/8 px-4 py-3 dark:border-indigo-900/50 dark:bg-primary/15/20">
+					<p className="text-sm text-primary dark:text-primary/60">
 						Viser <span className="font-semibold">{expenses.length}</span> importerte utgifter
 					</p>
 					<Link
 						href="/expenses"
-						className="flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+						className="flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-card-foreground"
 					>
 						<X className="h-3.5 w-3.5" />
 						Nullstill filter
@@ -372,15 +376,15 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				</div>
 			)}
 			{/* Filters */}
-			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-			<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+			<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
 				{/* Search */}
 				<div className="space-y-1 flex-1 min-w-[180px]">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Søk
 					</p>
 					<div className="relative">
-						<Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+						<Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/50" />
 						<Input
 							type="search"
 							placeholder="Søk i beskrivelse..."
@@ -392,7 +396,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				</div>
 
 				<div className="space-y-1">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Periode
 					</p>
 					<select
@@ -412,7 +416,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				{showDateRange && (
 					<>
 						<div className="space-y-1">
-							<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+							<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 								Fra dato
 							</p>
 							<input
@@ -423,7 +427,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							/>
 						</div>
 						<div className="space-y-1">
-							<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+							<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 								Til dato
 							</p>
 							<input
@@ -437,7 +441,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				)}
 
 				<div className="space-y-1">
-					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
 						Kategori
 					</p>
 					<select
@@ -462,7 +466,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow
 								key={headerGroup.id}
-								className="border-b border-gray-100 hover:bg-transparent dark:border-gray-800"
+								className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 							>
 								{headerGroup.headers.map((header) => (
 									<TableHead key={header.id}>
@@ -483,7 +487,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 								<TableRow
 									key={row.id}
 									onClick={() => setSelectedExpense(row.original)}
-									className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-gray-50 dark:border-gray-800/50 dark:hover:bg-gray-800/50"
+									className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
@@ -499,7 +503,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-32 text-center text-sm text-gray-400"
+									className="h-32 text-center text-sm text-foreground/50"
 								>
 									{searchQuery
 										? `Ingen utgifter funnet for «${searchQuery}»`
@@ -509,10 +513,10 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 						)}
 					</TableBody>
 					<TableFooter>
-						<TableRow className="border-t border-gray-100 dark:border-gray-800">
+						<TableRow className="border-t border-gray-100 dark:border-border/40">
 							<TableCell
 								colSpan={4}
-								className="text-sm font-medium text-gray-600 dark:text-gray-400"
+								className="text-sm font-medium text-foreground/70 dark:text-foreground/50"
 							>
 								Totalt ({filteredExpenses.length}{" "}
 								{filteredExpenses.length === 1 ? "utgift" : "utgifter"})
@@ -541,10 +545,10 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					{selectedExpense && (
 						<div className="mt-6 space-y-5 px-1">
 							<div>
-								<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Dato
 								</p>
-								<p className="text-sm font-medium text-gray-900 dark:text-white">
+								<p className="text-sm font-medium text-foreground dark:text-card-foreground">
 									{format(
 										parseLocalDate(selectedExpense.date),
 										"d. MMMM yyyy",
@@ -554,7 +558,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							</div>
 
 							<div>
-								<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Beløp
 								</p>
 								<p className="text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
@@ -564,7 +568,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 
 							{selectedExpense.categoryName && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Kategori
 									</p>
 									<Badge variant="secondary">
@@ -575,17 +579,17 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 
 							{selectedExpense.loanName && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Lån
 									</p>
 									<div className="flex items-center gap-2">
 										<BarChart3 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-										<p className="text-sm text-gray-700 dark:text-gray-300">
+										<p className="text-sm text-foreground/80 dark:text-foreground/80">
 											{selectedExpense.loanName}
 										</p>
 									</div>
 									{(selectedExpense.interestOere != null || selectedExpense.principalOere != null) && (
-										<div className="mt-1.5 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+										<div className="mt-1.5 space-y-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 											{selectedExpense.interestOere != null && (
 												<p>Renter: {formatNOK(selectedExpense.interestOere)}</p>
 											)}
@@ -599,10 +603,10 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 
 							{selectedExpense.accountName && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Konto
 									</p>
-									<p className="text-sm text-gray-700 dark:text-gray-300">
+									<p className="text-sm text-foreground/80 dark:text-foreground/80">
 										{selectedExpense.accountName}
 									</p>
 								</div>
@@ -610,10 +614,10 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 
 							{selectedExpense.notes && (
 								<div>
-									<p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+									<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 										Notater
 									</p>
-									<p className="text-sm text-gray-700 dark:text-gray-300">
+									<p className="text-sm text-foreground/80 dark:text-foreground/80">
 										{selectedExpense.notes}
 									</p>
 								</div>
@@ -622,7 +626,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							<div className="pt-2">
 								<Button
 									asChild
-									className="w-full gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+									className="w-full gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 								>
 									<Link href={`/expenses/${selectedExpense.id}/edit`}>
 										<Pencil className="h-4 w-4" />

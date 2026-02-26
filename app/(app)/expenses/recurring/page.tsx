@@ -64,14 +64,14 @@ export default async function RecurringExpensesPage() {
 		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Gjentagende utgifter
 					</h1>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 						Administrer faste og gjentagende utgifter.
 					</p>
 				</div>
-				<Button asChild className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+				<Button asChild className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
 					<Link href="/expenses/recurring/new">
 						<Plus className="h-4 w-4" />
 						Ny gjentagende utgift
@@ -80,17 +80,17 @@ export default async function RecurringExpensesPage() {
 			</div>
 
 			{templates.length === 0 ? (
-				<div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-900">
-					<Repeat className="mb-3 h-10 w-10 text-gray-300 dark:text-gray-600" />
-					<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+				<div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
+					<Repeat className="mb-3 h-10 w-10 text-gray-300 dark:text-foreground/70" />
+					<p className="text-sm font-medium text-foreground/60 dark:text-foreground/50">
 						Ingen gjentagende utgifter ennå
 					</p>
-					<p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+					<p className="mt-1 text-xs text-foreground/50 dark:text-foreground/60">
 						Legg til faste utgifter som husleie, strøm eller abonnementer.
 					</p>
 					<Button
 						asChild
-						className="mt-4 gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+						className="mt-4 gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 						size="sm"
 					>
 						<Link href="/expenses/recurring/new">
@@ -100,7 +100,7 @@ export default async function RecurringExpensesPage() {
 					</Button>
 				</div>
 			) : (
-				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+				<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
 					<ul className="divide-y divide-gray-100 dark:divide-gray-800">
 						{templates.map((template) => {
 							const boundDelete = deleteRecurringTemplate.bind(
@@ -112,11 +112,11 @@ export default async function RecurringExpensesPage() {
 									key={template.id}
 									className="flex items-center gap-4 px-5 py-4"
 								>
-									<Repeat className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+									<Repeat className="h-4 w-4 flex-shrink-0 text-foreground/50 dark:text-foreground/60" />
 
 									<div className="min-w-0 flex-1">
 										<div className="flex flex-wrap items-center gap-2">
-											<span className="font-medium text-gray-900 dark:text-white">
+											<span className="font-medium text-foreground dark:text-card-foreground">
 												{template.description}
 											</span>
 											<Badge variant="secondary">
@@ -127,7 +127,7 @@ export default async function RecurringExpensesPage() {
 												<Badge variant="outline">{template.categoryName}</Badge>
 											)}
 										</div>
-										<div className="mt-0.5 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
+										<div className="mt-0.5 flex flex-wrap gap-3 text-xs text-foreground/60 dark:text-foreground/50">
 											<span>
 												Fra{" "}
 												{format(
@@ -163,7 +163,7 @@ export default async function RecurringExpensesPage() {
 											asChild
 										>
 											<Link href={`/expenses/recurring/${template.id}/edit`}>
-												<Pencil className="h-4 w-4 text-gray-500" />
+												<Pencil className="h-4 w-4 text-foreground/60" />
 											</Link>
 										</Button>
 

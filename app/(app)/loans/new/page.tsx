@@ -18,14 +18,14 @@ export default async function NewLoanPage() {
 			<div className="mb-6">
 				<Link
 					href="/loans"
-					className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+					className="text-sm text-foreground/60 hover:text-foreground/80 dark:hover:text-gray-300"
 				>
 					&larr; Tilbake til lån
 				</Link>
 			</div>
 
 			<div className="mx-auto max-w-lg">
-				<h2 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+				<h2 className="mb-6 text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Legg til lån
 				</h2>
 				<LoanForm

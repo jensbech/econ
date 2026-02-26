@@ -135,11 +135,11 @@ function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 
 	if (state.step === "extracting") {
 		return (
-			<div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-6 text-sm text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-900/20 dark:text-indigo-300">
+			<div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-primary/8 p-6 text-sm text-primary dark:border-indigo-900/50 dark:bg-primary/15/20 dark:text-primary/60">
 				<Loader2 className="h-5 w-5 shrink-0 animate-spin" />
 				<div>
 					<p className="font-medium">Claude analyserer dokumentet…</p>
-					<p className="mt-0.5 text-xs text-indigo-500 dark:text-indigo-400">
+					<p className="mt-0.5 text-xs text-primary dark:text-indigo-400">
 						{state.filename}
 					</p>
 				</div>
@@ -180,27 +180,27 @@ function UploadZone({ accounts = [], onExtracted }: UploadZoneProps) {
 				{...getRootProps()}
 				className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-8 py-16 text-center transition-colors ${
 					isDragActive
-						? "border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/30"
-						: "border-gray-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
+						? "border-indigo-400 bg-primary/8 dark:border-indigo-600 dark:bg-indigo-950/30"
+						: "border-border bg-card hover:border-indigo-300 hover:bg-primary/8/30 dark:border-border/40 dark:bg-card dark:hover:border-indigo-700"
 				}`}
 			>
 				<input {...getInputProps()} />
 				<Upload
-					className={`mb-4 h-10 w-10 ${isDragActive ? "text-indigo-500" : "text-gray-400"}`}
+					className={`mb-4 h-10 w-10 ${isDragActive ? "text-primary" : "text-foreground/50"}`}
 				/>
 				{isDragActive ? (
-					<p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+					<p className="text-sm font-medium text-primary dark:text-indigo-400">
 						Slipp filen her…
 					</p>
 				) : (
 					<>
-						<p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+						<p className="text-sm font-medium text-foreground/80 dark:text-foreground/80">
 							Dra og slipp et dokument her
 						</p>
-						<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+						<p className="mt-1 text-xs text-foreground/60 dark:text-foreground/50">
 							eller klikk for å velge fil
 						</p>
-						<p className="mt-4 text-xs text-gray-400 dark:text-gray-600">
+						<p className="mt-4 text-xs text-foreground/50 dark:text-foreground/70">
 							PDF, JPG, PNG, WEBP — Claude trekker ut transaksjoner automatisk
 						</p>
 					</>

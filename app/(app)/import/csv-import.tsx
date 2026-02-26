@@ -470,10 +470,10 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 		<div className={headingHidden ? undefined : "p-8"}>
 			{!headingHidden && (
 				<>
-					<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h2 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Importer
 					</h2>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 						Last opp en CSV-fil fra din bank for å importere transaksjoner.
 					</p>
 				</>
@@ -493,27 +493,27 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 						{...getRootProps()}
 						className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-8 py-16 text-center transition-colors ${
 							isDragActive
-								? "border-indigo-400 bg-indigo-50 dark:border-indigo-600 dark:bg-indigo-950/30"
-								: "border-gray-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
+								? "border-indigo-400 bg-primary/8 dark:border-indigo-600 dark:bg-indigo-950/30"
+								: "border-border bg-card hover:border-indigo-300 hover:bg-primary/8/30 dark:border-border/40 dark:bg-card dark:hover:border-indigo-700"
 						}`}
 					>
 						<input {...getInputProps()} />
 						<Upload
-							className={`mb-4 h-10 w-10 ${isDragActive ? "text-indigo-500" : "text-gray-400"}`}
+							className={`mb-4 h-10 w-10 ${isDragActive ? "text-primary" : "text-foreground/50"}`}
 						/>
 						{isDragActive ? (
-							<p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+							<p className="text-sm font-medium text-primary dark:text-indigo-400">
 								Slipp filen her…
 							</p>
 						) : (
 							<>
-								<p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+								<p className="text-sm font-medium text-foreground/80 dark:text-foreground/80">
 									Dra og slipp en CSV-fil her
 								</p>
-								<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+								<p className="mt-1 text-xs text-foreground/60 dark:text-foreground/50">
 									eller klikk for å velge fil
 								</p>
-								<p className="mt-4 text-xs text-gray-400 dark:text-gray-600">
+								<p className="mt-4 text-xs text-foreground/50 dark:text-foreground/70">
 									Støttede formater: DNB, Nordea, Sparebank 1
 								</p>
 							</>
@@ -524,16 +524,16 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 
 			{/* ── Checking duplicates: spinner ────────────────────────────── */}
 			{step === "checking" && (
-				<div className="mt-8 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-					<Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+				<div className="mt-8 flex items-center gap-3 text-sm text-foreground/70 dark:text-foreground/50">
+					<Loader2 className="h-4 w-4 animate-spin text-primary" />
 					Sjekker for duplikater…
 				</div>
 			)}
 
 			{/* ── Importing: spinner ──────────────────────────────────────── */}
 			{step === "importing" && (
-				<div className="mt-8 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-					<Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+				<div className="mt-8 flex items-center gap-3 text-sm text-foreground/70 dark:text-foreground/50">
+					<Loader2 className="h-4 w-4 animate-spin text-primary" />
 					Importerer {nonSkippedCount} rader…
 				</div>
 			)}
@@ -555,7 +555,7 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 
 					<div className="flex flex-wrap gap-3">
 						<Link href={`/expenses?importBatch=${importResult.batchId}`}>
-							<Button className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+							<Button className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
 								Se importerte utgifter
 							</Button>
 						</Link>
@@ -632,7 +632,7 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 						<Button
 							onClick={handleConfirmImport}
 							disabled={nonSkippedCount === 0}
-							className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+							className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 						>
 							<CheckCircle className="mr-2 h-4 w-4" />
 							Bekreft import ({nonSkippedCount} rader)
@@ -693,8 +693,8 @@ function MappingDialog({
 				</DialogHeader>
 
 				{/* ── Format detection summary ─────────────────────────────── */}
-				<div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-					<p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+				<div className="rounded-lg border border-border bg-background p-4 dark:border-border/40 dark:bg-card/50">
+					<p className="mb-2 text-xs font-medium uppercase tracking-wide text-foreground/60 dark:text-foreground/50">
 						Detektert format
 					</p>
 					<div className="flex flex-wrap gap-2">
@@ -756,7 +756,7 @@ function MappingDialog({
 					<Button
 						onClick={onConfirm}
 						disabled={!isValid}
-						className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+						className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 					>
 						Bekreft tilordning
 						<ChevronRight className="ml-1 h-4 w-4" />
@@ -812,11 +812,11 @@ interface FormatChipProps {
 
 function FormatChip({ label, value }: FormatChipProps) {
 	return (
-		<div className="flex max-w-[200px] items-center gap-1 truncate rounded border border-gray-200 bg-white px-2 py-1 dark:border-gray-700 dark:bg-gray-800">
-			<span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
+		<div className="flex max-w-[200px] items-center gap-1 truncate rounded border border-border bg-card px-2 py-1 dark:border-border/40 dark:bg-card">
+			<span className="shrink-0 text-xs text-foreground/60 dark:text-foreground/50">
 				{label}:
 			</span>
-			<span className="truncate text-xs font-medium text-gray-900 dark:text-white">
+			<span className="truncate text-xs font-medium text-foreground dark:text-card-foreground">
 				{value}
 			</span>
 		</div>
@@ -840,36 +840,36 @@ function SamplePreview({ rows, mapping }: SamplePreviewProps) {
 	const sample = rows.slice(0, 3);
 	return (
 		<div>
-			<p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+			<p className="mb-2 text-xs font-medium uppercase tracking-wide text-foreground/60 dark:text-foreground/50">
 				Forhåndsvisning (3 rader)
 			</p>
-			<div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+			<div className="overflow-x-auto rounded-lg border border-border dark:border-border/40">
 				<table className="min-w-full text-xs">
-					<thead className="bg-gray-50 dark:bg-gray-800">
+					<thead className="bg-background dark:bg-card">
 						<tr>
 							{MAPPING_FIELDS.map(({ label }) => (
 								<th
 									key={label}
-									className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-400"
+									className="px-3 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50"
 								>
 									{label}
 								</th>
 							))}
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+					<tbody className="divide-y divide-gray-100 bg-card dark:divide-gray-800 dark:bg-card">
 						{sample.map((row, i) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: preview-only table, no CRUD
 							<tr key={i}>
 								{MAPPING_FIELDS.map(({ key }) => (
 									<td
 										key={key}
-										className="max-w-[160px] truncate px-3 py-2 text-gray-700 dark:text-gray-300"
+										className="max-w-[160px] truncate px-3 py-2 text-foreground/80 dark:text-foreground/80"
 									>
 										{mapping[key] ? (
 											(row[mapping[key]] ?? "—")
 										) : (
-											<span className="italic text-gray-400">ikke valgt</span>
+											<span className="italic text-foreground/50">ikke valgt</span>
 										)}
 									</td>
 								))}
@@ -944,40 +944,40 @@ function MappedPreview({
 }: MappedPreviewProps) {
 	return (
 		<div>
-			<p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+			<p className="mb-2 text-sm font-medium text-foreground/80 dark:text-foreground/80">
 				Forhåndsvisning — {rows.length} rader totalt
 			</p>
-			<div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+			<div className="overflow-x-auto rounded-lg border border-border dark:border-border/40">
 				<table className="min-w-full text-sm">
-					<thead className="bg-gray-50 dark:bg-gray-800">
+					<thead className="bg-background dark:bg-card">
 						<tr>
-							<th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-3 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Hopp over
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Dato
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Beløp
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Beskrivelse
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Konto
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Kategori
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Kobling
 							</th>
-							<th className="px-4 py-2 text-left font-medium text-gray-500 dark:text-gray-400">
+							<th className="px-4 py-2 text-left font-medium text-foreground/60 dark:text-foreground/50">
 								Status
 							</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+					<tbody className="divide-y divide-gray-100 bg-card dark:divide-gray-800 dark:bg-card">
 						{rows.map((row, i) => {
 							const isDuplicate = duplicateFlags[i] ?? false;
 							const isSkipped = skipped.has(i);
@@ -996,22 +996,22 @@ function MappedPreview({
 											type="checkbox"
 											checked={isSkipped}
 											onChange={() => onToggleSkip(i)}
-											className="h-4 w-4 rounded border-gray-300 accent-indigo-600"
+											className="h-4 w-4 rounded border-border accent-indigo-600"
 											aria-label="Hopp over denne raden"
 										/>
 									</td>
 									<td
-										className={`whitespace-nowrap px-4 py-2 ${isSkipped ? "text-gray-400 line-through" : "text-gray-700 dark:text-gray-300"}`}
+										className={`whitespace-nowrap px-4 py-2 ${isSkipped ? "text-foreground/50 line-through" : "text-foreground/80 dark:text-foreground/80"}`}
 									>
 										{row.date || "—"}
 									</td>
 									<td
-										className={`whitespace-nowrap px-4 py-2 ${isSkipped ? "text-gray-400 line-through" : "text-gray-700 dark:text-gray-300"}`}
+										className={`whitespace-nowrap px-4 py-2 ${isSkipped ? "text-foreground/50 line-through" : "text-foreground/80 dark:text-foreground/80"}`}
 									>
 										{row.amount || "—"}
 									</td>
 									<td
-										className={`max-w-[200px] truncate px-4 py-2 ${isSkipped ? "text-gray-400 line-through" : "text-gray-700 dark:text-gray-300"}`}
+										className={`max-w-[200px] truncate px-4 py-2 ${isSkipped ? "text-foreground/50 line-through" : "text-foreground/80 dark:text-foreground/80"}`}
 									>
 										{row.description || "—"}
 									</td>

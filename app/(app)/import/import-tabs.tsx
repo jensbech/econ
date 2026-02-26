@@ -38,10 +38,10 @@ export function ImportTabs({
 
 	return (
 		<div className="px-4 py-6 sm:p-8">
-			<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+			<h2 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 				Importer
 			</h2>
-			<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+			<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 				Last opp transaksjoner fra din bank — som CSV-fil, kvittering eller
 				PDF-kontoutskrift.
 			</p>
@@ -61,7 +61,7 @@ export function ImportTabs({
 				<div className="mt-4 flex items-center gap-3">
 					<label
 						htmlFor="importAccount"
-						className="text-sm font-medium text-gray-700 dark:text-gray-300"
+						className="text-sm font-medium text-foreground/80 dark:text-foreground/80"
 					>
 						Konto:
 					</label>
@@ -69,7 +69,7 @@ export function ImportTabs({
 						id="importAccount"
 						value={selectedAccountId}
 						onChange={(e) => setSelectedAccountId(e.target.value)}
-						className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+						className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 					>
 						{accounts.map((a) => (
 							<option key={a.id} value={a.id}>
@@ -81,14 +81,14 @@ export function ImportTabs({
 			)}
 
 			{/* Tab switcher */}
-			<div className="mt-6 flex gap-1 rounded-lg border border-gray-200 bg-gray-100 p-1 w-fit dark:border-gray-700 dark:bg-gray-800">
+			<div className="mt-6 flex gap-1 rounded-lg border border-border bg-primary/8 p-1 w-fit dark:border-border/40 dark:bg-card">
 				<button
 					type="button"
 					onClick={() => setActiveTab("document")}
 					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
 						activeTab === "document"
-							? "bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
-							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+							? "bg-card text-foreground dark:bg-card dark:text-card-foreground"
+							: "text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-gray-200"
 					}`}
 				>
 					Kvittering / PDF
@@ -98,8 +98,8 @@ export function ImportTabs({
 					onClick={() => setActiveTab("csv")}
 					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
 						activeTab === "csv"
-							? "bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
-							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+							? "bg-card text-foreground dark:bg-card dark:text-card-foreground"
+							: "text-foreground/70 hover:text-foreground dark:text-foreground/50 dark:hover:text-gray-200"
 					}`}
 				>
 					CSV-fil

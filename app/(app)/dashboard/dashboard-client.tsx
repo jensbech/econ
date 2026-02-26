@@ -79,16 +79,16 @@ export function DashboardClient({
 		return (
 			<div className="p-4 sm:p-6 lg:p-8">
 				<div className="mb-8">
-					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Oversikt
 					</h1>
 				</div>
-				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
-					<Wallet className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
-					<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
+					<Wallet className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-foreground/70" />
+					<p className="text-base font-medium text-foreground/60 dark:text-foreground/50">
 						Velg en konto for å se data
 					</p>
-					<p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+					<p className="mt-1 text-sm text-foreground/50 dark:text-foreground/60">
 						Bruk kontovalgeren øverst for å velge hvilke kontoer som skal vises.
 					</p>
 				</div>
@@ -99,24 +99,24 @@ export function DashboardClient({
 	const tabBase =
 		"pb-3 text-sm font-medium transition-colors border-b-2 -mb-px";
 	const tabActive =
-		"border-gray-900 text-gray-900 dark:border-white dark:text-white";
+		"border-gray-900 text-foreground dark:border-white dark:text-card-foreground";
 	const tabInactive =
-		"border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600";
+		"border-transparent text-foreground/60 hover:text-foreground/80 hover:border-border dark:text-foreground/50 dark:hover:text-gray-200 dark:hover:border-gray-600";
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
 			{/* Header */}
 			<div className="mb-1">
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Oversikt
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					{monthLabelDisplay}
 				</p>
 			</div>
 
 			{/* Tabs */}
-			<div className="mb-6 mt-4 flex gap-6 border-b border-gray-200 dark:border-gray-800">
+			<div className="mb-6 mt-4 flex gap-6 border-b border-border dark:border-border/40">
 				<Link
 					href="/dashboard"
 					className={`${tabBase} ${activeTab === "summary" ? tabActive : tabInactive}`}
@@ -143,12 +143,12 @@ export function DashboardClient({
 					<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
 						{/* Total income */}
 						<div
-							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+							className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 							style={{ animationDelay: "0ms" }}
 						>
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-foreground/50 dark:text-foreground/60">
 										Inntekt
 									</p>
 									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-green-600 dark:text-green-400">
@@ -161,12 +161,12 @@ export function DashboardClient({
 
 						{/* Total expenses */}
 						<div
-							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+							className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 							style={{ animationDelay: "60ms" }}
 						>
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-foreground/50 dark:text-foreground/60">
 										Utgifter
 									</p>
 									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-red-600 dark:text-red-400">
@@ -179,12 +179,12 @@ export function DashboardClient({
 
 						{/* Savings rate */}
 						<div
-							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+							className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 							style={{ animationDelay: "120ms" }}
 						>
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-foreground/50 dark:text-foreground/60">
 										Sparerate
 									</p>
 									{savingsRate !== null ? (
@@ -198,11 +198,11 @@ export function DashboardClient({
 											{savingsRate.toFixed(1)}%
 										</p>
 									) : (
-										<p className="mt-1.5 font-mono text-3xl font-bold text-gray-400 dark:text-gray-500">
+										<p className="mt-1.5 font-mono text-3xl font-bold text-foreground/50 dark:text-foreground/60">
 											—
 										</p>
 									)}
-									<p className="mt-0.5 font-mono text-xs tabular-nums text-gray-400 dark:text-gray-500">
+									<p className="mt-0.5 font-mono text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
 										Netto:{" "}
 										<span
 											className={
@@ -215,7 +215,7 @@ export function DashboardClient({
 										</span>
 									</p>
 								</div>
-								<Wallet className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+								<Wallet className="mt-0.5 h-4 w-4 flex-shrink-0 text-foreground/50 dark:text-foreground/60" />
 							</div>
 						</div>
 					</div>
@@ -231,19 +231,19 @@ export function DashboardClient({
 					{monthlyLoanTotal > 0 && (
 						<div className="mb-8">
 							<div
-								className="animate-card-in rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800"
+								className="animate-card-in rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card"
 								style={{ animationDelay: "180ms" }}
 							>
 								<div className="flex items-start justify-between">
 									<div>
-										<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+										<p className="text-sm font-medium text-foreground/60 dark:text-foreground/50">
 											Lån denne måneden
 										</p>
 										<p className="mt-1 font-mono text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
 											{formatNOK(monthlyLoanTotal)}
 										</p>
 										{(monthlyLoanInterest > 0 || monthlyLoanPrincipal > 0) && (
-											<p className="mt-0.5 text-xs tabular-nums text-gray-400 dark:text-gray-500">
+											<p className="mt-0.5 text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
 												Renter: {formatNOK(monthlyLoanInterest)} · Avdrag:{" "}
 												{formatNOK(monthlyLoanPrincipal)}
 											</p>
@@ -257,12 +257,12 @@ export function DashboardClient({
 
 					{/* Empty state */}
 					{!hasData && (
-						<div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
-							<TrendingDown className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
-							<p className="text-base font-medium text-gray-500 dark:text-gray-400">
+						<div className="rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
+							<TrendingDown className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-foreground/70" />
+							<p className="text-base font-medium text-foreground/60 dark:text-foreground/50">
 								Ingen data for {monthLabelDisplay}
 							</p>
-							<p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+							<p className="mt-1 text-sm text-foreground/50 dark:text-foreground/60">
 								Legg til{" "}
 								<Link
 									href="/expenses/new"
@@ -284,9 +284,9 @@ export function DashboardClient({
 
 					{/* Budget vs. actual */}
 					{budgetByCategory.length > 0 && (
-						<div className="mb-8 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-							<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-								<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+						<div className="mb-8 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+							<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+								<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 									Budsjett vs. faktisk
 								</h2>
 							</div>
@@ -317,11 +317,11 @@ export function DashboardClient({
 												className="flex items-center justify-between px-5 py-3"
 											>
 												<div className="min-w-0 flex-1">
-													<span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+													<span className="text-sm font-medium text-foreground/80 dark:text-card-foreground">
 														{name}
 													</span>
 													{budgetAmt > 0 && (
-														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
 															<div
 																className={`h-full rounded-full transition-all duration-500 ${over ? "bg-red-400 dark:bg-red-500" : "bg-green-400 dark:bg-green-500"}`}
 																style={{
@@ -333,12 +333,12 @@ export function DashboardClient({
 												</div>
 												<div className="ml-4 flex-shrink-0 text-right">
 													<span
-														className={`text-sm font-semibold tabular-nums ${over ? "text-red-600 dark:text-red-400" : under ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`}
+														className={`text-sm font-semibold tabular-nums ${over ? "text-red-600 dark:text-red-400" : under ? "text-green-600 dark:text-green-400" : "text-foreground/70 dark:text-foreground/50"}`}
 													>
 														{formatNOK(actualAmt)}
 													</span>
 													{budgetAmt > 0 && (
-														<span className="block text-xs text-gray-400 dark:text-gray-500">
+														<span className="block text-xs text-foreground/50 dark:text-foreground/60">
 															av {formatNOK(budgetAmt)}
 														</span>
 													)}
@@ -355,16 +355,16 @@ export function DashboardClient({
 						<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 							{/* Spending by category */}
 							<div
-								className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+								className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 								style={{ animationDelay: "200ms" }}
 							>
-								<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-									<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+								<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+									<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 										Utgifter per kategori
 									</h2>
 								</div>
 								{categoryBreakdown.length === 0 ? (
-									<div className="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+									<div className="px-5 py-8 text-center text-sm text-foreground/50 dark:text-foreground/60">
 										Ingen utgifter registrert
 									</div>
 								) : (
@@ -377,25 +377,25 @@ export function DashboardClient({
 											return (
 												<li
 													key={row.categoryId ?? `uncategorized-${i}`}
-													className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
+													className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-gray-700/30"
 												>
 													<div className="min-w-0 flex-1">
 														<div className="flex items-center justify-between text-sm">
-															<span className="truncate font-medium text-gray-700 dark:text-gray-200">
+															<span className="truncate font-medium text-foreground/80 dark:text-card-foreground">
 																{row.categoryName ?? "Ukategorisert"}
 															</span>
 															<span className="ml-4 flex-shrink-0 font-semibold tabular-nums text-red-600 dark:text-red-400">
 																{formatNOK(row.total)}
 															</span>
 														</div>
-														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
 															<div
 																className="h-full rounded-full bg-red-400 transition-all duration-500 ease-out dark:bg-red-500"
 																style={{ width: `${pct}%` }}
 															/>
 														</div>
 													</div>
-													<span className="w-8 flex-shrink-0 text-right text-xs tabular-nums text-gray-400 dark:text-gray-500">
+													<span className="w-8 flex-shrink-0 text-right text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
 														{pct}%
 													</span>
 												</li>
@@ -407,16 +407,16 @@ export function DashboardClient({
 
 							{/* Upcoming recurring expenses */}
 							<div
-								className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+								className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 								style={{ animationDelay: "260ms" }}
 							>
-								<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
-									<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+								<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+									<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 										Gjentagende utgifter denne måneden
 									</h2>
 								</div>
 								{upcomingRecurring.length === 0 ? (
-									<div className="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+									<div className="px-5 py-8 text-center text-sm text-foreground/50 dark:text-foreground/60">
 										Ingen gjentagende utgifter
 									</div>
 								) : (
@@ -424,13 +424,13 @@ export function DashboardClient({
 										{upcomingRecurring.map((item) => (
 											<li
 												key={item.id}
-												className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30"
+												className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-gray-700/30"
 											>
 												<div className="min-w-0">
-													<p className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">
+													<p className="truncate text-sm font-medium text-foreground/80 dark:text-card-foreground">
 														{item.notes ?? "Uten beskrivelse"}
 													</p>
-													<p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+													<p className="mt-0.5 text-xs text-foreground/50 dark:text-foreground/60">
 														{format(parseISO(item.date), "d. MMMM", {
 															locale: nb,
 														})}

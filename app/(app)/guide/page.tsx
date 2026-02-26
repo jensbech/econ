@@ -21,7 +21,7 @@ function Section({
 	children: React.ReactNode;
 }) {
 	return (
-		<section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+		<section className="rounded-xl border border-border bg-card p-6 dark:border-border/40 dark:bg-card">
 			{children}
 		</section>
 	);
@@ -35,8 +35,8 @@ function SectionTitle({
 	icon?: React.ComponentType<{ className?: string }>;
 }) {
 	return (
-		<h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-			{Icon && <Icon className="h-5 w-5 text-indigo-500" />}
+		<h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground dark:text-card-foreground">
+			{Icon && <Icon className="h-5 w-5 text-primary" />}
 			{children}
 		</h2>
 	);
@@ -53,11 +53,11 @@ function SubSection({
 }) {
 	return (
 		<div>
-			<h3 className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-gray-800 dark:text-gray-200">
-				{Icon && <Icon className="h-4 w-4 text-gray-400 dark:text-gray-500" />}
+			<h3 className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-foreground/80 dark:text-card-foreground">
+				{Icon && <Icon className="h-4 w-4 text-foreground/50 dark:text-foreground/60" />}
 				{title}
 			</h3>
-			<div className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+			<div className="text-sm leading-relaxed text-foreground/70 dark:text-foreground/50">
 				{children}
 			</div>
 		</div>
@@ -69,10 +69,10 @@ function StepList({ steps }: { steps: string[] }) {
 		<ol className="space-y-2">
 			{steps.map((step, i) => (
 				<li key={step} className="flex items-start gap-3">
-					<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+					<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary dark:bg-primary/15/50 dark:text-primary/60">
 						{i + 1}
 					</span>
-					<span className="text-sm text-gray-700 dark:text-gray-300">
+					<span className="text-sm text-foreground/80 dark:text-foreground/80">
 						{step}
 					</span>
 				</li>
@@ -94,10 +94,10 @@ export default function GuidePage() {
 	return (
 		<div className="p-4 sm:p-8">
 			<div className="mb-8">
-				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+				<h1 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 					Slik bruker du appen
 				</h1>
-				<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 					En oversikt over konsepter, funksjoner og hvordan du kommer i gang.
 				</p>
 			</div>
@@ -106,7 +106,7 @@ export default function GuidePage() {
 				{/* ── Getting started ──────────────────────────────────────────── */}
 				<Section>
 					<SectionTitle icon={CheckCircle}>Kom i gang</SectionTitle>
-					<p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+					<p className="mb-4 text-sm text-foreground/70 dark:text-foreground/50">
 						Hvis du akkurat har begynt, anbefaler vi denne rekkefølgen for å
 						raskt få oversikt over økonomien:
 					</p>

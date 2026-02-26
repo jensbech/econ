@@ -39,7 +39,7 @@ function SidebarNav() {
 		<>
 			<nav className="flex-1 space-y-0.5 px-3 py-4">
 				{navItems.map(({ href, label, icon: Icon }) => (
-					<NavLink key={href} href={href} label={label} onDark>
+					<NavLink key={href} href={href} label={label}>
 						<Icon className="h-4 w-4 flex-shrink-0" />
 					</NavLink>
 				))}
@@ -79,15 +79,15 @@ export default async function AppLayout({
 		: currentMonthStr;
 
 	return (
-		<div className="flex min-h-screen bg-[#F5F3EF] dark:bg-gray-950">
-			{/* Desktop Sidebar — always dark */}
-			<aside className="hidden w-60 flex-shrink-0 flex-col bg-[#0C0E14] md:flex">
-				<div className="border-b border-white/[0.06] px-5 py-4">
+		<div className="flex min-h-screen bg-background dark:bg-background">
+			{/* Desktop Sidebar — light & warm */}
+			<aside className="hidden w-60 flex-shrink-0 flex-col bg-background dark:bg-card md:flex border-r border-border/40">
+				<div className="border-b border-border/40 px-5 py-4">
 					<div className="flex items-center gap-2.5">
-						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-indigo-600 text-[11px] font-bold tracking-tight text-white">
+						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold tracking-tight text-card-foreground">
 							kr
 						</div>
-						<h1 className="text-sm font-semibold leading-tight text-white">
+						<h1 className="text-sm font-semibold leading-tight text-foreground">
 							Pengene mine
 						</h1>
 					</div>
@@ -96,7 +96,7 @@ export default async function AppLayout({
 				<SidebarNav />
 
 				{/* User section */}
-				<div className="border-t border-white/[0.06] p-3">
+				<div className="border-t border-border/40 p-3">
 					<div className="flex items-center gap-3 rounded-lg px-3 py-2">
 						{user.image ? (
 							<Image
@@ -107,20 +107,20 @@ export default async function AppLayout({
 								className="rounded-full object-cover"
 							/>
 						) : (
-							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-300">
+							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
 								{(user.name ?? "?")[0].toUpperCase()}
 							</div>
 						)}
 						<div className="min-w-0 flex-1">
-							<p className="truncate text-sm font-medium text-white">
+							<p className="truncate text-sm font-medium text-foreground">
 								{user.name}
 							</p>
-							<p className="truncate text-xs text-gray-400">
+							<p className="truncate text-xs text-foreground/60">
 								{user.email}
 							</p>
 						</div>
 					</div>
-					<ThemeToggle onDark />
+					<ThemeToggle />
 					<form
 						action={async () => {
 							"use server";
@@ -129,7 +129,7 @@ export default async function AppLayout({
 					>
 						<button
 							type="submit"
-							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-primary/8 hover:text-primary"
 						>
 							<LogOut className="h-4 w-4 flex-shrink-0" />
 							Logg ut
@@ -141,12 +141,12 @@ export default async function AppLayout({
 			{/* Main content area */}
 			<div className="flex flex-1 flex-col min-w-0">
 				{/* Top bar */}
-				<header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/90">
-					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-3 md:px-6 md:py-3">
+				<header className="sticky top-0 z-30 border-b border-border/50 bg-card/95 backdrop-blur-md dark:border-border/50 dark:bg-card/90 ethereal-shadow-sm">
+					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-4 md:px-6 md:py-3">
 						{/* Mobile hamburger + sidebar drawer */}
 						<MobileSidebar>
 							<SidebarNav />
-							<div className="border-t border-white/[0.06] p-3">
+							<div className="border-t border-border/40 p-3">
 								<div className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2">
 									{user.image ? (
 										<Image
@@ -157,16 +157,20 @@ export default async function AppLayout({
 											className="rounded-full object-cover"
 										/>
 									) : (
-										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-300">
+										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
 											{(user.name ?? "?")[0].toUpperCase()}
 										</div>
 									)}
 									<div className="min-w-0 flex-1">
-										<p className="truncate text-sm font-medium text-white">{user.name}</p>
-										<p className="truncate text-xs text-gray-400">{user.email}</p>
+										<p className="truncate text-sm font-medium text-foreground">
+											{user.name}
+										</p>
+										<p className="truncate text-xs text-foreground/60">
+											{user.email}
+										</p>
 									</div>
 								</div>
-								<ThemeToggle onDark />
+								<ThemeToggle />
 								<form
 									action={async () => {
 										"use server";
@@ -175,7 +179,7 @@ export default async function AppLayout({
 								>
 									<button
 										type="submit"
-										className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+										className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-primary/8 hover:text-primary"
 									>
 										<LogOut className="h-4 w-4 flex-shrink-0" />
 										Logg ut
@@ -184,22 +188,20 @@ export default async function AppLayout({
 							</div>
 						</MobileSidebar>
 
-						{/* Account selector — fills middle, scrollable */}
-						<div className="min-w-0 flex-1 overflow-x-auto">
+						{/* Month selector (mobile dropdown + desktop chevrons) */}
+						<MonthSelector initialMonth={initialMonth} />
+
+						{/* Account selector — fills middle, scrollable with gradient indicator */}
+						<div className="min-w-0 flex-1 overflow-hidden">
 							<AccountSelector
 								accounts={visibleAccounts}
 								initialSelected={initialSelected}
 							/>
 						</div>
-
-						{/* Month selector — rightmost on mobile, leftmost on desktop */}
-						<div className="shrink-0 md:order-first">
-							<MonthSelector initialMonth={initialMonth} />
-						</div>
 					</div>
 				</header>
 
-				<main className="flex-1 overflow-auto">{children}</main>
+				<main className="flex-1 overflow-auto bg-background">{children}</main>
 			</div>
 		</div>
 	);
