@@ -112,7 +112,7 @@ export default async function RecurringExpensesPage() {
 									key={template.id}
 									className="flex items-center gap-4 px-5 py-4"
 								>
-									<Repeat className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+									<Repeat className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
 
 									<div className="min-w-0 flex-1">
 										<div className="flex flex-wrap items-center gap-2">

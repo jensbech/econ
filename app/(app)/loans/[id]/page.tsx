@@ -89,7 +89,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			<div className="mb-6">
 				<Link
 					href="/loans"
-					className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+					className="inline-flex items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200"
 				>
 					&larr; Tilbake til lån
 				</Link>
@@ -123,7 +123,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			{/* Loan summary cards */}
 			<div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
 				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+					<p className="text-xs text-gray-500 dark:text-gray-400">
 						Gjenstående saldo
 					</p>
 					<p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
@@ -135,7 +135,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 				</div>
 
 				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+					<p className="text-xs text-gray-500 dark:text-gray-400">
 						Månedlig terminbeløp
 					</p>
 					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -147,7 +147,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 				</div>
 
 				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+					<p className="text-xs text-gray-500 dark:text-gray-400">
 						Gjenstående løpetid
 					</p>
 					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -163,15 +163,15 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 				</div>
 
 				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+					<p className="text-xs text-gray-500 dark:text-gray-400">
 						Nedbetalt
 					</p>
-					<p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
 						{balance.principalPaidPct}%
 					</p>
 					<div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
 						<div
-							className="h-full rounded-full bg-indigo-500 transition-all"
+							className="h-full rounded-full bg-gray-500 dark:bg-gray-400 transition-all"
 							style={{ width: `${balance.principalPaidPct}%` }}
 						/>
 					</div>
@@ -181,7 +181,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 				{/* Payment history */}
 				<div className="lg:col-span-2">
-					<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+					<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
 						Betalingshistorikk
 					</h3>
 					{expensePayments.length === 0 ? (
@@ -289,7 +289,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 				{/* Add payment + what-if */}
 				<div className="space-y-6">
 					<div>
-						<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+						<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
 							Registrer betaling
 						</h3>
 						<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
@@ -299,7 +299,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 
 					{balance.currentBalanceOere > 0 && (
 						<div>
-							<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+							<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
 								Ekstra nedbetaling
 							</h3>
 							<LoanWhatIfPanel

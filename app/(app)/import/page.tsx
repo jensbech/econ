@@ -80,7 +80,7 @@ export default async function ImportPage() {
 
 			{batches.length > 0 && (
 				<div className="max-w-4xl px-4 pb-12 sm:px-8">
-					<h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+					<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
 						Importhistorikk
 					</h3>
 					<div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">

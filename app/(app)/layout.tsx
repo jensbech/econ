@@ -142,7 +142,7 @@ export default async function AppLayout({
 			<div className="flex flex-1 flex-col min-w-0">
 				{/* Top bar */}
 				<header className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/90 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/90">
-					<div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 md:flex-nowrap md:px-6 md:py-3">
+					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-3 md:px-6 md:py-3">
 						{/* Mobile hamburger + sidebar drawer */}
 						<MobileSidebar>
 							<SidebarNav />
@@ -184,15 +184,17 @@ export default async function AppLayout({
 							</div>
 						</MobileSidebar>
 
-						{/* Month selector */}
-						<MonthSelector initialMonth={initialMonth} />
-
-						{/* Account selector — scrollable row on mobile, inline on desktop */}
-						<div className="basis-full overflow-x-auto md:min-w-0 md:flex-1 md:basis-auto">
+						{/* Account selector — fills middle, scrollable */}
+						<div className="min-w-0 flex-1 overflow-x-auto">
 							<AccountSelector
 								accounts={visibleAccounts}
 								initialSelected={initialSelected}
 							/>
+						</div>
+
+						{/* Month selector — rightmost on mobile, leftmost on desktop */}
+						<div className="shrink-0 md:order-first">
+							<MonthSelector initialMonth={initialMonth} />
 						</div>
 					</div>
 				</header>

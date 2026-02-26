@@ -97,16 +97,16 @@ export function DashboardClient({
 	}
 
 	const tabBase =
-		"px-4 py-2 text-sm font-medium transition-colors rounded-lg";
+		"pb-3 text-sm font-medium transition-colors border-b-2 -mb-px";
 	const tabActive =
-		"bg-gray-900 text-white dark:bg-white dark:text-gray-900";
+		"border-gray-900 text-gray-900 dark:border-white dark:text-white";
 	const tabInactive =
-		"text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800";
+		"border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600";
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
 			{/* Header */}
-			<div className="mb-6">
+			<div className="mb-1">
 				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
 					Oversikt
 				</h1>
@@ -116,7 +116,7 @@ export function DashboardClient({
 			</div>
 
 			{/* Tabs */}
-			<div className="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 w-fit dark:border-gray-700 dark:bg-gray-800/50">
+			<div className="mb-6 mt-4 flex gap-6 border-b border-gray-200 dark:border-gray-800">
 				<Link
 					href="/dashboard"
 					className={`${tabBase} ${activeTab === "summary" ? tabActive : tabInactive}`}
@@ -191,7 +191,7 @@ export function DashboardClient({
 										<p
 											className={`mt-1.5 font-mono text-3xl font-bold tabular-nums ${
 												savingsRate >= 0
-													? "text-indigo-600 dark:text-indigo-400"
+													? "text-green-600 dark:text-green-400"
 													: "text-red-600 dark:text-red-400"
 											}`}
 										>
@@ -215,7 +215,7 @@ export function DashboardClient({
 										</span>
 									</p>
 								</div>
-								<Wallet className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+								<Wallet className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
 							</div>
 						</div>
 					</div>
@@ -266,14 +266,14 @@ export function DashboardClient({
 								Legg til{" "}
 								<Link
 									href="/expenses/new"
-									className="text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
+									className="underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 dark:decoration-gray-500 dark:hover:decoration-gray-300"
 								>
 									utgifter
 								</Link>{" "}
 								eller{" "}
 								<Link
 									href="/income/new"
-									className="text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
+									className="underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 dark:decoration-gray-500 dark:hover:decoration-gray-300"
 								>
 									inntekter
 								</Link>{" "}

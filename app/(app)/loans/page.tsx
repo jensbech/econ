@@ -159,7 +159,7 @@ export default async function LoansPage() {
 								{/* Progress bar */}
 								<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
 									<div
-										className="h-full rounded-full bg-indigo-500 transition-all"
+										className="h-full rounded-full bg-gray-500 dark:bg-gray-400 transition-all"
 										style={{ width: `${balance.principalPaidPct}%` }}
 									/>
 								</div>

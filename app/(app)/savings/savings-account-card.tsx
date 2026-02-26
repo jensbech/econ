@@ -33,7 +33,7 @@ export function SavingsAccountCard({
 			{/* Header */}
 			<div className="mb-4 flex items-start justify-between gap-2">
 				<div className="flex items-center gap-2 min-w-0">
-					<PiggyBank className="h-5 w-5 flex-shrink-0 text-indigo-500" />
+					<PiggyBank className="h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-500" />
 					<div className="min-w-0">
 						<h3 className="truncate font-semibold text-gray-900 dark:text-white">
 							{account.name}

@@ -306,7 +306,8 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 	return (
 		<div className="space-y-4">
 			{/* View toggle + Filters */}
-			<div className="flex flex-wrap items-end gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+			<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+		<div className="flex flex-wrap items-end gap-4 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
 				{/* Monthly / Yearly toggle */}
 				<div className="space-y-1">
 					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -391,7 +392,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 			</div>
 
 			{/* Table */}
-			<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+			<div className="overflow-x-auto">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -458,8 +459,9 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 					</TableFooter>
 				</Table>
 			</div>
+		</div>
 
-			{/* Detail Sheet */}
+		{/* Detail Sheet */}
 			<Sheet
 				open={selectedIncome !== null}
 				onOpenChange={(open) => {

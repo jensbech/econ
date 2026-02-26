@@ -364,7 +364,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					</p>
 					<Link
 						href="/expenses"
-						className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
+						className="flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 					>
 						<X className="h-3.5 w-3.5" />
 						Nullstill filter
@@ -372,7 +372,8 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				</div>
 			)}
 			{/* Filters */}
-			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+			<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
 				{/* Search */}
 				<div className="space-y-1 flex-1 min-w-[180px]">
 					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -455,7 +456,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 			</div>
 
 			{/* Table */}
-			<div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+			<div className="overflow-x-auto">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -524,8 +525,9 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					</TableFooter>
 				</Table>
 			</div>
+		</div>
 
-			{/* Detail Sheet */}
+		{/* Detail Sheet */}
 			<Sheet
 				open={selectedExpense !== null}
 				onOpenChange={(open) => {
