@@ -106,7 +106,15 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 						{format(parseISO(loan.startDate), "d. MMMM yyyy", { locale: nb })}
 					</p>
 				</div>
+				<div className="flex items-center gap-2">
+				<a
+					href={`/loans/${id}/edit`}
+					className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground/70 transition-colors hover:bg-card dark:border-border/40 dark:text-foreground/60 dark:hover:bg-card/50"
+				>
+					Rediger
+				</a>
 				<DeleteLoanButton loanId={id} />
+			</div>
 			</div>
 
 			{/* Loan summary cards */}
