@@ -91,6 +91,9 @@ export function CalendarField({
 					}}
 					locale={nb}
 					initialFocus
+					captionLayout="dropdown"
+					fromYear={2000}
+					toYear={new Date().getFullYear() + 10}
 				/>
 			</PopoverContent>
 		</Popover>
