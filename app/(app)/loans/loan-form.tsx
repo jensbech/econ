@@ -211,7 +211,7 @@ export function LoanForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="bg-indigo-600 hover:bg-indigo-700"
+					className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 				>
 					{pending ? "Lagrer..." : submitLabel}
 				</Button>

@@ -85,7 +85,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 	const remainingMonthsRemainder = balance.remainingMonths % 12;
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="mb-6">
 				<Link
 					href="/loans"

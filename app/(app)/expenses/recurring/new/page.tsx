@@ -35,7 +35,7 @@ export default async function NewRecurringExpensePage() {
 				</p>
 			</div>
 
-			<div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
 				<RecurringForm
 					action={createRecurringTemplate}
 					categories={expenseCategories}

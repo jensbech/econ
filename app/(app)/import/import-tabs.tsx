@@ -87,7 +87,7 @@ export function ImportTabs({
 					onClick={() => setActiveTab("document")}
 					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
 						activeTab === "document"
-							? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
+							? "bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
 							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
 					}`}
 				>
@@ -98,7 +98,7 @@ export function ImportTabs({
 					onClick={() => setActiveTab("csv")}
 					className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
 						activeTab === "csv"
-							? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
+							? "bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
 							: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
 					}`}
 				>

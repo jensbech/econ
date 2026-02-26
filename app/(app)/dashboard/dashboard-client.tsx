@@ -77,7 +77,7 @@ export function DashboardClient({
 
 	if (noAccountSelected) {
 		return (
-			<div className="p-8">
+			<div className="p-4 sm:p-6 lg:p-8">
 				<div className="mb-8">
 					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
 						Oversikt
@@ -99,12 +99,12 @@ export function DashboardClient({
 	const tabBase =
 		"px-4 py-2 text-sm font-medium transition-colors rounded-lg";
 	const tabActive =
-		"bg-indigo-600 text-white";
+		"bg-gray-900 text-white dark:bg-white dark:text-gray-900";
 	const tabInactive =
 		"text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800";
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8">
 			{/* Header */}
 			<div className="mb-6">
 				<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -143,55 +143,48 @@ export function DashboardClient({
 					<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
 						{/* Total income */}
 						<div
-							className="animate-card-in overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
 							style={{ animationDelay: "0ms" }}
 						>
-							<div className="h-1 bg-green-400 dark:bg-green-500" />
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
 										Inntekt
 									</p>
 									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-green-600 dark:text-green-400">
 										{formatNOK(totalIncome)}
 									</p>
 								</div>
-								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/20">
-									<TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-								</div>
+								<TrendingUp className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500 dark:text-green-400" />
 							</div>
 						</div>
 
 						{/* Total expenses */}
 						<div
-							className="animate-card-in overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-							style={{ animationDelay: "80ms" }}
+							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+							style={{ animationDelay: "60ms" }}
 						>
-							<div className="h-1 bg-red-400 dark:bg-red-500" />
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
 										Utgifter
 									</p>
 									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-red-600 dark:text-red-400">
 										{formatNOK(totalExpenses)}
 									</p>
 								</div>
-								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20">
-									<TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
-								</div>
+								<TrendingDown className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500 dark:text-red-400" />
 							</div>
 						</div>
 
 						{/* Savings rate */}
 						<div
-							className="animate-card-in overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-							style={{ animationDelay: "160ms" }}
+							className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+							style={{ animationDelay: "120ms" }}
 						>
-							<div className={`h-1 ${savingsRate !== null && savingsRate >= 0 ? "bg-indigo-400 dark:bg-indigo-500" : "bg-red-400 dark:bg-red-500"}`} />
 							<div className="flex items-start justify-between p-5">
 								<div>
-									<p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+									<p className="text-xs font-medium text-gray-400 dark:text-gray-500">
 										Sparerate
 									</p>
 									{savingsRate !== null ? (
@@ -222,9 +215,7 @@ export function DashboardClient({
 										</span>
 									</p>
 								</div>
-								<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
-									<Wallet className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-								</div>
+								<Wallet className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
 							</div>
 						</div>
 					</div>
@@ -240,9 +231,9 @@ export function DashboardClient({
 					{monthlyLoanTotal > 0 && (
 						<div className="mb-8">
 							<div
-							className="animate-card-in rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-							style={{ animationDelay: "240ms" }}
-						>
+								className="animate-card-in rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800"
+								style={{ animationDelay: "180ms" }}
+							>
 								<div className="flex items-start justify-between">
 									<div>
 										<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -258,9 +249,7 @@ export function DashboardClient({
 											</p>
 										)}
 									</div>
-									<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
-										<BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-									</div>
+									<BarChart3 className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400" />
 								</div>
 							</div>
 						</div>
@@ -301,9 +290,8 @@ export function DashboardClient({
 									Budsjett vs. faktisk
 								</h2>
 							</div>
-							<ul className="divide-y divide-gray-50 dark:divide-gray-700/50">
+							<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
 								{(() => {
-									// Merge budget and actual by categoryId
 									const allIds = new Set([
 										...budgetByCategory.map((b) => b.categoryId ?? "__none__"),
 										...categoryBreakdown.map((a) => a.categoryId ?? "__none__"),
@@ -333,7 +321,7 @@ export function DashboardClient({
 														{name}
 													</span>
 													{budgetAmt > 0 && (
-														<div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
 															<div
 																className={`h-full rounded-full transition-all duration-500 ${over ? "bg-red-400 dark:bg-red-500" : "bg-green-400 dark:bg-green-500"}`}
 																style={{
@@ -368,7 +356,7 @@ export function DashboardClient({
 							{/* Spending by category */}
 							<div
 								className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-								style={{ animationDelay: "300ms" }}
+								style={{ animationDelay: "200ms" }}
 							>
 								<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
 									<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -380,7 +368,7 @@ export function DashboardClient({
 										Ingen utgifter registrert
 									</div>
 								) : (
-									<ul className="divide-y divide-gray-50 dark:divide-gray-700/50">
+									<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
 										{categoryBreakdown.map((row, i) => {
 											const pct =
 												totalExpenses > 0
@@ -400,7 +388,7 @@ export function DashboardClient({
 																{formatNOK(row.total)}
 															</span>
 														</div>
-														<div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
 															<div
 																className="h-full rounded-full bg-red-400 transition-all duration-500 ease-out dark:bg-red-500"
 																style={{ width: `${pct}%` }}
@@ -420,7 +408,7 @@ export function DashboardClient({
 							{/* Upcoming recurring expenses */}
 							<div
 								className="animate-card-in rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
-								style={{ animationDelay: "380ms" }}
+								style={{ animationDelay: "260ms" }}
 							>
 								<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
 									<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -432,7 +420,7 @@ export function DashboardClient({
 										Ingen gjentagende utgifter
 									</div>
 								) : (
-									<ul className="divide-y divide-gray-50 dark:divide-gray-700/50">
+									<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
 										{upcomingRecurring.map((item) => (
 											<li
 												key={item.id}

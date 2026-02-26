@@ -61,7 +61,7 @@ export default async function RecurringExpensesPage() {
 		: [];
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -71,7 +71,7 @@ export default async function RecurringExpensesPage() {
 						Administrer faste og gjentagende utgifter.
 					</p>
 				</div>
-				<Button asChild className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+				<Button asChild className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
 					<Link href="/expenses/recurring/new">
 						<Plus className="h-4 w-4" />
 						Ny gjentagende utgift
@@ -90,7 +90,7 @@ export default async function RecurringExpensesPage() {
 					</p>
 					<Button
 						asChild
-						className="mt-4 gap-2 bg-indigo-600 hover:bg-indigo-700"
+						className="mt-4 gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 						size="sm"
 					>
 						<Link href="/expenses/recurring/new">
@@ -100,7 +100,7 @@ export default async function RecurringExpensesPage() {
 					</Button>
 				</div>
 			) : (
-				<div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
 					<ul className="divide-y divide-gray-100 dark:divide-gray-800">
 						{templates.map((template) => {
 							const boundDelete = deleteRecurringTemplate.bind(
@@ -112,9 +112,7 @@ export default async function RecurringExpensesPage() {
 									key={template.id}
 									className="flex items-center gap-4 px-5 py-4"
 								>
-									<div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
-										<Repeat className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-									</div>
+									<Repeat className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
 
 									<div className="min-w-0 flex-1">
 										<div className="flex flex-wrap items-center gap-2">

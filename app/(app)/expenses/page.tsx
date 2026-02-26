@@ -188,7 +188,7 @@ export default async function ExpensesPage({
 							Gjentagende
 						</Link>
 					</Button>
-					<Button asChild className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+					<Button asChild className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
 						<Link href="/expenses/new">
 							<Plus className="h-4 w-4" />
 							Ny utgift

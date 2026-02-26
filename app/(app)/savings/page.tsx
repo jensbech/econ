@@ -206,7 +206,7 @@ export default async function SavingsPage() {
 	const totalBalance = Object.values(balances).reduce((s, b) => s + b, 0);
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8">
 			{/* Header */}
 			<div className="mb-6">
 				<div>
@@ -236,7 +236,7 @@ export default async function SavingsPage() {
 					</p>
 					<Link
 						href="/accounts"
-						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 					>
 						Gå til Kontoer
 					</Link>

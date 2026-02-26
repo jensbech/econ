@@ -81,7 +81,7 @@ export default async function LoansPage() {
 	);
 
 	return (
-		<div className="p-8">
+		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="mb-6 flex items-center justify-between">
 				<div>
 					<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -98,7 +98,7 @@ export default async function LoansPage() {
 				</div>
 				<Link
 					href="/loans/new"
-					className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+					className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 				>
 					<Plus className="h-4 w-4" />
 					Legg til lån
@@ -113,7 +113,7 @@ export default async function LoansPage() {
 					</p>
 					<Link
 						href="/loans/new"
-						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+						className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 					>
 						<Plus className="h-4 w-4" />
 						Legg til lån
@@ -129,7 +129,7 @@ export default async function LoansPage() {
 							<Link
 								key={loan.id}
 								href={`/loans/${loan.id}`}
-								className="block rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
+								className="block rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/50"
 							>
 								<div className="mb-4 flex items-start justify-between">
 									<div>
@@ -143,7 +143,7 @@ export default async function LoansPage() {
 											})}
 										</p>
 									</div>
-									<span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+									<span className="rounded-full border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
 										{loan.interestRate}%
 									</span>
 								</div>
@@ -157,7 +157,7 @@ export default async function LoansPage() {
 								</p>
 
 								{/* Progress bar */}
-								<div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+								<div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
 									<div
 										className="h-full rounded-full bg-indigo-500 transition-all"
 										style={{ width: `${balance.principalPaidPct}%` }}

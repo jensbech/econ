@@ -102,12 +102,12 @@ export function AccountSelector({
 	const chipBase =
 		"flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors";
 	const chipActive =
-		"border-indigo-600 bg-indigo-600 text-white dark:border-indigo-400 dark:bg-indigo-600";
+		"border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-white dark:text-gray-900";
 	const chipInactive =
 		"border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700";
 
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		<div className="flex flex-nowrap items-center gap-2 md:flex-wrap">
 			<button
 				type="button"
 				aria-pressed={isAll}

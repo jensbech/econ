@@ -174,11 +174,17 @@ export function AiReview({
 	const [insertedCount, setInsertedCount] = useState(0);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	// Run duplicate check once on mount
+	// Run duplicate check; cancel stale results if transactions change mid-flight
 	useEffect(() => {
+		let cancelled = false;
 		checkAiDuplicates(
 			transactions.map((tx) => ({ date: tx.date, amountOere: tx.amountOere })),
-		).then(setDuplicateFlags);
+		).then((flags) => {
+			if (!cancelled) setDuplicateFlags(flags);
+		});
+		return () => {
+			cancelled = true;
+		};
 	}, [transactions]);
 
 	const visibleRows = useMemo(() => rows.filter((r) => !r.deleted), [rows]);
@@ -602,7 +608,7 @@ export function AiReview({
 						</Button>
 						<Button
 							onClick={handleConfirm}
-							className="bg-indigo-600 text-white hover:bg-indigo-700"
+							className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 						>
 							Bekreft og importer
 						</Button>
@@ -684,7 +690,7 @@ export function AiReview({
 						size="sm"
 						onClick={() => setShowConfirmModal(true)}
 						disabled={visibleRows.length === 0 || isSubmitting}
-						className="bg-indigo-600 text-white hover:bg-indigo-700"
+						className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 					>
 						Bekreft import ({visibleRows.length} rader)
 					</Button>

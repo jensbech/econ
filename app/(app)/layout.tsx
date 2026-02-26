@@ -187,8 +187,8 @@ export default async function AppLayout({
 						{/* Month selector */}
 						<MonthSelector initialMonth={initialMonth} />
 
-						{/* Account selector — full-width second row on mobile, inline on desktop */}
-						<div className="basis-full overflow-x-auto pb-0.5 md:min-w-0 md:flex-1 md:basis-auto md:pb-0">
+						{/* Account selector — scrollable row on mobile, inline on desktop */}
+						<div className="basis-full overflow-x-auto md:min-w-0 md:flex-1 md:basis-auto">
 							<AccountSelector
 								accounts={visibleAccounts}
 								initialSelected={initialSelected}

@@ -41,7 +41,7 @@ export default async function CategoriesPage() {
 			</div>
 
 			{/* Add category form */}
-			<section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
 				<h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
 					Legg til kategori
 				</h2>
@@ -70,7 +70,7 @@ export default async function CategoriesPage() {
 					</div>
 					<Button
 						type="submit"
-						className="h-9 bg-indigo-600 hover:bg-indigo-700"
+						className="h-9 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 					>
 						Legg til
 					</Button>

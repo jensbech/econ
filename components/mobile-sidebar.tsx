@@ -16,6 +16,21 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 		setMounted(true);
 	}, []);
 
+	// Escape key + scroll lock when drawer is open
+	useEffect(() => {
+		if (!open) return;
+		const prevOverflow = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.key === "Escape") setOpen(false);
+		}
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.body.style.overflow = prevOverflow;
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [open]);
+
 	return (
 		<>
 			{/* Hamburger button - visible only on mobile */}
@@ -24,6 +39,8 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 				onClick={() => setOpen(true)}
 				className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 md:hidden"
 				aria-label="Åpne meny"
+				aria-expanded={open}
+				aria-controls="mobile-sidebar-drawer"
 			>
 				<Menu className="h-5 w-5" />
 			</button>
@@ -37,12 +54,14 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 							<div
 								className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
 								onClick={() => setOpen(false)}
-								onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+								aria-hidden="true"
 							/>
 						)}
 
 						{/* Drawer */}
 						<aside
+							id="mobile-sidebar-drawer"
+							aria-hidden={!open}
 							className={`fixed inset-y-0 left-0 z-50 w-60 transform transition-transform duration-200 ease-in-out md:hidden ${
 								open ? "translate-x-0" : "-translate-x-full"
 							}`}

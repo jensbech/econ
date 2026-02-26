@@ -137,7 +137,7 @@ export function PaymentForm({ action }: PaymentFormProps) {
 			<Button
 				type="submit"
 				disabled={pending}
-				className="w-full bg-indigo-600 hover:bg-indigo-700"
+				className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 			>
 				{pending ? "Registrerer..." : "Registrer betaling"}
 			</Button>

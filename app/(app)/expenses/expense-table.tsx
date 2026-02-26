@@ -372,7 +372,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 				</div>
 			)}
 			{/* Filters */}
-			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 				{/* Search */}
 				<div className="space-y-1 flex-1 min-w-[180px]">
 					<p className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -455,7 +455,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 			</div>
 
 			{/* Table */}
-			<div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -620,7 +620,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 							<div className="pt-2">
 								<Button
 									asChild
-									className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700"
+									className="w-full gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 								>
 									<Link href={`/expenses/${selectedExpense.id}/edit`}>
 										<Pencil className="h-4 w-4" />

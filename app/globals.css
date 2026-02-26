@@ -119,7 +119,7 @@
 @keyframes card-in {
 	from {
 		opacity: 0;
-		transform: translateY(10px);
+		transform: translateY(4px);
 	}
 	to {
 		opacity: 1;
@@ -128,7 +128,7 @@
 }
 
 .animate-card-in {
-	animation: card-in 0.4s ease-out both;
+	animation: card-in 0.2s ease-out both;
 }
 
 @layer base {

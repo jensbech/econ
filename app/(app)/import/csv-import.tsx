@@ -555,7 +555,7 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 
 					<div className="flex flex-wrap gap-3">
 						<Link href={`/expenses?importBatch=${importResult.batchId}`}>
-							<Button className="bg-indigo-600 hover:bg-indigo-700">
+							<Button className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
 								Se importerte utgifter
 							</Button>
 						</Link>
@@ -632,7 +632,7 @@ export function CsvImport({ categories, headingHidden, accountId, accounts = [],
 						<Button
 							onClick={handleConfirmImport}
 							disabled={nonSkippedCount === 0}
-							className="bg-indigo-600 hover:bg-indigo-700"
+							className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 						>
 							<CheckCircle className="mr-2 h-4 w-4" />
 							Bekreft import ({nonSkippedCount} rader)
@@ -756,7 +756,7 @@ function MappingDialog({
 					<Button
 						onClick={onConfirm}
 						disabled={!isValid}
-						className="bg-indigo-600 hover:bg-indigo-700"
+						className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 					>
 						Bekreft tilordning
 						<ChevronRight className="ml-1 h-4 w-4" />

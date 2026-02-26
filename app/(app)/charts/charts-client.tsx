@@ -28,20 +28,20 @@ import {
 } from "@/components/ui/chart";
 import { formatNOK } from "@/lib/format";
 
-// Fixed color palette for categories
+// Fixed color palette for categories — muted, data-viz appropriate
 const CATEGORY_COLORS = [
-	"#6366f1",
-	"#f43f5e",
+	"#3b82f6",
+	"#ef4444",
 	"#f97316",
-	"#eab308",
 	"#22c55e",
+	"#a855f7",
 	"#06b6d4",
-	"#8b5cf6",
+	"#f59e0b",
 	"#ec4899",
 	"#14b8a6",
 	"#64748b",
-	"#ef4444",
-	"#3b82f6",
+	"#84cc16",
+	"#8b5cf6",
 ];
 
 interface CategoryData {
@@ -142,7 +142,7 @@ export function ChartsClient({
 								onClick={() => setCategoryView("bar")}
 								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									categoryView === "bar"
-										? "bg-indigo-600 text-white"
+										? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
 										: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 								}`}
 							>
@@ -153,7 +153,7 @@ export function ChartsClient({
 								onClick={() => setCategoryView("pie")}
 								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									categoryView === "pie"
-										? "bg-indigo-600 text-white"
+										? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
 										: "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
 								}`}
 							>
@@ -180,7 +180,7 @@ export function ChartsClient({
 										}
 									}}
 								>
-									<CartesianGrid strokeDasharray="3 3" vertical={false} />
+									<CartesianGrid vertical={false} stroke="rgba(156,163,175,0.35)" strokeWidth={1} />
 									<XAxis
 										dataKey="name"
 										tick={{ fontSize: 11 }}
@@ -200,7 +200,7 @@ export function ChartsClient({
 											formatNOK(value),
 											name,
 										]}
-										cursor={{ fill: "rgba(99,102,241,0.08)" }}
+										cursor={{ fill: "rgba(0,0,0,0.04)" }}
 									/>
 									<Bar
 										dataKey="total"
@@ -291,7 +291,7 @@ export function ChartsClient({
 				<div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
 					<div className="border-b border-gray-100 px-5 py-4 dark:border-gray-700">
 						<h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-							Utgiftstrend — siste 6 måneder
+							Utgiftstrend — 6 måneder
 						</h2>
 					</div>
 					{!hasTrend ? (
@@ -324,7 +324,7 @@ export function ChartsClient({
 											<stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
 										</linearGradient>
 									</defs>
-									<CartesianGrid strokeDasharray="3 3" vertical={false} />
+									<CartesianGrid vertical={false} stroke="rgba(156,163,175,0.35)" strokeWidth={1} />
 									<XAxis dataKey="month" tick={{ fontSize: 11 }} />
 									<YAxis
 										tickFormatter={(v: number) =>
@@ -387,7 +387,7 @@ export function ChartsClient({
 										}
 									}}
 								>
-									<CartesianGrid strokeDasharray="3 3" vertical={false} />
+									<CartesianGrid vertical={false} stroke="rgba(156,163,175,0.35)" strokeWidth={1} />
 									<XAxis dataKey="month" tick={{ fontSize: 11 }} />
 									<YAxis
 										tickFormatter={(v: number) =>

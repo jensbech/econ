@@ -199,7 +199,7 @@ export function IncomeForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+					className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
 				>
 					{pending && <Loader2 className="h-4 w-4 animate-spin" />}
 					{pending ? "Lagrer..." : submitLabel}
