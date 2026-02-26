@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories, expenses, loans } from "@/db/schema";
-import { logCreate, logDelete } from "@/lib/audit";
+import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
@@ -160,6 +160,152 @@ export async function createLoan(
 
 	revalidatePath("/loans");
 	redirect("/loans");
+}
+
+export async function updateLoan(
+	loanId: string,
+	_prevState: LoanFormState,
+	formData: FormData,
+): Promise<LoanFormState> {
+	await validateCsrfOrigin();
+	const user = await verifySession();
+	if (!user.id) return { error: "User ID not available" };
+
+	try {
+		checkRateLimit(`loan:update:${user.id}`, 10, 3600);
+	} catch {
+		return { error: "Too many requests. Please try again later." };
+	}
+
+	const householdId = await getHouseholdId(user.id);
+	if (!householdId) return { error: "Ingen husholdning funnet" };
+
+	const [existing] = await db
+		.select({ id: loans.id })
+		.from(loans)
+		.where(
+			and(
+				eq(loans.id, loanId),
+				eq(loans.householdId, householdId),
+				eq(loans.userId, user.id),
+				isNull(loans.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!existing) return { error: "Lån ikke funnet" };
+
+	const raw = {
+		name: formData.get("name") as string,
+		type: formData.get("type") as string,
+		principal: formData.get("principal") as string,
+		interestRate: formData.get("interestRate") as string,
+		termMonths: formData.get("termMonths") as string,
+		startDate: formData.get("startDate") as string,
+		accountId: (formData.get("accountId") as string) || undefined,
+		openingBalance: (formData.get("openingBalance") as string) || undefined,
+		openingBalanceDate: (formData.get("openingBalanceDate") as string) || undefined,
+	};
+
+	const parsed = LoanSchema.safeParse(raw);
+	if (!parsed.success) return { fieldErrors: extractFieldErrors(parsed.error) };
+
+	let principalOere: number;
+	try {
+		principalOere = nokToOere(parsed.data.principal);
+	} catch {
+		return { fieldErrors: { principal: ["Ugyldig beløp"] } };
+	}
+
+	const interestRate = Number.parseFloat(
+		parsed.data.interestRate.replace(",", "."),
+	);
+	if (
+		Number.isNaN(interestRate) ||
+		interestRate < 0 ||
+		interestRate > 100 ||
+		!Number.isFinite(interestRate)
+	) {
+		return {
+			fieldErrors: {
+				interestRate: ["Rente må være mellom 0 og 100 prosent"],
+			},
+		};
+	}
+	const roundedRate = Math.round(interestRate * 100) / 100;
+	if (interestRate !== roundedRate) {
+		return {
+			fieldErrors: {
+				interestRate: ["Rente må ha maks 2 desimaler (f.eks. 3,50%)"],
+			},
+		};
+	}
+
+	const termMonths = Number.parseInt(parsed.data.termMonths, 10);
+	if (Number.isNaN(termMonths) || termMonths <= 0) {
+		return { fieldErrors: { termMonths: ["Ugyldig løpetid"] } };
+	}
+
+	let openingBalanceOere: number | null = null;
+	const openingBalanceDate: string | null =
+		parsed.data.openingBalanceDate || null;
+
+	if (parsed.data.openingBalance || openingBalanceDate) {
+		if (!parsed.data.openingBalance || !openingBalanceDate) {
+			return {
+				fieldErrors: {
+					openingBalance: [
+						"Både restgjeld og dato må fylles ut sammen",
+					],
+				},
+			};
+		}
+		if (openingBalanceDate < parsed.data.startDate) {
+			return {
+				fieldErrors: {
+					openingBalanceDate: [
+						"Dato må være lik eller etter startdato",
+					],
+				},
+			};
+		}
+		try {
+			openingBalanceOere = nokToOere(parsed.data.openingBalance);
+		} catch {
+			return { fieldErrors: { openingBalance: ["Ugyldig beløp"] } };
+		}
+	}
+
+	await db
+		.update(loans)
+		.set({
+			name: parsed.data.name,
+			type: parsed.data.type as "mortgage" | "student" | "car" | "consumer" | "other",
+			principalOere,
+			interestRate,
+			termMonths,
+			startDate: parsed.data.startDate,
+			accountId: parsed.data.accountId ?? null,
+			openingBalanceOere,
+			openingBalanceDate,
+		})
+		.where(
+			and(
+				eq(loans.id, loanId),
+				eq(loans.householdId, householdId),
+				eq(loans.userId, user.id),
+			),
+		);
+
+	await logUpdate(householdId, user.id, "loan", loanId, {
+		principalOere,
+		interestRate,
+		termMonths,
+	});
+
+	revalidatePath(`/loans/${loanId}`);
+	revalidatePath("/loans");
+	redirect(`/loans/${loanId}`);
 }
 
 export async function deleteLoan(id: string): Promise<void> {
