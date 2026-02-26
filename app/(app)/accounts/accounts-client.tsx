@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AccountIcon, ACCOUNT_ICONS } from "@/components/account-icon";
+import { formatNOK } from "@/lib/format";
 import { createAccount, deleteAccount, updateAccount } from "./actions";
 
 interface AccountRow {
@@ -39,6 +40,7 @@ interface AccountRow {
 interface AccountsClientProps {
 	accounts: AccountRow[];
 	currentUserId: string;
+	balances: Record<string, number | null>;
 }
 
 function IconPicker({
@@ -113,6 +115,7 @@ function openingBalanceError(value: string): string | null {
 export function AccountsClient({
 	accounts,
 	currentUserId,
+	balances,
 }: AccountsClientProps) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
@@ -349,7 +352,19 @@ export function AccountsClient({
 										)}
 									</div>
 
-									{isOwner && !isEditing && (
+									{!isEditing && (
+									<div className="ml-auto text-sm font-medium tabular-nums">
+										{balances[account.id] != null ? (
+											<span className={balances[account.id]! >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+												{formatNOK(balances[account.id]!)}
+											</span>
+										) : (
+											<span className="text-foreground/30">—</span>
+										)}
+									</div>
+								)}
+
+								{isOwner && !isEditing && (
 										<div className="flex items-center gap-1">
 											<Button
 												variant="ghost"
