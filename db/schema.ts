@@ -119,6 +119,8 @@ export const accounts = pgTable("accounts", {
 	icon: text("icon").notNull().default("wallet"), // lucide icon name
 	openingBalanceOere: integer("opening_balance_oere"),
 	openingBalanceDate: date("opening_balance_date"),
+	coinSymbol: text("coin_symbol"),
+	coinQuantity: doublePrecision("coin_quantity"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
