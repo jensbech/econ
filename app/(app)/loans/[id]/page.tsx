@@ -10,8 +10,9 @@ import { formatNOK } from "@/lib/format";
 import { getHouseholdId } from "@/lib/households";
 import { computeLoanBalance } from "@/lib/loan-math";
 import { LoanWhatIfPanel } from "@/components/loan-what-if-panel";
-import { addLoanPayment, deleteLoan, deleteLoanPayment } from "../actions";
+import { addLoanPayment } from "../actions";
 import { PaymentForm } from "../payment-form";
+import { DeleteLoanButton, DeletePaymentButton } from "./loan-delete-buttons";
 
 interface LoanDetailPageProps {
 	params: Promise<{ id: string }>;
@@ -89,7 +90,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			<div className="mb-6">
 				<Link
 					href="/loans"
-					className="inline-flex items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200"
+					className="inline-flex items-center gap-1.5 text-sm text-foreground/50 transition-colors hover:text-foreground/80 dark:hover:text-gray-200"
 				>
 					&larr; Tilbake til lån
 				</Link>
@@ -97,81 +98,69 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 
 			<div className="mb-8 flex items-start justify-between">
 				<div>
-					<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+					<h2 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						{loan.name}
 					</h2>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 						{LOAN_TYPE_LABELS[loan.type] ?? loan.type} &middot; Startet{" "}
 						{format(parseISO(loan.startDate), "d. MMMM yyyy", { locale: nb })}
 					</p>
 				</div>
-				<form
-					action={async () => {
-						"use server";
-						await deleteLoan(id);
-					}}
-				>
-					<button
-						type="submit"
-						className="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
-					>
-						Slett lån
-					</button>
-				</form>
+				<DeleteLoanButton loanId={id} />
 			</div>
 
 			{/* Loan summary cards */}
 			<div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card">
+					<p className="text-xs text-foreground/60 dark:text-foreground/50">
 						Gjenstående saldo
 					</p>
 					<p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
 						{formatNOK(balance.currentBalanceOere)}
 					</p>
-					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+					<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 						av {formatNOK(loan.principalOere)} opprinnelig
 					</p>
 				</div>
 
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card">
+					<p className="text-xs text-foreground/60 dark:text-foreground/50">
 						Månedlig terminbeløp
 					</p>
-					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+					<p className="mt-2 text-2xl font-bold text-foreground dark:text-card-foreground">
 						{formatNOK(balance.monthlyPaymentOere)}
 					</p>
-					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+					<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 						{loan.interestRate}% nominell rente
 					</p>
 				</div>
 
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card">
+					<p className="text-xs text-foreground/60 dark:text-foreground/50">
 						Gjenstående løpetid
 					</p>
-					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+					<p className="mt-2 text-2xl font-bold text-foreground dark:text-card-foreground">
 						{balance.remainingMonths === 0
 							? "Nedbetalt"
 							: remainingYears > 0
 								? `${remainingYears} år ${remainingMonthsRemainder > 0 ? `${remainingMonthsRemainder} mnd` : ""}`
 								: `${balance.remainingMonths} mnd`}
 					</p>
-					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+					<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 						Opprinnelig {loan.termMonths} måneder
 					</p>
 				</div>
 
-				<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-					<p className="text-xs text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card">
+					<p className="text-xs text-foreground/60 dark:text-foreground/50">
 						Nedbetalt
 					</p>
-					<p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+					<p className="mt-2 text-2xl font-bold text-foreground dark:text-card-foreground">
 						{balance.principalPaidPct}%
 					</p>
-					<div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+					<div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-card">
 						<div
-							className="h-full rounded-full bg-gray-500 dark:bg-gray-400 transition-all"
+							className="h-full rounded-full bg-background0 dark:bg-gray-400 transition-all"
 							style={{ width: `${balance.principalPaidPct}%` }}
 						/>
 					</div>
@@ -181,80 +170,68 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 			<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 				{/* Payment history */}
 				<div className="lg:col-span-2">
-					<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+					<h3 className="mb-4 text-sm font-medium text-foreground/60 dark:text-foreground/50">
 						Betalingshistorikk
 					</h3>
 					{expensePayments.length === 0 ? (
-						<div className="rounded-xl border border-dashed border-gray-200 py-12 text-center dark:border-gray-700">
-							<p className="text-sm text-gray-400 dark:text-gray-500">
+						<div className="rounded-xl border border-dashed border-border py-12 text-center dark:border-border/40">
+							<p className="text-sm text-foreground/50 dark:text-foreground/60">
 								Ingen betalinger registrert ennå
 							</p>
 						</div>
 					) : (
-						<div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+						<div className="overflow-hidden rounded-xl border border-border dark:border-border/40">
 							<table className="w-full text-sm">
-								<thead className="bg-gray-50 dark:bg-gray-800/50">
+								<thead className="bg-background dark:bg-card/50">
 									<tr>
-										<th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
+										<th className="px-4 py-3 text-left font-medium text-foreground/60 dark:text-foreground/50">
 											Dato
 										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
+										<th className="px-4 py-3 text-right font-medium text-foreground/60 dark:text-foreground/50">
 											Totalt
 										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
+										<th className="px-4 py-3 text-right font-medium text-foreground/60 dark:text-foreground/50">
 											Renter
 										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
+										<th className="px-4 py-3 text-right font-medium text-foreground/60 dark:text-foreground/50">
 											Avdrag
 										</th>
-										<th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400" />
+										<th className="px-4 py-3 text-right font-medium text-foreground/60 dark:text-foreground/50" />
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-gray-100 dark:divide-gray-800">
 									{expensePayments.map((p) => (
-										<tr key={p.id} className="bg-white dark:bg-gray-900">
-											<td className="px-4 py-3 text-gray-900 dark:text-white">
+										<tr key={p.id} className="bg-card dark:bg-card">
+											<td className="px-4 py-3 text-foreground dark:text-card-foreground">
 												{format(parseISO(p.date), "d. MMMM yyyy", {
 													locale: nb,
 												})}
 											</td>
-											<td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
+											<td className="px-4 py-3 text-right font-medium text-foreground dark:text-card-foreground">
 												{formatNOK(p.amountOere)}
 											</td>
-											<td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
+											<td className="px-4 py-3 text-right text-foreground/70 dark:text-foreground/50">
 												{p.interestOere !== null
 													? formatNOK(p.interestOere)
 													: "—"}
 											</td>
-											<td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
+											<td className="px-4 py-3 text-right text-foreground/70 dark:text-foreground/50">
 												{p.principalOere !== null
 													? formatNOK(p.principalOere)
 													: "—"}
 											</td>
 											<td className="px-4 py-3 text-right">
-												<form
-													action={async () => {
-														"use server";
-														await deleteLoanPayment(p.id, id);
-													}}
-												>
-													<button
-														type="submit"
-														className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-													>
-														Slett
-													</button>
-												</form>
+												<DeletePaymentButton paymentId={p.id} loanId={id} />
 											</td>
 										</tr>
 									))}
 								</tbody>
-								<tfoot className="bg-gray-50 dark:bg-gray-800/50">
+								<tfoot className="bg-background dark:bg-card/50">
 									<tr>
-										<td className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+										<td className="px-4 py-3 text-sm font-medium text-foreground/80 dark:text-foreground/80">
 											Totalt registrert
 										</td>
-										<td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
+										<td className="px-4 py-3 text-right font-semibold text-foreground dark:text-card-foreground">
 											{formatNOK(
 												expensePayments.reduce(
 													(s, p) => s + p.amountOere,
@@ -262,7 +239,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 												),
 											)}
 										</td>
-										<td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+										<td className="px-4 py-3 text-right text-sm text-foreground/70 dark:text-foreground/50">
 											{formatNOK(
 												expensePayments.reduce(
 													(s, p) => s + (p.interestOere ?? 0),
@@ -270,7 +247,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 												),
 											)}
 										</td>
-										<td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+										<td className="px-4 py-3 text-right text-sm text-foreground/70 dark:text-foreground/50">
 											{formatNOK(
 												expensePayments.reduce(
 													(s, p) => s + (p.principalOere ?? 0),
@@ -289,17 +266,17 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 				{/* Add payment + what-if */}
 				<div className="space-y-6">
 					<div>
-						<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+						<h3 className="mb-4 text-sm font-medium text-foreground/60 dark:text-foreground/50">
 							Registrer betaling
 						</h3>
-						<div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+						<div className="rounded-xl border border-border bg-card p-5 dark:border-border/40 dark:bg-card">
 							<PaymentForm action={paymentAction} />
 						</div>
 					</div>
 
 					{balance.currentBalanceOere > 0 && (
 						<div>
-							<h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+							<h3 className="mb-4 text-sm font-medium text-foreground/60 dark:text-foreground/50">
 								Ekstra nedbetaling
 							</h3>
 							<LoanWhatIfPanel
