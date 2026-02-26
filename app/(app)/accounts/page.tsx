@@ -21,6 +21,8 @@ export default async function AccountsPage() {
 					userId: accounts.userId,
 					openingBalanceOere: accounts.openingBalanceOere,
 					openingBalanceDate: accounts.openingBalanceDate,
+					coinSymbol: accounts.coinSymbol,
+					coinQuantity: accounts.coinQuantity,
 					creatorName: users.name,
 					creatorEmail: users.email,
 				})

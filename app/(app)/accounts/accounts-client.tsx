@@ -23,6 +23,17 @@ import { AccountIcon, ACCOUNT_ICONS } from "@/components/account-icon";
 import { formatNOK } from "@/lib/format";
 import { createAccount, deleteAccount, updateAccount } from "./actions";
 
+const COINS = [
+	{ symbol: "BTC", name: "Bitcoin", geckoId: "bitcoin" },
+	{ symbol: "ETH", name: "Ethereum", geckoId: "ethereum" },
+	{ symbol: "SOL", name: "Solana", geckoId: "solana" },
+	{ symbol: "ADA", name: "Cardano", geckoId: "cardano" },
+	{ symbol: "XRP", name: "XRP", geckoId: "ripple" },
+	{ symbol: "DOT", name: "Polkadot", geckoId: "polkadot" },
+	{ symbol: "LINK", name: "Chainlink", geckoId: "chainlink" },
+	{ symbol: "MATIC", name: "Polygon", geckoId: "matic-network" },
+] as const;
+
 interface AccountRow {
 	id: string;
 	name: string;
@@ -33,6 +44,8 @@ interface AccountRow {
 	userId: string;
 	openingBalanceOere: number | null;
 	openingBalanceDate: string | null;
+	coinSymbol: string | null;
+	coinQuantity: number | null;
 	creatorName: string | null;
 	creatorEmail: string | null;
 }
@@ -112,6 +125,13 @@ function openingBalanceError(value: string): string | null {
 	return Number.isNaN(Number(value.replace(",", "."))) ? "Ugyldig beløp" : null;
 }
 
+function coinQuantityError(value: string): string | null {
+	if (!value.trim()) return null;
+	const n = Number(value.replace(",", "."));
+	if (Number.isNaN(n) || n <= 0) return "Ugyldig mengde";
+	return null;
+}
+
 export function AccountsClient({
 	accounts,
 	currentUserId,
@@ -134,19 +154,25 @@ export function AccountsClient({
 	const [editAccountNumber, setEditAccountNumber] = useState("");
 	const [editOpeningBalance, setEditOpeningBalance] = useState("");
 	const [editOpeningBalanceDate, setEditOpeningBalanceDate] = useState("");
+	const [newCoinSymbol, setNewCoinSymbol] = useState("BTC");
+	const [newCoinQuantity, setNewCoinQuantity] = useState("");
+	const [editCoinSymbol, setEditCoinSymbol] = useState("BTC");
+	const [editCoinQuantity, setEditCoinQuantity] = useState("");
 
 	const newAccountNumberErr = accountNumberError(newAccountNumber);
 	const newOpeningBalanceErr = openingBalanceError(newOpeningBalance);
+	const newCoinQuantityErr = newKind === "crypto" ? coinQuantityError(newCoinQuantity) : null;
 	const editAccountNumberErr = accountNumberError(editAccountNumber);
 	const editOpeningBalanceErr = openingBalanceError(editOpeningBalance);
+	const editCoinQuantityErr = editKind === "crypto" ? coinQuantityError(editCoinQuantity) : null;
 
-	const newFormValid = !newAccountNumberErr && !newOpeningBalanceErr;
-	const editFormValid = !editAccountNumberErr && !editOpeningBalanceErr;
+	const newFormValid = !newAccountNumberErr && !newOpeningBalanceErr && !newCoinQuantityErr;
+	const editFormValid = !editAccountNumberErr && !editOpeningBalanceErr && !editCoinQuantityErr;
 
 	function handleCreate() {
 		if (!newName.trim() || !newFormValid) return;
 		startTransition(async () => {
-			const error = await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind, newOpeningBalance || undefined, newOpeningBalanceDate || undefined);
+			const error = await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind, newOpeningBalance || undefined, newOpeningBalanceDate || undefined, newKind === "crypto" ? newCoinSymbol : undefined, newKind === "crypto" ? newCoinQuantity : undefined);
 			if (error) {
 				toast.error(error);
 				return;
@@ -158,6 +184,8 @@ export function AccountsClient({
 			setNewAccountNumber("");
 			setNewOpeningBalance("");
 			setNewOpeningBalanceDate("");
+			setNewCoinSymbol("BTC");
+			setNewCoinQuantity("");
 			setShowNewForm(false);
 			router.refresh();
 		});
@@ -171,12 +199,14 @@ export function AccountsClient({
 		setEditAccountNumber(account.accountNumber ?? "");
 		setEditOpeningBalance(account.openingBalanceOere != null ? String(account.openingBalanceOere / 100) : "");
 		setEditOpeningBalanceDate(account.openingBalanceDate ?? "");
+		setEditCoinSymbol(account.coinSymbol ?? "BTC");
+		setEditCoinQuantity(account.coinQuantity != null ? String(account.coinQuantity) : "");
 	}
 
 	function handleUpdate(id: string) {
 		if (!editName.trim() || !editFormValid) return;
 		startTransition(async () => {
-			const error = await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind, editOpeningBalance || undefined, editOpeningBalanceDate || undefined);
+			const error = await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind, editOpeningBalance || undefined, editOpeningBalanceDate || undefined, editKind === "crypto" ? editCoinSymbol : undefined, editKind === "crypto" ? editCoinQuantity : undefined);
 			if (error) {
 				toast.error(error);
 				return;
@@ -286,20 +316,45 @@ export function AccountsClient({
 													<option value="savings">Sparekonto</option>
 													<option value="credit">Kredittkort</option>
 													<option value="investment">Investering</option>
+													<option value="crypto">Krypto</option>
 												</select>
-												<Input
-													value={editOpeningBalance}
-													onChange={(e) => setEditOpeningBalance(e.target.value)}
-													placeholder="Inngående saldo (NOK)"
-													inputMode="decimal"
-													className="h-8 max-w-[140px]"
-												/>
-												<Input
-													type="date"
-													value={editOpeningBalanceDate}
-													onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
-													className="h-8 max-w-[160px]"
-												/>
+												{editKind === "crypto" ? (
+													<>
+														<select
+															value={editCoinSymbol}
+															onChange={(e) => setEditCoinSymbol(e.target.value)}
+															className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
+														>
+															{COINS.map((c) => (
+																<option key={c.symbol} value={c.symbol}>{c.symbol} — {c.name}</option>
+															))}
+														</select>
+														<Input
+															value={editCoinQuantity}
+															onChange={(e) => setEditCoinQuantity(e.target.value)}
+															placeholder={`Antall ${editCoinSymbol}`}
+															inputMode="decimal"
+															className={`h-8 max-w-[120px] ${editCoinQuantityErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+															title={editCoinQuantityErr ?? undefined}
+														/>
+													</>
+												) : (
+													<>
+														<Input
+															value={editOpeningBalance}
+															onChange={(e) => setEditOpeningBalance(e.target.value)}
+															placeholder="Inngående saldo (NOK)"
+															inputMode="decimal"
+															className="h-8 max-w-[140px]"
+														/>
+														<Input
+															type="date"
+															value={editOpeningBalanceDate}
+															onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
+															className="h-8 max-w-[160px]"
+														/>
+													</>
+												)}
 												<Button
 													size="sm"
 													onClick={() =>
@@ -488,32 +543,67 @@ export function AccountsClient({
 							<option value="savings">Sparekonto</option>
 							<option value="credit">Kredittkort</option>
 							<option value="investment">Investering</option>
+							<option value="crypto">Krypto</option>
 						</select>
 					</div>
-					<div className="space-y-1.5">
-						<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
-						<Input
-							id="newOpeningBalance"
-							value={newOpeningBalance}
-							onChange={(e) => setNewOpeningBalance(e.target.value)}
-							placeholder="0.00"
-							inputMode="decimal"
-							className={`max-w-xs ${newOpeningBalanceErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
-						/>
-						{newOpeningBalanceErr && (
-							<p className="text-xs text-red-500">{newOpeningBalanceErr}</p>
-						)}
-					</div>
-					<div className="space-y-1.5">
-						<Label htmlFor="newOpeningBalanceDate">Per dato</Label>
-						<Input
-							id="newOpeningBalanceDate"
-							type="date"
-							value={newOpeningBalanceDate}
-							onChange={(e) => setNewOpeningBalanceDate(e.target.value)}
-							className="max-w-xs"
-						/>
-					</div>
+					{newKind === "crypto" ? (
+						<>
+							<div className="space-y-1.5">
+								<Label htmlFor="newCoinSymbol">Kryptovaluta</Label>
+								<select
+									id="newCoinSymbol"
+									value={newCoinSymbol}
+									onChange={(e) => setNewCoinSymbol(e.target.value)}
+									className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
+								>
+									{COINS.map((c) => (
+										<option key={c.symbol} value={c.symbol}>{c.symbol} — {c.name}</option>
+									))}
+								</select>
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="newCoinQuantity">Antall {newCoinSymbol}</Label>
+								<Input
+									id="newCoinQuantity"
+									value={newCoinQuantity}
+									onChange={(e) => setNewCoinQuantity(e.target.value)}
+									placeholder="0.00"
+									inputMode="decimal"
+									className={`max-w-xs ${newCoinQuantityErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+								/>
+								{newCoinQuantityErr && (
+									<p className="text-xs text-red-500">{newCoinQuantityErr}</p>
+								)}
+							</div>
+						</>
+					) : (
+						<>
+							<div className="space-y-1.5">
+								<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
+								<Input
+									id="newOpeningBalance"
+									value={newOpeningBalance}
+									onChange={(e) => setNewOpeningBalance(e.target.value)}
+									placeholder="0.00"
+									inputMode="decimal"
+									className={`max-w-xs ${newOpeningBalanceErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+								/>
+								{newOpeningBalanceErr && (
+									<p className="text-xs text-red-500">{newOpeningBalanceErr}</p>
+								)}
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="newOpeningBalanceDate">Per dato</Label>
+								<Input
+									id="newOpeningBalanceDate"
+									type="date"
+									value={newOpeningBalanceDate}
+									onChange={(e) => setNewOpeningBalanceDate(e.target.value)}
+									className="max-w-xs"
+								/>
+							</div>
+						</>
+					)}
 					<div className="flex gap-2">
 						<Button
 							onClick={handleCreate}
@@ -532,6 +622,8 @@ export function AccountsClient({
 								setNewAccountNumber("");
 								setNewOpeningBalance("");
 								setNewOpeningBalanceDate("");
+								setNewCoinSymbol("BTC");
+								setNewCoinQuantity("");
 							}}
 						>
 							Avbryt
