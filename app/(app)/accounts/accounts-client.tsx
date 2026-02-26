@@ -67,13 +67,13 @@ function IconPicker({
 			<button
 				type="button"
 				onClick={() => setOpen(!open)}
-				className="flex h-9 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
+				className="flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm text-foreground hover:bg-background dark:border-border/40 dark:bg-card dark:text-card-foreground dark:hover:bg-card"
 			>
 				<AccountIcon icon={value} className="h-4 w-4" />
 				<span>{ACCOUNT_ICONS[value]?.label ?? "Velg ikon"}</span>
 			</button>
 			{open && (
-				<div className="absolute left-0 top-full z-50 mt-1 grid max-h-64 w-72 grid-cols-6 gap-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+				<div className="absolute left-0 top-full z-50 mt-1 grid max-h-64 w-72 grid-cols-6 gap-1 overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-lg dark:border-border/40 dark:bg-card">
 					{Object.entries(ACCOUNT_ICONS).map(([key, { label }]) => (
 						<button
 							key={key}
@@ -85,8 +85,8 @@ function IconPicker({
 							}}
 							className={`flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
 								value === key
-									? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
-									: "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+									? "bg-card text-card-foreground dark:bg-card dark:text-foreground"
+									: "text-foreground/70 hover:bg-primary/8 dark:text-foreground/50 dark:hover:bg-gray-700"
 							}`}
 						>
 							<AccountIcon icon={key} className="h-4 w-4" />
@@ -96,6 +96,18 @@ function IconPicker({
 			)}
 		</div>
 	);
+}
+
+const ACCOUNT_NUMBER_RE = /^\d{4}\.\d{2}\.\d{5}$/;
+
+function accountNumberError(value: string): string | null {
+	if (!value.trim()) return null;
+	return ACCOUNT_NUMBER_RE.test(value.trim()) ? null : "Format: XXXX.XX.XXXXX";
+}
+
+function openingBalanceError(value: string): string | null {
+	if (!value.trim()) return null;
+	return Number.isNaN(Number(value.replace(",", "."))) ? "Ugyldig beløp" : null;
 }
 
 export function AccountsClient({
@@ -120,10 +132,22 @@ export function AccountsClient({
 	const [editOpeningBalance, setEditOpeningBalance] = useState("");
 	const [editOpeningBalanceDate, setEditOpeningBalanceDate] = useState("");
 
+	const newAccountNumberErr = accountNumberError(newAccountNumber);
+	const newOpeningBalanceErr = openingBalanceError(newOpeningBalance);
+	const editAccountNumberErr = accountNumberError(editAccountNumber);
+	const editOpeningBalanceErr = openingBalanceError(editOpeningBalance);
+
+	const newFormValid = !newAccountNumberErr && !newOpeningBalanceErr;
+	const editFormValid = !editAccountNumberErr && !editOpeningBalanceErr;
+
 	function handleCreate() {
-		if (!newName.trim()) return;
+		if (!newName.trim() || !newFormValid) return;
 		startTransition(async () => {
-			await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind, newOpeningBalance || undefined, newOpeningBalanceDate || undefined);
+			const error = await createAccount(newName.trim(), newType, newIcon, newAccountNumber || undefined, newKind, newOpeningBalance || undefined, newOpeningBalanceDate || undefined);
+			if (error) {
+				toast.error(error);
+				return;
+			}
 			toast.success("Konto opprettet");
 			setNewName("");
 			setNewKind("checking");
@@ -147,9 +171,13 @@ export function AccountsClient({
 	}
 
 	function handleUpdate(id: string) {
-		if (!editName.trim()) return;
+		if (!editName.trim() || !editFormValid) return;
 		startTransition(async () => {
-			await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind, editOpeningBalance || undefined, editOpeningBalanceDate || undefined);
+			const error = await updateAccount(id, editName.trim(), editIcon, editAccountNumber || null, editKind, editOpeningBalance || undefined, editOpeningBalanceDate || undefined);
+			if (error) {
+				toast.error(error);
+				return;
+			}
 			toast.success("Konto oppdatert");
 			setEditingId(null);
 			router.refresh();
@@ -158,7 +186,11 @@ export function AccountsClient({
 
 	function handleDelete(id: string) {
 		startTransition(async () => {
-			await deleteAccount(id);
+			const error = await deleteAccount(id);
+			if (error) {
+				toast.error(error);
+				return;
+			}
 			toast.success("Konto slettet");
 			router.refresh();
 		});
@@ -168,13 +200,13 @@ export function AccountsClient({
 		<div className="space-y-4 max-w-2xl">
 			{/* Account list */}
 			{accounts.length === 0 ? (
-				<div className="rounded-xl border border-dashed border-gray-200 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
-					<p className="text-sm text-gray-500 dark:text-gray-400">
+				<div className="rounded-xl border border-dashed border-border bg-card py-12 text-center dark:border-border/40 dark:bg-card">
+					<p className="text-sm text-foreground/60 dark:text-foreground/50">
 						Ingen kontoer enn&aring;.
 					</p>
 				</div>
 			) : (
-				<div className="rounded-xl border border-gray-200 bg-white overflow-hidden dark:border-gray-700 dark:bg-gray-800">
+				<div className="rounded-xl border border-border bg-card overflow-hidden dark:border-border/40 dark:bg-card">
 					<ul className="divide-y divide-gray-100 dark:divide-gray-700">
 						{accounts.map((account) => {
 							const isOwner = account.userId === currentUserId;
@@ -185,13 +217,13 @@ export function AccountsClient({
 									key={account.id}
 									className="flex items-center gap-3 px-5 py-4"
 								>
-									<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700">
+									<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/8 dark:bg-gray-700">
 										{account.type === "private" ? (
 											<Lock className="h-4 w-4 text-purple-500 dark:text-purple-400" />
 										) : (
 											<AccountIcon
 												icon={account.icon}
-												className="h-4 w-4 text-gray-600 dark:text-gray-300"
+												className="h-4 w-4 text-foreground/70 dark:text-foreground/80"
 											/>
 										)}
 									</div>
@@ -230,8 +262,9 @@ export function AccountsClient({
 														if (e.key === "Escape")
 															setEditingId(null);
 													}}
-													className="h-8 max-w-[160px]"
+													className={`h-8 max-w-[160px] ${editAccountNumberErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
 													placeholder="Kontonummer"
+													title={editAccountNumberErr ?? undefined}
 												/>
 												<select
 													value={editKind}
@@ -244,37 +277,33 @@ export function AccountsClient({
 														if (e.key === "Escape")
 															setEditingId(null);
 													}}
-													className="h-8 rounded-md border border-gray-200 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+													className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 												>
 													<option value="checking">Brukskonto</option>
 													<option value="savings">Sparekonto</option>
 													<option value="credit">Kredittkort</option>
 													<option value="investment">Investering</option>
 												</select>
-												{editKind === "savings" && (
-													<>
-														<Input
-															value={editOpeningBalance}
-															onChange={(e) => setEditOpeningBalance(e.target.value)}
-															placeholder="Inngående saldo (NOK)"
-															inputMode="decimal"
-															className="h-8 max-w-[140px]"
-														/>
-														<Input
-															type="date"
-															value={editOpeningBalanceDate}
-															onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
-															className="h-8 max-w-[160px]"
-														/>
-													</>
-												)}
+												<Input
+													value={editOpeningBalance}
+													onChange={(e) => setEditOpeningBalance(e.target.value)}
+													placeholder="Inngående saldo (NOK)"
+													inputMode="decimal"
+													className="h-8 max-w-[140px]"
+												/>
+												<Input
+													type="date"
+													value={editOpeningBalanceDate}
+													onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
+													className="h-8 max-w-[160px]"
+												/>
 												<Button
 													size="sm"
 													onClick={() =>
 														handleUpdate(account.id)
 													}
-													disabled={isPending}
-													className="h-8 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+													disabled={isPending || !editFormValid}
+													className="h-8 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 												>
 													Lagre
 												</Button>
@@ -290,7 +319,7 @@ export function AccountsClient({
 										) : (
 											<div>
 												<div className="flex items-center gap-2">
-													<span className="font-medium text-sm text-gray-900 dark:text-white">
+													<span className="font-medium text-sm text-foreground dark:text-card-foreground">
 														{account.name}
 													</span>
 													<Badge
@@ -305,14 +334,14 @@ export function AccountsClient({
 															? "Privat"
 															: "Felles"}
 													</Badge>
-													<span className="text-xs text-gray-400">
+													<span className="text-xs text-foreground/50">
 														{account.creatorName ??
 															account.creatorEmail ??
 															""}
 													</span>
 												</div>
 												{account.accountNumber && (
-													<span className="text-xs text-gray-400 dark:text-gray-500">
+													<span className="text-xs text-foreground/50 dark:text-foreground/60">
 														Kontonr: {account.accountNumber}
 													</span>
 												)}
@@ -328,7 +357,7 @@ export function AccountsClient({
 												className="h-8 w-8"
 												onClick={() => startEdit(account)}
 											>
-												<Pencil className="h-4 w-4 text-gray-500" />
+												<Pencil className="h-4 w-4 text-foreground/60" />
 											</Button>
 											<AlertDialog>
 												<AlertDialogTrigger asChild>
@@ -379,8 +408,8 @@ export function AccountsClient({
 
 			{/* New account form */}
 			{showNewForm ? (
-				<div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 dark:border-gray-700 dark:bg-gray-800">
-					<h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+				<div className="rounded-xl border border-border bg-card p-5 space-y-4 dark:border-border/40 dark:bg-card">
+					<h3 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 						Ny konto
 					</h3>
 					<div className="space-y-1.5">
@@ -404,8 +433,11 @@ export function AccountsClient({
 							value={newAccountNumber}
 							onChange={(e) => setNewAccountNumber(e.target.value)}
 							placeholder="F.eks. 1234.56.78901"
-							className="max-w-xs"
+							className={`max-w-xs ${newAccountNumberErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
 						/>
+						{newAccountNumberErr && (
+							<p className="text-xs text-red-500">{newAccountNumberErr}</p>
+						)}
 					</div>
 					<div className="space-y-1.5">
 						<Label>Ikon</Label>
@@ -419,7 +451,7 @@ export function AccountsClient({
 							onChange={(e) =>
 								setNewType(e.target.value as "public" | "private")
 							}
-							className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+							className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 						>
 							<option value="public">
 								Felles (synlig for alle)
@@ -435,7 +467,7 @@ export function AccountsClient({
 							id="newKind"
 							value={newKind}
 							onChange={(e) => setNewKind(e.target.value)}
-							className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+							className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 						>
 							<option value="checking">Brukskonto</option>
 							<option value="savings">Sparekonto</option>
@@ -443,36 +475,35 @@ export function AccountsClient({
 							<option value="investment">Investering</option>
 						</select>
 					</div>
-					{newKind === "savings" && (
-						<>
-							<div className="space-y-1.5">
-								<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
-								<Input
-									id="newOpeningBalance"
-									value={newOpeningBalance}
-									onChange={(e) => setNewOpeningBalance(e.target.value)}
-									placeholder="0.00"
-									inputMode="decimal"
-									className="max-w-xs"
-								/>
-							</div>
-							<div className="space-y-1.5">
-								<Label htmlFor="newOpeningBalanceDate">Per dato</Label>
-								<Input
-									id="newOpeningBalanceDate"
-									type="date"
-									value={newOpeningBalanceDate}
-									onChange={(e) => setNewOpeningBalanceDate(e.target.value)}
-									className="max-w-xs"
-								/>
-							</div>
-						</>
-					)}
+					<div className="space-y-1.5">
+						<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
+						<Input
+							id="newOpeningBalance"
+							value={newOpeningBalance}
+							onChange={(e) => setNewOpeningBalance(e.target.value)}
+							placeholder="0.00"
+							inputMode="decimal"
+							className={`max-w-xs ${newOpeningBalanceErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+						/>
+						{newOpeningBalanceErr && (
+							<p className="text-xs text-red-500">{newOpeningBalanceErr}</p>
+						)}
+					</div>
+					<div className="space-y-1.5">
+						<Label htmlFor="newOpeningBalanceDate">Per dato</Label>
+						<Input
+							id="newOpeningBalanceDate"
+							type="date"
+							value={newOpeningBalanceDate}
+							onChange={(e) => setNewOpeningBalanceDate(e.target.value)}
+							className="max-w-xs"
+						/>
+					</div>
 					<div className="flex gap-2">
 						<Button
 							onClick={handleCreate}
-							disabled={isPending || !newName.trim()}
-							className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+							disabled={isPending || !newName.trim() || !newFormValid}
+							className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 						>
 							Opprett konto
 						</Button>
@@ -495,7 +526,7 @@ export function AccountsClient({
 			) : (
 				<Button
 					onClick={() => setShowNewForm(true)}
-					className="gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
 				>
 					<Plus className="h-4 w-4" />
 					Ny konto
