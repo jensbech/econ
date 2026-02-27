@@ -3,7 +3,13 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { accounts, categories, expenses, importBatches, loans } from "@/db/schema";
+import {
+	accounts,
+	categories,
+	expenses,
+	importBatches,
+	loans,
+} from "@/db/schema";
 import { logCreate, logDelete } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
@@ -34,6 +40,7 @@ export type EnrichedExtractionResult =
 export async function checkAiDuplicates(
 	rows: Array<{ date: string; amountOere: number }>,
 ): Promise<boolean[]> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return rows.map(() => false);
@@ -84,7 +91,12 @@ export async function createExpenseCategory(
 	const [{ cnt }] = await db
 		.select({ cnt: sql<number>`count(*)::int` })
 		.from(categories)
-		.where(and(eq(categories.householdId, householdId), isNull(categories.deletedAt)));
+		.where(
+			and(
+				eq(categories.householdId, householdId),
+				isNull(categories.deletedAt),
+			),
+		);
 	if (cnt >= 200) throw new Error("Maks 200 kategorier per husholdning");
 
 	const [cat] = await db
@@ -123,13 +135,18 @@ export async function confirmAiImport(
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
-	const safeFilename = filename.trim().slice(0, 255).replace(/[\x00-\x1f\x7f]/g, "");
+	const safeFilename = filename
+		.trim()
+		.slice(0, 255)
+		.replace(/[\x00-\x1f\x7f]/g, "");
 	if (!safeFilename) throw new Error("Ugyldig filnavn");
 
-	if (scope !== "household" && scope !== "personal") throw new Error("Ugyldig scope");
+	if (scope !== "household" && scope !== "personal")
+		throw new Error("Ugyldig scope");
 
 	const MAX_IMPORT_ROWS = 500;
-	if (rows.length > MAX_IMPORT_ROWS) throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
+	if (rows.length > MAX_IMPORT_ROWS)
+		throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
 
 	const parsed = rows
 		.map((row) => ({
@@ -139,12 +156,14 @@ export async function confirmAiImport(
 			categoryId: row.categoryId || null,
 			accountId: row.accountId ?? accountId ?? null,
 			loanId: row.loanId || null,
-			interestOere: Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
-				? Math.round(row.interestOere as number)
-				: null,
-			principalOere: Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
-				? Math.round(row.principalOere as number)
-				: null,
+			interestOere:
+				Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
+					? Math.round(row.interestOere as number)
+					: null,
+			principalOere:
+				Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
+					? Math.round(row.principalOere as number)
+					: null,
 		}))
 		.filter(
 			(

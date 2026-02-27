@@ -3,7 +3,13 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { accounts, categories, expenses, importBatches, loans } from "@/db/schema";
+import {
+	accounts,
+	categories,
+	expenses,
+	importBatches,
+	loans,
+} from "@/db/schema";
 import { logCreate, logDelete } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import type { DecimalSeparator } from "@/lib/csv-detect";
@@ -57,6 +63,7 @@ export async function checkDuplicates(
 	rows: CheckRow[],
 	decimalSeparator: DecimalSeparator,
 ): Promise<boolean[]> {
+	await validateCsrfOrigin();
 	const user = await verifySession();
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return rows.map(() => false);
@@ -121,11 +128,15 @@ export async function confirmImport(
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
-	const safeFilename = filename.trim().slice(0, 255).replace(/[\x00-\x1f\x7f]/g, "");
+	const safeFilename = filename
+		.trim()
+		.slice(0, 255)
+		.replace(/[\x00-\x1f\x7f]/g, "");
 	if (!safeFilename) throw new Error("Ugyldig filnavn");
 
 	const MAX_IMPORT_ROWS = 500;
-	if (rows.length > MAX_IMPORT_ROWS) throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
+	if (rows.length > MAX_IMPORT_ROWS)
+		throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
 
 	// Parse and filter out unparseable rows
 	const parsed = rows
@@ -136,12 +147,14 @@ export async function confirmImport(
 			categoryId: row.categoryId || null,
 			accountId: row.accountId ?? accountId ?? null,
 			loanId: row.loanId || null,
-			interestOere: Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
-				? Math.round(row.interestOere as number)
-				: null,
-			principalOere: Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
-				? Math.round(row.principalOere as number)
-				: null,
+			interestOere:
+				Number.isFinite(row.interestOere) && (row.interestOere ?? -1) >= 0
+					? Math.round(row.interestOere as number)
+					: null,
+			principalOere:
+				Number.isFinite(row.principalOere) && (row.principalOere ?? -1) >= 0
+					? Math.round(row.principalOere as number)
+					: null,
 		}))
 		.filter(
 			(
@@ -311,6 +324,7 @@ export async function rollbackImport(batchId: string): Promise<void> {
 			and(
 				eq(importBatches.id, batchId),
 				eq(importBatches.householdId, householdId),
+				eq(importBatches.userId, user.id),
 			),
 		)
 		.limit(1);
