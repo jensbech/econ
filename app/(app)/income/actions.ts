@@ -11,7 +11,11 @@ import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
+import {
+	extractFieldErrors,
+	nokToOere,
+	parseDateToIso,
+} from "@/lib/server-utils";
 
 export type IncomeFormState = {
 	error?: string | null;
@@ -294,7 +298,13 @@ export async function deleteIncome(id: string): Promise<void> {
 			),
 		);
 
-	await logDelete(householdId, user.id as string, "income", id, "User initiated deletion");
+	await logDelete(
+		householdId,
+		user.id as string,
+		"income",
+		id,
+		"User initiated deletion",
+	);
 
 	revalidatePath("/income");
 	redirect("/income");
@@ -339,7 +349,13 @@ export async function deleteIncomeNoRedirect(id: string): Promise<void> {
 			),
 		);
 
-	await logDelete(householdId, user.id as string, "income", id, "User initiated deletion");
+	await logDelete(
+		householdId,
+		user.id as string,
+		"income",
+		id,
+		"User initiated deletion",
+	);
 
 	revalidatePath("/income");
 }

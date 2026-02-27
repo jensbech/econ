@@ -11,7 +11,11 @@ import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
+import {
+	extractFieldErrors,
+	nokToOere,
+	parseDateToIso,
+} from "@/lib/server-utils";
 
 export type ExpenseFormState = {
 	error?: string | null;
@@ -355,7 +359,11 @@ export async function deleteExpense(id: string): Promise<void> {
 	}
 
 	// Rate limiting: max 10 deletions per minute per user
-	checkRateLimit(`expense:delete:${user.id}`, 10, 60);
+	try {
+		checkRateLimit(`expense:delete:${user.id}`, 10, 60);
+	} catch {
+		throw new Error("Too many delete requests. Please try again later.");
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -395,12 +403,22 @@ export async function deleteExpense(id: string): Promise<void> {
 }
 
 // Deletes without redirect — used from the expense list table
-export async function deleteExpenseNoRedirect(id: string): Promise<void> {
+export async function deleteExpenseNoRedirect(
+	id: string,
+): Promise<{ error: string } | void> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) {
 		throw new Error("User ID not available");
 	}
+
+	// Rate limiting: max 10 deletions per minute per user
+	try {
+		checkRateLimit(`expense:delete:${user.id}`, 10, 60);
+	} catch {
+		return { error: "Too many delete requests. Please try again later." };
+	}
+
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
