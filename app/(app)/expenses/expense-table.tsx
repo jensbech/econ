@@ -10,7 +10,15 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { ArrowUpDown, BarChart3, Pencil, Search, Trash2, UserCircle, X } from "lucide-react";
+import {
+	ArrowUpDown,
+	BarChart3,
+	Pencil,
+	Search,
+	Trash2,
+	UserCircle,
+	X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -94,7 +102,11 @@ interface ExpenseTableProps {
 	importBatchId?: string;
 }
 
-export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTableProps) {
+export function ExpenseTable({
+	expenses,
+	categories,
+	importBatchId,
+}: ExpenseTableProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [isPending, startTransition] = useTransition();
@@ -170,7 +182,11 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 	function handleDelete(id: string, notes: string | null) {
 		startTransition(async () => {
 			try {
-				await deleteExpenseNoRedirect(id);
+				const result = await deleteExpenseNoRedirect(id);
+				if (result && "error" in result) {
+					toast.error(result.error);
+					return;
+				}
 				toast.success("Utgift slettet", {
 					description: notes ?? undefined,
 				});
@@ -190,9 +206,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 						variant="ghost"
 						size="sm"
 						className="-ml-3 h-8"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 					>
 						Dato
 						<ArrowUpDown className="ml-2 h-3 w-3" />
@@ -289,12 +303,7 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 					const expense = row.original;
 					return (
 						<div className="flex items-center justify-end gap-1">
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8"
-								asChild
-							>
+							<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
 								<Link
 									href={`/expenses/${expense.id}/edit`}
 									onClick={(e) => e.stopPropagation()}
@@ -313,24 +322,18 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 										<Trash2 className="h-4 w-4 text-red-400" />
 									</Button>
 								</AlertDialogTrigger>
-								<AlertDialogContent
-									onClick={(e) => e.stopPropagation()}
-								>
+								<AlertDialogContent onClick={(e) => e.stopPropagation()}>
 									<AlertDialogHeader>
-										<AlertDialogTitle>
-											Slett utgift
-										</AlertDialogTitle>
+										<AlertDialogTitle>Slett utgift</AlertDialogTitle>
 										<AlertDialogDescription>
-											Er du sikker på at du vil slette denne
-											utgiften? Denne handlingen kan ikke angres.
+											Er du sikker på at du vil slette denne utgiften? Denne
+											handlingen kan ikke angres.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
 										<AlertDialogCancel>Avbryt</AlertDialogCancel>
 										<AlertDialogAction
-											onClick={() =>
-												handleDelete(expense.id, expense.notes)
-											}
+											onClick={() => handleDelete(expense.id, expense.notes)}
 											disabled={isPending}
 											className="bg-red-600 hover:bg-red-700"
 										>
@@ -364,7 +367,8 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 			{importBatchId && (
 				<div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-primary/8 px-4 py-3 dark:border-indigo-900/50 dark:bg-primary/15/20">
 					<p className="text-sm text-primary dark:text-primary/60">
-						Viser <span className="font-semibold">{expenses.length}</span> importerte utgifter
+						Viser <span className="font-semibold">{expenses.length}</span>{" "}
+						importerte utgifter
 					</p>
 					<Link
 						href="/expenses"
@@ -377,161 +381,161 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 			)}
 			{/* Filters */}
 			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
-			<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
-				{/* Search */}
-				<div className="space-y-1 flex-1 min-w-[180px]">
-					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
-						Søk
-					</p>
-					<div className="relative">
-						<Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/50" />
-						<Input
-							type="search"
-							placeholder="Søk i beskrivelse..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="h-9 pl-8"
-						/>
+				<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
+					{/* Search */}
+					<div className="space-y-1 flex-1 min-w-[180px]">
+						<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
+							Søk
+						</p>
+						<div className="relative">
+							<Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/50" />
+							<Input
+								type="search"
+								placeholder="Søk i beskrivelse..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="h-9 pl-8"
+							/>
+						</div>
+					</div>
+
+					<div className="space-y-1">
+						<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
+							Periode
+						</p>
+						<select
+							value={currentMonthValue}
+							onChange={(e) => handleMonthChange(e.target.value)}
+							className={selectClass}
+						>
+							<option value="all">Alle måneder</option>
+							{monthOptions.map((opt) => (
+								<option key={opt.value} value={opt.value}>
+									{opt.label}
+								</option>
+							))}
+						</select>
+					</div>
+
+					{showDateRange && (
+						<>
+							<div className="space-y-1">
+								<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
+									Fra dato
+								</p>
+								<input
+									type="date"
+									value={fromParam}
+									onChange={(e) => handleFromChange(e.target.value)}
+									className={selectClass}
+								/>
+							</div>
+							<div className="space-y-1">
+								<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
+									Til dato
+								</p>
+								<input
+									type="date"
+									value={toParam}
+									onChange={(e) => handleToChange(e.target.value)}
+									className={selectClass}
+								/>
+							</div>
+						</>
+					)}
+
+					<div className="space-y-1">
+						<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
+							Kategori
+						</p>
+						<select
+							value={categoryParam}
+							onChange={(e) => handleCategoryChange(e.target.value)}
+							className={selectClass}
+						>
+							<option value="">Alle kategorier</option>
+							{categories.map((cat) => (
+								<option key={cat.id} value={cat.id}>
+									{cat.name}
+								</option>
+							))}
+						</select>
 					</div>
 				</div>
 
-				<div className="space-y-1">
-					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
-						Periode
-					</p>
-					<select
-						value={currentMonthValue}
-						onChange={(e) => handleMonthChange(e.target.value)}
-						className={selectClass}
-					>
-						<option value="all">Alle måneder</option>
-						{monthOptions.map((opt) => (
-							<option key={opt.value} value={opt.value}>
-								{opt.label}
-							</option>
-						))}
-					</select>
-				</div>
-
-				{showDateRange && (
-					<>
-						<div className="space-y-1">
-							<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
-								Fra dato
-							</p>
-							<input
-								type="date"
-								value={fromParam}
-								onChange={(e) => handleFromChange(e.target.value)}
-								className={selectClass}
-							/>
-						</div>
-						<div className="space-y-1">
-							<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
-								Til dato
-							</p>
-							<input
-								type="date"
-								value={toParam}
-								onChange={(e) => handleToChange(e.target.value)}
-								className={selectClass}
-							/>
-						</div>
-					</>
-				)}
-
-				<div className="space-y-1">
-					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
-						Kategori
-					</p>
-					<select
-						value={categoryParam}
-						onChange={(e) => handleCategoryChange(e.target.value)}
-						className={selectClass}
-					>
-						<option value="">Alle kategorier</option>
-						{categories.map((cat) => (
-							<option key={cat.id} value={cat.id}>
-								{cat.name}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
-
-			{/* Table */}
-			<div className="overflow-x-auto">
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow
-								key={headerGroup.id}
-								className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
-							>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{table.getRowModel().rows.length > 0 ? (
-							table.getRowModel().rows.map((row) => (
+				{/* Table */}
+				<div className="overflow-x-auto">
+					<Table>
+						<TableHeader>
+							{table.getHeaderGroups().map((headerGroup) => (
 								<TableRow
-									key={row.id}
-									onClick={() => setSelectedExpense(row.original)}
-									className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
+									key={headerGroup.id}
+									className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
-										</TableCell>
+									{headerGroup.headers.map((header) => (
+										<TableHead key={header.id}>
+											{header.isPlaceholder
+												? null
+												: flexRender(
+														header.column.columnDef.header,
+														header.getContext(),
+													)}
+										</TableHead>
 									))}
 								</TableRow>
-							))
-						) : (
-							<TableRow>
+							))}
+						</TableHeader>
+						<TableBody>
+							{table.getRowModel().rows.length > 0 ? (
+								table.getRowModel().rows.map((row) => (
+									<TableRow
+										key={row.id}
+										onClick={() => setSelectedExpense(row.original)}
+										className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext(),
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell
+										colSpan={columns.length}
+										className="h-32 text-center text-sm text-foreground/50"
+									>
+										{searchQuery
+											? `Ingen utgifter funnet for «${searchQuery}»`
+											: "Ingen utgifter funnet for valgt periode."}
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+						<TableFooter>
+							<TableRow className="border-t border-gray-100 dark:border-border/40">
 								<TableCell
-									colSpan={columns.length}
-									className="h-32 text-center text-sm text-foreground/50"
+									colSpan={4}
+									className="text-sm font-medium text-foreground/70 dark:text-foreground/50"
 								>
-									{searchQuery
-										? `Ingen utgifter funnet for «${searchQuery}»`
-										: "Ingen utgifter funnet for valgt periode."}
+									Totalt ({filteredExpenses.length}{" "}
+									{filteredExpenses.length === 1 ? "utgift" : "utgifter"})
 								</TableCell>
+								<TableCell className="text-right font-semibold tabular-nums text-red-600 dark:text-red-400">
+									{formatNOK(total)}
+								</TableCell>
+								<TableCell />
 							</TableRow>
-						)}
-					</TableBody>
-					<TableFooter>
-						<TableRow className="border-t border-gray-100 dark:border-border/40">
-							<TableCell
-								colSpan={4}
-								className="text-sm font-medium text-foreground/70 dark:text-foreground/50"
-							>
-								Totalt ({filteredExpenses.length}{" "}
-								{filteredExpenses.length === 1 ? "utgift" : "utgifter"})
-							</TableCell>
-							<TableCell className="text-right font-semibold tabular-nums text-red-600 dark:text-red-400">
-								{formatNOK(total)}
-							</TableCell>
-							<TableCell />
-						</TableRow>
-					</TableFooter>
-				</Table>
+						</TableFooter>
+					</Table>
+				</div>
 			</div>
-		</div>
 
-		{/* Detail Sheet */}
+			{/* Detail Sheet */}
 			<Sheet
 				open={selectedExpense !== null}
 				onOpenChange={(open) => {
@@ -588,13 +592,16 @@ export function ExpenseTable({ expenses, categories, importBatchId }: ExpenseTab
 											{selectedExpense.loanName}
 										</p>
 									</div>
-									{(selectedExpense.interestOere != null || selectedExpense.principalOere != null) && (
+									{(selectedExpense.interestOere != null ||
+										selectedExpense.principalOere != null) && (
 										<div className="mt-1.5 space-y-0.5 text-xs text-foreground/60 dark:text-foreground/50">
 											{selectedExpense.interestOere != null && (
 												<p>Renter: {formatNOK(selectedExpense.interestOere)}</p>
 											)}
 											{selectedExpense.principalOere != null && (
-												<p>Avdrag: {formatNOK(selectedExpense.principalOere)}</p>
+												<p>
+													Avdrag: {formatNOK(selectedExpense.principalOere)}
+												</p>
 											)}
 										</div>
 									)}

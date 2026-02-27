@@ -267,7 +267,7 @@ export async function deleteIncome(id: string): Promise<void> {
 	try {
 		checkRateLimit(`income:delete:${user.id}`, 10, 60);
 	} catch {
-		throw new Error("Rate limit exceeded. Please try again later.");
+		throw new Error("Too many delete requests. Please try again later.");
 	}
 
 	const householdId = await getHouseholdId(user.id as string);
