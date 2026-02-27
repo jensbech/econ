@@ -306,6 +306,7 @@ export async function updateLoan(
 				eq(loans.id, loanId),
 				eq(loans.householdId, householdId),
 				eq(loans.userId, user.id),
+				isNull(loans.deletedAt),
 			),
 		);
 
@@ -343,6 +344,7 @@ export async function deleteLoan(id: string): Promise<void> {
 			and(
 				eq(loans.id, id),
 				eq(loans.householdId, householdId),
+				eq(loans.userId, user.id),
 				isNull(loans.deletedAt),
 			),
 		)
@@ -481,7 +483,11 @@ export async function deleteLoanPayment(
 	if (!user.id) throw new Error("User ID not available");
 
 	// Rate limiting: max 10 payment deletions per minute per user
-	checkRateLimit(`loan:payment:delete:${user.id}`, 10, 60);
+	try {
+		checkRateLimit(`loan:payment:delete:${user.id}`, 10, 60);
+	} catch {
+		throw new Error("Too many requests. Please try again later.");
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -521,7 +527,11 @@ export async function deleteLoanPayment(
 		.update(expenses)
 		.set({ deletedAt: new Date() })
 		.where(
-			and(eq(expenses.id, paymentId), eq(expenses.householdId, householdId)),
+			and(
+				eq(expenses.id, paymentId),
+				eq(expenses.householdId, householdId),
+				isNull(expenses.deletedAt),
+			),
 		);
 
 	// Log the deletion
