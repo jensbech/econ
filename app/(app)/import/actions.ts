@@ -325,6 +325,7 @@ export async function rollbackImport(batchId: string): Promise<void> {
 				eq(importBatches.id, batchId),
 				eq(importBatches.householdId, householdId),
 				eq(importBatches.userId, user.id),
+				isNull(importBatches.rolledBackAt),
 			),
 		)
 		.limit(1);
@@ -338,7 +339,7 @@ export async function rollbackImport(batchId: string): Promise<void> {
 		.set({ rolledBackAt: new Date() })
 		.where(eq(importBatches.id, batchId));
 
-	const result = await db
+	await db
 		.update(expenses)
 		.set({ deletedAt: new Date() })
 		.where(
