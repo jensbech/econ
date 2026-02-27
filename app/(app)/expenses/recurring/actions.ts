@@ -193,7 +193,11 @@ export async function updateRecurringTemplate(
 export async function deleteRecurringTemplate(id: string): Promise<void> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`recurring:delete:${user.id}`, 5, 3600);
+	try {
+		checkRateLimit(`recurring:delete:${user.id}`, 5, 3600);
+	} catch {
+		throw new Error("Too many requests. Please try again later.");
+	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
