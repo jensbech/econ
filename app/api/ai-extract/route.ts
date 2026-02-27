@@ -1,12 +1,15 @@
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import type {
+	EnrichedExtractionResult,
+	EnrichedTransaction,
+} from "@/app/(app)/import/ai-actions";
 import { db } from "@/db";
-import { categories, expenses } from "@/db/schema";
-import { type SupportedMediaType, extractTransactions } from "@/lib/ai-extract";
+import { accounts, categories, expenses } from "@/db/schema";
+import { extractTransactions, type SupportedMediaType } from "@/lib/ai-extract";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
-import type { EnrichedExtractionResult, EnrichedTransaction } from "@/app/(app)/import/ai-actions";
 
 const SUPPORTED_MEDIA_TYPES: SupportedMediaType[] = [
 	"application/pdf",
@@ -60,11 +63,10 @@ export async function POST(request: Request) {
 	try {
 		await validateCsrfOrigin();
 		const user = await verifySession();
-		checkRateLimit(`ai:extract:${user.id}`, 10, 600);
+		checkRateLimit(`ai:extract:${user.id}`, 5, 3600);
 
 		const formData = await request.formData();
 		const file = formData.get("file") as File | null;
-		const accountsRaw = formData.get("accounts") as string | null;
 
 		if (!file) {
 			return Response.json(
@@ -81,19 +83,33 @@ export async function POST(request: Request) {
 			);
 		}
 
-		let userAccounts: Array<{ id: string; accountNumber: string | null }> = [];
-		if (accountsRaw) {
-			try {
-				userAccounts = JSON.parse(accountsRaw);
-			} catch {
-				// ignore, use empty list
-			}
+		const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
+		if (file.size > MAX_FILE_SIZE) {
+			return Response.json(
+				{
+					success: false,
+					error: "Filen er for stor. Maksimal filstørrelse er 16 MB.",
+				},
+				{ status: 413 },
+			);
 		}
+
+		const householdId = await getHouseholdId(user.id as string);
+
+		const userAccounts = householdId
+			? await db
+					.select({ id: accounts.id, accountNumber: accounts.accountNumber })
+					.from(accounts)
+					.where(
+						and(
+							eq(accounts.householdId, householdId),
+							isNull(accounts.deletedAt),
+						),
+					)
+			: [];
 
 		const buffer = await file.arrayBuffer();
 		const base64 = Buffer.from(buffer).toString("base64");
-
-		const householdId = await getHouseholdId(user.id as string);
 
 		const accountNumberMap = new Map<string, string>();
 		for (const a of userAccounts) {
@@ -206,7 +222,10 @@ export async function POST(request: Request) {
 			};
 		});
 
-		return Response.json({ success: true, transactions: enriched } satisfies EnrichedExtractionResult);
+		return Response.json({
+			success: true,
+			transactions: enriched,
+		} satisfies EnrichedExtractionResult);
 	} catch (error) {
 		if (error instanceof Error) {
 			if (error.message === "Unauthorized") {
@@ -223,7 +242,10 @@ export async function POST(request: Request) {
 			}
 			if (error.message.startsWith("Rate limit")) {
 				return Response.json(
-					{ success: false, error: "For mange forespørsler. Prøv igjen senere." },
+					{
+						success: false,
+						error: "For mange forespørsler. Prøv igjen senere.",
+					},
 					{ status: 429 },
 				);
 			}
