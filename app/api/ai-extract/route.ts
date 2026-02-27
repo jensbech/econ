@@ -11,7 +11,7 @@ import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
 const SUPPORTED_MEDIA_TYPES: SupportedMediaType[] = [
 	"application/pdf",
