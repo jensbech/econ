@@ -11,6 +11,8 @@ import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
+
 const SUPPORTED_MEDIA_TYPES: SupportedMediaType[] = [
 	"application/pdf",
 	"image/jpeg",
@@ -83,7 +85,6 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
 		if (file.size > MAX_FILE_SIZE) {
 			return Response.json(
 				{
@@ -247,6 +248,15 @@ export async function POST(request: Request) {
 						error: "For mange forespørsler. Prøv igjen senere.",
 					},
 					{ status: 429 },
+				);
+			}
+			if (error.message.includes("Service temporarily unavailable")) {
+				return Response.json(
+					{
+						success: false,
+						error: "Tjenesten er midlertidig utilgjengelig. Prøv igjen senere.",
+					},
+					{ status: 503 },
 				);
 			}
 		}
