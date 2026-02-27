@@ -69,7 +69,8 @@ export async function createLoan(
 		startDate: formData.get("startDate") as string,
 		accountId: (formData.get("accountId") as string) || undefined,
 		openingBalance: (formData.get("openingBalance") as string) || undefined,
-		openingBalanceDate: (formData.get("openingBalanceDate") as string) || undefined,
+		openingBalanceDate:
+			(formData.get("openingBalanceDate") as string) || undefined,
 	};
 
 	const parsed = LoanSchema.safeParse(raw);
@@ -116,14 +117,23 @@ export async function createLoan(
 	}
 
 	let openingBalanceOere: number | null = null;
-	const openingBalanceDate: string | null = parsed.data.openingBalanceDate || null;
+	const openingBalanceDate: string | null =
+		parsed.data.openingBalanceDate || null;
 
 	if (parsed.data.openingBalance || openingBalanceDate) {
 		if (!parsed.data.openingBalance || !openingBalanceDate) {
-			return { fieldErrors: { openingBalance: ["Både restgjeld og dato må fylles ut sammen"] } };
+			return {
+				fieldErrors: {
+					openingBalance: ["Både restgjeld og dato må fylles ut sammen"],
+				},
+			};
 		}
 		if (openingBalanceDate < parsed.data.startDate) {
-			return { fieldErrors: { openingBalanceDate: ["Dato må være lik eller etter startdato"] } };
+			return {
+				fieldErrors: {
+					openingBalanceDate: ["Dato må være lik eller etter startdato"],
+				},
+			};
 		}
 		try {
 			openingBalanceOere = nokToOere(parsed.data.openingBalance);
@@ -204,7 +214,8 @@ export async function updateLoan(
 		startDate: formData.get("startDate") as string,
 		accountId: (formData.get("accountId") as string) || undefined,
 		openingBalance: (formData.get("openingBalance") as string) || undefined,
-		openingBalanceDate: (formData.get("openingBalanceDate") as string) || undefined,
+		openingBalanceDate:
+			(formData.get("openingBalanceDate") as string) || undefined,
 	};
 
 	const parsed = LoanSchema.safeParse(raw);
@@ -254,18 +265,14 @@ export async function updateLoan(
 		if (!parsed.data.openingBalance || !openingBalanceDate) {
 			return {
 				fieldErrors: {
-					openingBalance: [
-						"Både restgjeld og dato må fylles ut sammen",
-					],
+					openingBalance: ["Både restgjeld og dato må fylles ut sammen"],
 				},
 			};
 		}
 		if (openingBalanceDate < parsed.data.startDate) {
 			return {
 				fieldErrors: {
-					openingBalanceDate: [
-						"Dato må være lik eller etter startdato",
-					],
+					openingBalanceDate: ["Dato må være lik eller etter startdato"],
 				},
 			};
 		}
@@ -280,7 +287,12 @@ export async function updateLoan(
 		.update(loans)
 		.set({
 			name: parsed.data.name,
-			type: parsed.data.type as "mortgage" | "student" | "car" | "consumer" | "other",
+			type: parsed.data.type as
+				| "mortgage"
+				| "student"
+				| "car"
+				| "consumer"
+				| "other",
 			principalOere,
 			interestRate,
 			termMonths,
@@ -314,7 +326,11 @@ export async function deleteLoan(id: string): Promise<void> {
 	if (!user.id) throw new Error("User ID not available");
 
 	// Rate limiting: max 5 deletions per hour per user
-	checkRateLimit(`loan:delete:${user.id}`, 5, 3600);
+	try {
+		checkRateLimit(`loan:delete:${user.id}`, 5, 3600);
+	} catch {
+		throw new Error("Too many requests. Please try again later.");
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -339,7 +355,13 @@ export async function deleteLoan(id: string): Promise<void> {
 	await db
 		.update(loans)
 		.set({ deletedAt: new Date() })
-		.where(and(eq(loans.id, id), eq(loans.householdId, householdId)));
+		.where(
+			and(
+				eq(loans.id, id),
+				eq(loans.householdId, householdId),
+				isNull(loans.deletedAt),
+			),
+		);
 
 	// Log the deletion
 	await logDelete(householdId, user.id, "loan", id, "User initiated deletion");
@@ -498,10 +520,18 @@ export async function deleteLoanPayment(
 	await db
 		.update(expenses)
 		.set({ deletedAt: new Date() })
-		.where(and(eq(expenses.id, paymentId), eq(expenses.householdId, householdId)));
+		.where(
+			and(eq(expenses.id, paymentId), eq(expenses.householdId, householdId)),
+		);
 
 	// Log the deletion
-	await logDelete(householdId, user.id, "loanPayment", paymentId, "User initiated deletion");
+	await logDelete(
+		householdId,
+		user.id,
+		"loanPayment",
+		paymentId,
+		"User initiated deletion",
+	);
 
 	revalidatePath(`/loans/${loanId}`);
 }
