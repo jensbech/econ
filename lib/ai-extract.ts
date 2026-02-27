@@ -157,7 +157,7 @@ export async function extractTransactions(
 		return { success: true, transactions: object.transactions };
 	} catch (error) {
 		// Log sanitized error server-side (do not log full error object or stack)
-		const errorId = Math.random().toString(36).substring(7);
+		const errorId = crypto.randomUUID().slice(0, 8);
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		console.error(`[AI Extraction Error ${errorId}] ${errorMessage}`);
 

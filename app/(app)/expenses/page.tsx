@@ -120,12 +120,20 @@ export default async function ExpensesPage({
 		);
 	}
 
-	if (importBatch) {
+	const DATE_RE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
+	const UUID_RE =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	const safeFrom = from && DATE_RE.test(from) ? from : undefined;
+	const safeTo = to && DATE_RE.test(to) ? to : undefined;
+	const safeImportBatch =
+		importBatch && UUID_RE.test(importBatch) ? importBatch : undefined;
+
+	if (safeImportBatch) {
 		// Filter to only rows from this import batch; skip month filter
-		conditions.push(eq(expenses.importBatchId, importBatch));
+		conditions.push(eq(expenses.importBatchId, safeImportBatch));
 	} else if (month === "all") {
-		if (from) conditions.push(gte(expenses.date, from));
-		if (to) conditions.push(lte(expenses.date, to));
+		if (safeFrom) conditions.push(gte(expenses.date, safeFrom));
+		if (safeTo) conditions.push(lte(expenses.date, safeTo));
 	} else if (month) {
 		const [yearStr, monStr] = month.split("-");
 		const year = Number.parseInt(yearStr, 10);
@@ -227,7 +235,7 @@ export default async function ExpensesPage({
 				<ExpenseTable
 					expenses={expenseRowsWithAccount}
 					categories={categoryRows}
-					importBatchId={importBatch}
+					importBatchId={safeImportBatch}
 				/>
 			</Suspense>
 		</div>

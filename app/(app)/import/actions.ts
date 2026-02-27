@@ -139,6 +139,7 @@ export async function confirmImport(
 		throw new Error(`Maks ${MAX_IMPORT_ROWS} rader per import`);
 
 	// Parse and filter out unparseable rows
+	const MAX_AMOUNT_OERE = 2_000_000_000;
 	const parsed = rows
 		.map((row) => ({
 			isoDate: parseDateToIso(row.date),
@@ -168,7 +169,10 @@ export async function confirmImport(
 				loanId: string | null;
 				interestOere: number | null;
 				principalOere: number | null;
-			} => r.isoDate !== null && r.amountOere !== null,
+			} =>
+				r.isoDate !== null &&
+				r.amountOere !== null &&
+				r.amountOere <= MAX_AMOUNT_OERE,
 		);
 
 	if (parsed.length === 0) return { batchId: "", inserted: 0 };
@@ -337,7 +341,13 @@ export async function rollbackImport(batchId: string): Promise<void> {
 	await db
 		.update(importBatches)
 		.set({ rolledBackAt: new Date() })
-		.where(eq(importBatches.id, batchId));
+		.where(
+			and(
+				eq(importBatches.id, batchId),
+				eq(importBatches.householdId, householdId),
+				eq(importBatches.userId, user.id),
+			),
+		);
 
 	await db
 		.update(expenses)

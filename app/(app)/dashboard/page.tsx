@@ -27,8 +27,10 @@ export default async function DashboardPage({
 	const selectedIds = selectedRaw.split(",").filter(Boolean);
 
 	// Parse month: searchParam overrides cookie, cookie overrides current month
+	const MONTH_RE = /^\d{4}-(?:0[1-9]|1[0-2])$/;
 	const monthCookie = cookieStore.get("selectedMonth")?.value;
-	const monthStr = params.month ?? monthCookie;
+	const rawMonthStr = params.month ?? monthCookie;
+	const monthStr = rawMonthStr && MONTH_RE.test(rawMonthStr) ? rawMonthStr : undefined;
 	let selectedMonth: Date;
 	if (monthStr) {
 		const [yearStr, monStr] = monthStr.split("-");

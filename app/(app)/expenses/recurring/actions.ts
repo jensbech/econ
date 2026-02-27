@@ -11,7 +11,7 @@ import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
+import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
 
 export type TemplateFormState = {
 	error?: string | null;
@@ -28,8 +28,17 @@ const TemplateSchema = z.object({
 			(v) => ["weekly", "monthly", "annual"].includes(v),
 			"Velg en frekvens",
 		),
-	startDate: z.string().min(1, "Startdato er påkrevd"),
-	endDate: z.string().optional(),
+	startDate: z
+		.string()
+		.min(1, "Startdato er påkrevd")
+		.refine((d) => parseDateToIso(d) !== null, "Ugyldig startdato"),
+	endDate: z
+		.string()
+		.optional()
+		.refine(
+			(d) => d === undefined || d === "" || parseDateToIso(d) !== null,
+			"Ugyldig sluttdato",
+		),
 });
 
 export async function createRecurringTemplate(
@@ -91,8 +100,8 @@ export async function createRecurringTemplate(
 			categoryId: parsed.data.categoryId ?? null,
 			amountOere,
 			frequency: parsed.data.frequency as "weekly" | "monthly" | "annual",
-			startDate: parsed.data.startDate,
-			endDate: parsed.data.endDate ?? null,
+			startDate: parseDateToIso(parsed.data.startDate) as string,
+			endDate: parsed.data.endDate ? (parseDateToIso(parsed.data.endDate) ?? null) : null,
 			type: "expense",
 			description: parsed.data.description,
 		})
@@ -159,8 +168,23 @@ export async function updateRecurringTemplate(
 		if (!cat) return { fieldErrors: { categoryId: ["Ugyldig kategori"] } };
 	}
 
+	// AUTHORIZATION: Verify template exists and belongs to this user before any writes
+	const [existing] = await db
+		.select({ id: recurringTemplates.id })
+		.from(recurringTemplates)
+		.where(
+			and(
+				eq(recurringTemplates.id, id),
+				eq(recurringTemplates.householdId, householdId),
+				eq(recurringTemplates.userId, user.id as string),
+				isNull(recurringTemplates.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!existing) return { error: "Mal ikke funnet" };
+
 	// Soft-delete all future generated expenses for this template
-	// Include householdId to guard against cross-household tampering
 	const today = new Date().toISOString().slice(0, 10);
 	await db
 		.update(expenses)
@@ -182,8 +206,8 @@ export async function updateRecurringTemplate(
 			categoryId: parsed.data.categoryId ?? null,
 			amountOere,
 			frequency: parsed.data.frequency as "weekly" | "monthly" | "annual",
-			startDate: parsed.data.startDate,
-			endDate: parsed.data.endDate ?? null,
+			startDate: parseDateToIso(parsed.data.startDate) as string,
+			endDate: parsed.data.endDate ? (parseDateToIso(parsed.data.endDate) ?? null) : null,
 		})
 		.where(
 			and(
@@ -211,6 +235,21 @@ export async function deleteRecurringTemplate(id: string): Promise<void> {
 	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
+
+	const [template] = await db
+		.select({ id: recurringTemplates.id })
+		.from(recurringTemplates)
+		.where(
+			and(
+				eq(recurringTemplates.id, id),
+				eq(recurringTemplates.householdId, householdId),
+				eq(recurringTemplates.userId, user.id as string),
+				isNull(recurringTemplates.deletedAt),
+			),
+		)
+		.limit(1);
+
+	if (!template) throw new Error("Mal ikke funnet eller ingen tilgang");
 
 	await db
 		.update(recurringTemplates)

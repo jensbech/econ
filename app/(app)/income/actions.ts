@@ -140,7 +140,7 @@ export async function createIncome(
 			categoryId: parsed.data.categoryId ?? null,
 			accountId: parsed.data.accountId ?? null,
 			amountOere,
-			date: parsed.data.date,
+			date: parseDateToIso(parsed.data.date) as string,
 			source: parsed.data.source ?? null,
 			type: parsed.data.type,
 		})
@@ -235,7 +235,7 @@ export async function updateIncome(
 			categoryId: parsed.data.categoryId ?? null,
 			accountId: parsed.data.accountId ?? null,
 			amountOere,
-			date: parsed.data.date,
+			date: parseDateToIso(parsed.data.date) as string,
 			source: parsed.data.source ?? null,
 			type: parsed.data.type,
 			// Editing a single occurrence unlinks it from any recurring template

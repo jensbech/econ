@@ -260,7 +260,7 @@ export async function POST(request: Request) {
 				);
 			}
 		}
-		const errorId = Math.random().toString(36).substring(7);
+		const errorId = crypto.randomUUID().slice(0, 8);
 		console.error(
 			`[AI Extract ${errorId}]`,
 			error instanceof Error ? error.message : String(error),

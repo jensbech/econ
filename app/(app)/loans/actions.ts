@@ -11,7 +11,7 @@ import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { extractFieldErrors, nokToOere } from "@/lib/server-utils";
+import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
 
 export type LoanFormState = {
 	error?: string | null;
@@ -29,10 +29,19 @@ const LoanSchema = z.object({
 	principal: z.string().min(1, "Hovedstol er påkrevd"),
 	interestRate: z.string().min(1, "Rente er påkrevd"),
 	termMonths: z.string().min(1, "Løpetid er påkrevd"),
-	startDate: z.string().min(1, "Startdato er påkrevd"),
+	startDate: z
+		.string()
+		.min(1, "Startdato er påkrevd")
+		.refine((d) => parseDateToIso(d) !== null, "Ugyldig startdato"),
 	accountId: z.string().optional(),
 	openingBalance: z.string().optional(),
-	openingBalanceDate: z.string().optional(),
+	openingBalanceDate: z
+		.string()
+		.optional()
+		.refine(
+			(d) => d === undefined || d === "" || parseDateToIso(d) !== null,
+			"Ugyldig dato for restgjeld",
+		),
 });
 
 const PaymentSchema = z.object({
@@ -112,13 +121,16 @@ export async function createLoan(
 	}
 
 	const termMonths = Number.parseInt(parsed.data.termMonths, 10);
-	if (Number.isNaN(termMonths) || termMonths <= 0) {
-		return { fieldErrors: { termMonths: ["Ugyldig løpetid"] } };
+	if (Number.isNaN(termMonths) || termMonths <= 0 || termMonths > 600) {
+		return { fieldErrors: { termMonths: ["Løpetid må være mellom 1 og 600 måneder"] } };
 	}
 
+	const isoStartDate = parseDateToIso(parsed.data.startDate) as string;
 	let openingBalanceOere: number | null = null;
-	const openingBalanceDate: string | null =
-		parsed.data.openingBalanceDate || null;
+	const rawOpeningBalanceDate = parsed.data.openingBalanceDate || null;
+	const openingBalanceDate = rawOpeningBalanceDate
+		? (parseDateToIso(rawOpeningBalanceDate) ?? null)
+		: null;
 
 	if (parsed.data.openingBalance || openingBalanceDate) {
 		if (!parsed.data.openingBalance || !openingBalanceDate) {
@@ -128,7 +140,7 @@ export async function createLoan(
 				},
 			};
 		}
-		if (openingBalanceDate < parsed.data.startDate) {
+		if (openingBalanceDate < isoStartDate) {
 			return {
 				fieldErrors: {
 					openingBalanceDate: ["Dato må være lik eller etter startdato"],
@@ -152,7 +164,7 @@ export async function createLoan(
 			principalOere,
 			interestRate,
 			termMonths,
-			startDate: parsed.data.startDate,
+			startDate: isoStartDate,
 			accountId: parsed.data.accountId ?? null,
 			openingBalanceOere,
 			openingBalanceDate,
@@ -253,13 +265,16 @@ export async function updateLoan(
 	}
 
 	const termMonths = Number.parseInt(parsed.data.termMonths, 10);
-	if (Number.isNaN(termMonths) || termMonths <= 0) {
-		return { fieldErrors: { termMonths: ["Ugyldig løpetid"] } };
+	if (Number.isNaN(termMonths) || termMonths <= 0 || termMonths > 600) {
+		return { fieldErrors: { termMonths: ["Løpetid må være mellom 1 og 600 måneder"] } };
 	}
 
+	const isoStartDate = parseDateToIso(parsed.data.startDate) as string;
 	let openingBalanceOere: number | null = null;
-	const openingBalanceDate: string | null =
-		parsed.data.openingBalanceDate || null;
+	const rawOpeningBalanceDate = parsed.data.openingBalanceDate || null;
+	const openingBalanceDate = rawOpeningBalanceDate
+		? (parseDateToIso(rawOpeningBalanceDate) ?? null)
+		: null;
 
 	if (parsed.data.openingBalance || openingBalanceDate) {
 		if (!parsed.data.openingBalance || !openingBalanceDate) {
@@ -269,7 +284,7 @@ export async function updateLoan(
 				},
 			};
 		}
-		if (openingBalanceDate < parsed.data.startDate) {
+		if (openingBalanceDate < isoStartDate) {
 			return {
 				fieldErrors: {
 					openingBalanceDate: ["Dato må være lik eller etter startdato"],
@@ -296,7 +311,7 @@ export async function updateLoan(
 			principalOere,
 			interestRate,
 			termMonths,
-			startDate: parsed.data.startDate,
+			startDate: isoStartDate,
 			accountId: parsed.data.accountId ?? null,
 			openingBalanceOere,
 			openingBalanceDate,
@@ -361,6 +376,7 @@ export async function deleteLoan(id: string): Promise<void> {
 			and(
 				eq(loans.id, id),
 				eq(loans.householdId, householdId),
+				eq(loans.userId, user.id),
 				isNull(loans.deletedAt),
 			),
 		);
