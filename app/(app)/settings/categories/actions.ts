@@ -42,7 +42,7 @@ export async function addCategory(formData: FormData) {
 	try {
 		checkRateLimit(`category:add:${user.id}`, 20, 60);
 	} catch {
-		return { error: "Too many requests. Please try again later." };
+		throw new Error("Too many requests. Please try again later.");
 	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
