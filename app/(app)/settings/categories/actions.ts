@@ -39,7 +39,11 @@ const RenameCategorySchema = z.object({
 export async function addCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`category:add:${user.id}`, 20, 60);
+	try {
+		checkRateLimit(`category:add:${user.id}`, 20, 60);
+	} catch {
+		return { error: "Too many requests. Please try again later." };
+	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -49,14 +53,21 @@ export async function addCategory(formData: FormData) {
 	});
 	if (!parsed.success) throw new Error("Ugyldig skjemadata");
 
-	const categoryName = parsed.data.name.trim();
+	let categoryName = parsed.data.name.trim();
+	categoryName = categoryName.normalize("NFKC");
 
 	// Enforce category count cap (HIGH-08)
 	const [{ cnt }] = await db
 		.select({ cnt: sql<number>`count(*)::int` })
 		.from(categories)
-		.where(and(eq(categories.householdId, householdId), isNull(categories.deletedAt)));
-	if (cnt >= MAX_CATEGORIES) throw new Error(`Maks ${MAX_CATEGORIES} kategorier per husholdning`);
+		.where(
+			and(
+				eq(categories.householdId, householdId),
+				isNull(categories.deletedAt),
+			),
+		);
+	if (cnt >= MAX_CATEGORIES)
+		throw new Error(`Maks ${MAX_CATEGORIES} kategorier per husholdning`);
 
 	// Check for duplicate category name
 	const [existing] = await db
@@ -89,7 +100,11 @@ export async function addCategory(formData: FormData) {
 export async function renameCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`category:rename:${user.id}`, 20, 60);
+	try {
+		checkRateLimit(`category:rename:${user.id}`, 20, 60);
+	} catch {
+		return { error: "Too many requests. Please try again later." };
+	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -99,7 +114,8 @@ export async function renameCategory(formData: FormData) {
 	});
 	if (!parsed.success) throw new Error("Ugyldig skjemadata");
 
-	const newName = parsed.data.name.trim();
+	let newName = parsed.data.name.trim();
+	newName = newName.normalize("NFKC");
 
 	// Get the current category to find its type
 	const [currentCategory] = await db
@@ -153,7 +169,11 @@ export async function renameCategory(formData: FormData) {
 export async function deleteCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`category:delete:${user.id}`, 10, 60);
+	try {
+		checkRateLimit(`category:delete:${user.id}`, 10, 60);
+	} catch {
+		throw new Error("Too many requests. Please try again later.");
+	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
