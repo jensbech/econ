@@ -311,14 +311,16 @@ export async function deleteIncome(id: string): Promise<void> {
 }
 
 // Deletes without redirect — used from the income list table
-export async function deleteIncomeNoRedirect(id: string): Promise<void> {
+export async function deleteIncomeNoRedirect(
+	id: string,
+): Promise<{ error: string } | undefined> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
 
 	try {
 		checkRateLimit(`income:delete:${user.id}`, 10, 60);
 	} catch {
-		throw new Error("Rate limit exceeded. Please try again later.");
+		return { error: "Too many delete requests. Please try again later." };
 	}
 
 	const householdId = await getHouseholdId(user.id as string);
