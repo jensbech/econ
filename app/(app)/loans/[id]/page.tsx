@@ -3,13 +3,13 @@ import { nb } from "date-fns/locale";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LoanWhatIfPanel } from "@/components/loan-what-if-panel";
 import { db } from "@/db";
 import { expenses, loans } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { formatNOK } from "@/lib/format";
 import { getHouseholdId } from "@/lib/households";
 import { computeLoanBalance } from "@/lib/loan-math";
-import { LoanWhatIfPanel } from "@/components/loan-what-if-panel";
 import { addLoanPayment } from "../actions";
 import { PaymentForm } from "../payment-form";
 import { DeleteLoanButton, DeletePaymentButton } from "./loan-delete-buttons";
@@ -38,6 +38,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 		.where(
 			and(
 				eq(loans.id, id),
+				eq(loans.userId, user.id as string),
 				eq(loans.householdId, householdId),
 				isNull(loans.deletedAt),
 			),
@@ -107,14 +108,14 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
-				<a
-					href={`/loans/${id}/edit`}
-					className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground/70 transition-colors hover:bg-card dark:border-border/40 dark:text-foreground/60 dark:hover:bg-card/50"
-				>
-					Rediger
-				</a>
-				<DeleteLoanButton loanId={id} />
-			</div>
+					<a
+						href={`/loans/${id}/edit`}
+						className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground/70 transition-colors hover:bg-card dark:border-border/40 dark:text-foreground/60 dark:hover:bg-card/50"
+					>
+						Rediger
+					</a>
+					<DeleteLoanButton loanId={id} />
+				</div>
 			</div>
 
 			{/* Loan summary cards */}
@@ -241,10 +242,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 										</td>
 										<td className="px-4 py-3 text-right font-semibold text-foreground dark:text-card-foreground">
 											{formatNOK(
-												expensePayments.reduce(
-													(s, p) => s + p.amountOere,
-													0,
-												),
+												expensePayments.reduce((s, p) => s + p.amountOere, 0),
 											)}
 										</td>
 										<td className="px-4 py-3 text-right text-sm text-foreground/70 dark:text-foreground/50">
