@@ -343,7 +343,7 @@ export function AccountsClient({
 														<Input
 															value={editOpeningBalance}
 															onChange={(e) => setEditOpeningBalance(e.target.value)}
-															placeholder="Inngående saldo (NOK)"
+															placeholder="Startsaldo"
 															inputMode="decimal"
 															className="h-8 max-w-[140px]"
 														/>
@@ -579,7 +579,7 @@ export function AccountsClient({
 					) : (
 						<>
 							<div className="space-y-1.5">
-								<Label htmlFor="newOpeningBalance">Inngående saldo (NOK)</Label>
+								<Label htmlFor="newOpeningBalance">Startsaldo (NOK)</Label>
 								<Input
 									id="newOpeningBalance"
 									value={newOpeningBalance}

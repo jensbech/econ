@@ -36,9 +36,9 @@ export function ThemeToggle({ onDark = false }: ThemeToggleProps) {
 			className={cls}
 		>
 			{isDark ? (
-				<Sun className="h-4 w-4 flex-shrink-0" />
+				<Sun key="sun" className="h-4 w-4 flex-shrink-0 animate-icon-swap" />
 			) : (
-				<Moon className="h-4 w-4 flex-shrink-0" />
+				<Moon key="moon" className="h-4 w-4 flex-shrink-0 animate-icon-swap" />
 			)}
 			{isDark ? "Lyst tema" : "Mørkt tema"}
 		</button>

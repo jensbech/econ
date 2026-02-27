@@ -36,7 +36,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary dark:text-foreground/70 dark:hover:bg-primary/10 dark:hover:text-primary md:hidden"
+				className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/60 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-110 dark:text-foreground/70 dark:hover:bg-primary/10 dark:hover:text-primary md:hidden"
 				aria-label="Åpne meny"
 				aria-expanded={open}
 				aria-controls="mobile-sidebar-drawer"
@@ -48,20 +48,22 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 			{mounted &&
 				createPortal(
 					<>
-						{/* Backdrop */}
-						{open && (
-							<div
-								className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
-								onClick={() => setOpen(false)}
-								aria-hidden="true"
-							/>
-						)}
+						{/* Backdrop - always rendered, fades in/out */}
+						<div
+							className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out ${
+								open
+									? "opacity-100 pointer-events-auto"
+									: "opacity-0 pointer-events-none"
+							}`}
+							onClick={() => setOpen(false)}
+							aria-hidden="true"
+						/>
 
 						{/* Drawer */}
 						<aside
 							id="mobile-sidebar-drawer"
 							aria-hidden={!open}
-							className={`fixed inset-y-0 left-0 z-50 w-60 transform transition-transform duration-200 ease-in-out md:hidden ${
+							className={`fixed inset-y-0 left-0 z-50 w-60 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
 								open ? "translate-x-0" : "-translate-x-full"
 							}`}
 						>
@@ -79,7 +81,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 									<button
 										type="button"
 										onClick={() => setOpen(false)}
-										className="rounded-lg p-1 text-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary"
+										className="rounded-lg p-1 text-foreground/60 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:rotate-90"
 										aria-label="Lukk meny"
 									>
 										<X className="h-4 w-4" />

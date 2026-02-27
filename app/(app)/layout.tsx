@@ -81,7 +81,7 @@ export default async function AppLayout({
 	return (
 		<div className="flex min-h-screen bg-background dark:bg-background">
 			{/* Desktop Sidebar — light & warm */}
-			<aside className="hidden w-60 flex-shrink-0 flex-col bg-background dark:bg-card md:flex border-r border-border/40">
+			<aside className="hidden w-60 flex-shrink-0 flex-col bg-background dark:bg-card md:flex border-r border-border/40 animate-sidebar-in">
 				<div className="border-b border-border/40 px-5 py-4">
 					<div className="flex items-center gap-2.5">
 						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold tracking-tight text-card-foreground">
@@ -147,7 +147,7 @@ export default async function AppLayout({
 			{/* Main content area */}
 			<div className="flex flex-1 flex-col min-w-0">
 				{/* Top bar */}
-				<header className="sticky top-0 z-30 border-b border-border/50 bg-card/95 backdrop-blur-md dark:border-border/50 dark:bg-card/90 ethereal-shadow-sm">
+				<header className="sticky top-0 z-30 border-b border-border/50 bg-card/95 backdrop-blur-md dark:border-border/50 dark:bg-card/90 ethereal-shadow-sm animate-header-in">
 					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-4 md:px-6 md:py-3">
 						{/* Mobile hamburger + sidebar drawer */}
 						<MobileSidebar>
