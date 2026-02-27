@@ -151,11 +151,11 @@ export function DashboardClient({
 									<p className="text-xs font-medium text-foreground/50 dark:text-foreground/60">
 										Inntekt
 									</p>
-									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-green-600 dark:text-green-400">
+									<p className="mt-1.5 text-3xl font-bold tabular-nums text-primary">
 										{formatNOK(totalIncome)}
 									</p>
 								</div>
-								<TrendingUp className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500 dark:text-green-400" />
+								<TrendingUp className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
 							</div>
 						</div>
 
@@ -169,11 +169,11 @@ export function DashboardClient({
 									<p className="text-xs font-medium text-foreground/50 dark:text-foreground/60">
 										Utgifter
 									</p>
-									<p className="mt-1.5 font-mono text-3xl font-bold tabular-nums text-red-600 dark:text-red-400">
+									<p className="mt-1.5 text-3xl font-bold tabular-nums text-destructive">
 										{formatNOK(totalExpenses)}
 									</p>
 								</div>
-								<TrendingDown className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500 dark:text-red-400" />
+								<TrendingDown className="mt-0.5 h-4 w-4 flex-shrink-0 text-destructive" />
 							</div>
 						</div>
 
@@ -189,26 +189,26 @@ export function DashboardClient({
 									</p>
 									{savingsRate !== null ? (
 										<p
-											className={`mt-1.5 font-mono text-3xl font-bold tabular-nums ${
+											className={`mt-1.5 text-3xl font-bold tabular-nums ${
 												savingsRate >= 0
-													? "text-green-600 dark:text-green-400"
-													: "text-red-600 dark:text-red-400"
+													? "text-primary"
+													: "text-destructive"
 											}`}
 										>
 											{savingsRate.toFixed(1)}%
 										</p>
 									) : (
-										<p className="mt-1.5 font-mono text-3xl font-bold text-foreground/50 dark:text-foreground/60">
+										<p className="mt-1.5 text-3xl font-bold text-foreground/50 dark:text-foreground/60">
 											—
 										</p>
 									)}
-									<p className="mt-0.5 font-mono text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
+									<p className="mt-0.5 text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
 										Netto:{" "}
 										<span
 											className={
 												netAmount >= 0
-													? "text-green-600 dark:text-green-400"
-													: "text-red-600 dark:text-red-400"
+													? "text-primary"
+													: "text-destructive"
 											}
 										>
 											{formatNOK(netAmount)}
@@ -239,7 +239,7 @@ export function DashboardClient({
 										<p className="text-sm font-medium text-foreground/60 dark:text-foreground/50">
 											Lån denne måneden
 										</p>
-										<p className="mt-1 font-mono text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+										<p className="mt-1 text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
 											{formatNOK(monthlyLoanTotal)}
 										</p>
 										{(monthlyLoanInterest > 0 || monthlyLoanPrincipal > 0) && (
@@ -323,7 +323,7 @@ export function DashboardClient({
 													{budgetAmt > 0 && (
 														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
 															<div
-																className={`h-full rounded-full transition-all duration-500 ${over ? "bg-red-400 dark:bg-red-500" : "bg-green-400 dark:bg-green-500"}`}
+																className={`h-full rounded-full transition-all duration-500 ${over ? "bg-destructive/60" : "bg-primary/60"}`}
 																style={{
 																	width: `${Math.min(100, Math.round((actualAmt / budgetAmt) * 100))}%`,
 																}}
@@ -333,7 +333,7 @@ export function DashboardClient({
 												</div>
 												<div className="ml-4 flex-shrink-0 text-right">
 													<span
-														className={`text-sm font-semibold tabular-nums ${over ? "text-red-600 dark:text-red-400" : under ? "text-green-600 dark:text-green-400" : "text-foreground/70 dark:text-foreground/50"}`}
+														className={`text-sm font-semibold tabular-nums ${over ? "text-destructive" : under ? "text-primary" : "text-foreground/70 dark:text-foreground/50"}`}
 													>
 														{formatNOK(actualAmt)}
 													</span>
@@ -384,13 +384,13 @@ export function DashboardClient({
 															<span className="truncate font-medium text-foreground/80 dark:text-card-foreground">
 																{row.categoryName ?? "Ukategorisert"}
 															</span>
-															<span className="ml-4 flex-shrink-0 font-semibold tabular-nums text-red-600 dark:text-red-400">
+															<span className="ml-4 flex-shrink-0 font-semibold tabular-nums text-destructive">
 																{formatNOK(row.total)}
 															</span>
 														</div>
 														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
 															<div
-																className="h-full rounded-full bg-red-400 transition-all duration-500 ease-out dark:bg-red-500"
+																className="h-full rounded-full bg-destructive/60 transition-all duration-500 ease-out"
 																style={{ width: `${pct}%` }}
 															/>
 														</div>
@@ -437,7 +437,7 @@ export function DashboardClient({
 														{item.categoryName ? ` · ${item.categoryName}` : ""}
 													</p>
 												</div>
-												<span className="ml-4 flex-shrink-0 text-sm font-semibold tabular-nums text-red-600 dark:text-red-400">
+												<span className="ml-4 flex-shrink-0 text-sm font-semibold tabular-nums text-destructive">
 													{formatNOK(item.amountOere)}
 												</span>
 											</li>

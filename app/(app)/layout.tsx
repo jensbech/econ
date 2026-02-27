@@ -93,7 +93,13 @@ export default async function AppLayout({
 					</div>
 				</div>
 
+				{/* Month selector */}
+				<div className="border-b border-border/40 px-3 py-2">
+					<MonthSelector initialMonth={initialMonth} />
+				</div>
+
 				<SidebarNav />
+
 
 				{/* User section */}
 				<div className="border-t border-border/40 p-3">
@@ -145,6 +151,9 @@ export default async function AppLayout({
 					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-4 md:px-6 md:py-3">
 						{/* Mobile hamburger + sidebar drawer */}
 						<MobileSidebar>
+							<div className="border-b border-border/40 px-3 py-2">
+								<MonthSelector initialMonth={initialMonth} inline />
+							</div>
 							<SidebarNav />
 							<div className="border-t border-border/40 p-3">
 								<div className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2">
@@ -187,9 +196,6 @@ export default async function AppLayout({
 								</form>
 							</div>
 						</MobileSidebar>
-
-						{/* Month selector (mobile dropdown + desktop chevrons) */}
-						<MonthSelector initialMonth={initialMonth} />
 
 						{/* Account selector — fills middle, scrollable with gradient indicator */}
 						<div className="min-w-0 flex-1 overflow-hidden">

@@ -108,9 +108,9 @@ export function AccountSelector({
 
 	const chipBase =
 		"flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-all duration-200 flex-shrink-0";
-	const chipActive = "border-primary/40 bg-primary/10 text-primary";
+	const chipActive = "border-foreground/25 bg-foreground/12 text-foreground";
 	const chipInactive =
-		"border-border/40 bg-background text-foreground/70 hover:bg-primary/5 hover:border-primary/30";
+		"border-border/40 bg-transparent text-foreground/40 hover:bg-foreground/6 hover:border-border/60 hover:text-foreground/65";
 
 	return (
 		<div className="relative flex items-center gap-2">

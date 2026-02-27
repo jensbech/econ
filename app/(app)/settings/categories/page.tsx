@@ -83,7 +83,7 @@ export default async function CategoriesPage() {
 					<h2 className="text-sm font-semibold text-foreground/80 dark:text-foreground/80">
 						Utgiftskategorier
 					</h2>
-					<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
+					<span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
 						{expenseCategories.length}
 					</span>
 				</div>
@@ -111,7 +111,7 @@ export default async function CategoriesPage() {
 					<h2 className="text-sm font-semibold text-foreground/80 dark:text-foreground/80">
 						Inntektskategorier
 					</h2>
-					<span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600 dark:bg-green-900/20 dark:text-green-400">
+					<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
 						{incomeCategories.length}
 					</span>
 				</div>

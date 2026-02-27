@@ -292,7 +292,7 @@ export function ExpenseTable({
 					</div>
 				),
 				cell: ({ row }) => (
-					<div className="text-right font-medium tabular-nums text-red-600 dark:text-red-400">
+					<div className="text-right font-medium tabular-nums text-destructive">
 						{formatNOK(row.original.amountOere)}
 					</div>
 				),
@@ -525,7 +525,7 @@ export function ExpenseTable({
 									Totalt ({filteredExpenses.length}{" "}
 									{filteredExpenses.length === 1 ? "utgift" : "utgifter"})
 								</TableCell>
-								<TableCell className="text-right font-semibold tabular-nums text-red-600 dark:text-red-400">
+								<TableCell className="text-right font-semibold tabular-nums text-destructive">
 									{formatNOK(total)}
 								</TableCell>
 								<TableCell />
@@ -565,7 +565,7 @@ export function ExpenseTable({
 								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Beløp
 								</p>
-								<p className="text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
+								<p className="text-2xl font-bold tabular-nums text-destructive">
 									{formatNOK(selectedExpense.amountOere)}
 								</p>
 							</div>

@@ -124,7 +124,7 @@ export function CalendarField({
 			) : (
 				trigger
 			)}
-			{error && <p className="text-xs text-red-600">{error}</p>}
+			{error && <p className="text-xs text-destructive">{error}</p>}
 		</div>
 	);
 }

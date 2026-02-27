@@ -410,7 +410,7 @@ export function AccountsClient({
 									{!isEditing && (
 									<div className="ml-auto text-sm font-medium tabular-nums">
 										{balances[account.id] != null ? (
-											<span className={balances[account.id]! >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+											<span className={balances[account.id]! >= 0 ? "text-primary" : "text-destructive"}>
 												{formatNOK(balances[account.id]!)}
 											</span>
 										) : (

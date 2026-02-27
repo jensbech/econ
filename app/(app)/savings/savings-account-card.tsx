@@ -70,7 +70,7 @@ export function SavingsAccountCard({
 
 			{/* Balance */}
 			<div className="mb-4">
-				<span className="text-2xl font-bold text-green-600 dark:text-green-400">
+				<span className="text-2xl font-bold text-primary">
 					{formatNOK(balance)}
 				</span>
 			</div>
@@ -94,8 +94,8 @@ export function SavingsAccountCard({
 								<span
 									className={`font-medium tabular-nums ${
 										tx.type === "income"
-											? "text-green-600 dark:text-green-400"
-											: "text-red-600 dark:text-red-400"
+											? "text-primary"
+											: "text-destructive"
 									}`}
 								>
 									{tx.type === "income" ? "+" : "−"}

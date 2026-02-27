@@ -173,7 +173,7 @@ const columns: ColumnDef<IncomeRow>[] = [
 			</div>
 		),
 		cell: ({ row }) => (
-			<div className="text-right font-medium text-green-600 dark:text-green-400">
+			<div className="text-right font-medium tabular-nums text-primary">
 				{formatNOK(row.original.amountOere)}
 			</div>
 		),
@@ -451,7 +451,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								Totalt for {viewLabel} ({incomes.length}{" "}
 								{incomes.length === 1 ? "inntekt" : "inntekter"})
 							</TableCell>
-							<TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
+							<TableCell className="text-right font-semibold tabular-nums text-primary">
 								{formatNOK(total)}
 							</TableCell>
 							<TableCell />
@@ -489,7 +489,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								<p className="mb-1 text-xs font-medium text-foreground/60 dark:text-foreground/50">
 									Beløp
 								</p>
-								<p className="text-2xl font-bold text-green-600 dark:text-green-400">
+								<p className="text-2xl font-bold tabular-nums text-primary">
 									{formatNOK(selectedIncome.amountOere)}
 								</p>
 							</div>

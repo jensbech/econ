@@ -90,7 +90,7 @@ export default async function LoansPage() {
 					{allLoans.length > 0 && (
 						<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 							Total gjeld:{" "}
-							<span className="font-medium text-red-600 dark:text-red-400">
+							<span className="font-medium text-destructive">
 								{formatNOK(totalBalance)}
 							</span>
 						</p>
@@ -149,7 +149,7 @@ export default async function LoansPage() {
 								</div>
 
 								{/* Balance */}
-								<p className="text-2xl font-bold text-red-600 dark:text-red-400">
+								<p className="text-2xl font-bold text-destructive">
 									{formatNOK(balance.currentBalanceOere)}
 								</p>
 								<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">

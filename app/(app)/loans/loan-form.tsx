@@ -65,7 +65,7 @@ export function LoanForm({
 					className="h-9"
 				/>
 				{state?.fieldErrors?.name && (
-					<p className="text-xs text-red-600">{state.fieldErrors.name[0]}</p>
+					<p className="text-xs text-destructive">{state.fieldErrors.name[0]}</p>
 				)}
 			</div>
 
@@ -85,7 +85,7 @@ export function LoanForm({
 					<option value="other">Annet</option>
 				</select>
 				{state?.fieldErrors?.type && (
-					<p className="text-xs text-red-600">{state.fieldErrors.type[0]}</p>
+					<p className="text-xs text-destructive">{state.fieldErrors.type[0]}</p>
 				)}
 			</div>
 
@@ -103,7 +103,7 @@ export function LoanForm({
 					className="h-9"
 				/>
 				{state?.fieldErrors?.principal && (
-					<p className="text-xs text-red-600">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.principal[0]}
 					</p>
 				)}
@@ -123,7 +123,7 @@ export function LoanForm({
 					className="h-9"
 				/>
 				{state?.fieldErrors?.interestRate && (
-					<p className="text-xs text-red-600">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.interestRate[0]}
 					</p>
 				)}
@@ -143,7 +143,7 @@ export function LoanForm({
 					className="h-9"
 				/>
 				{state?.fieldErrors?.termMonths && (
-					<p className="text-xs text-red-600">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.termMonths[0]}
 					</p>
 				)}
@@ -176,7 +176,7 @@ export function LoanForm({
 						className="h-9"
 					/>
 					{state?.fieldErrors?.openingBalance && (
-						<p className="text-xs text-red-600">{state.fieldErrors.openingBalance[0]}</p>
+						<p className="text-xs text-destructive">{state.fieldErrors.openingBalance[0]}</p>
 					)}
 				</div>
 				<CalendarField

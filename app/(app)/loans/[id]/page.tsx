@@ -124,7 +124,7 @@ export default async function LoanDetailPage({ params }: LoanDetailPageProps) {
 					<p className="text-xs text-foreground/60 dark:text-foreground/50">
 						Gjenstående saldo
 					</p>
-					<p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
+					<p className="mt-2 text-2xl font-bold text-destructive">
 						{formatNOK(balance.currentBalanceOere)}
 					</p>
 					<p className="mt-0.5 text-xs text-foreground/60 dark:text-foreground/50">

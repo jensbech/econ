@@ -95,7 +95,7 @@ export function SavingsProjectionPanel({
 									<dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
 										Om {years} år
 									</dt>
-									<dd className="text-sm font-bold tabular-nums text-green-700 dark:text-green-400">
+									<dd className="text-sm font-bold tabular-nums text-primary">
 										{formatNOK(value)}
 									</dd>
 								</div>

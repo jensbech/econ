@@ -14,9 +14,10 @@ import {
 
 interface MonthSelectorProps {
 	initialMonth: string;
+	inline?: boolean;
 }
 
-export function MonthSelector({ initialMonth }: MonthSelectorProps) {
+export function MonthSelector({ initialMonth, inline }: MonthSelectorProps) {
 	const router = useRouter();
 	const [, startTransition] = useTransition();
 	const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +47,7 @@ export function MonthSelector({ initialMonth }: MonthSelectorProps) {
 					<Button
 						variant="ghost"
 						size="sm"
-						className="gap-1.5 text-sm md:hidden"
+						className={`gap-1.5 text-sm ${inline ? "hidden" : "md:hidden"}`}
 					>
 						<span className="text-foreground/80">
 							{monthLabelDisplay}
@@ -116,7 +117,7 @@ export function MonthSelector({ initialMonth }: MonthSelectorProps) {
 				</PopoverContent>
 			</Popover>
 
-			<div className="hidden items-center gap-2 md:flex">
+			<div className={`${inline ? "flex" : "hidden md:flex"} w-full items-center justify-between gap-2`}>
 				<Button
 					variant="ghost"
 					size="icon"

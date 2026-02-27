@@ -272,7 +272,7 @@ export default async function SavingsPage() {
 					{savingsAccounts.length > 0 && (
 						<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
 							Total saldo:{" "}
-							<span className="font-medium text-green-600 dark:text-green-400">
+							<span className="font-medium text-primary">
 								{formatNOK(totalBalance)}
 							</span>
 						</p>

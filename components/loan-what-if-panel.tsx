@@ -88,21 +88,21 @@ export function LoanWhatIfPanel({
 						</div>
 						<div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-900/20">
 							<div className="mb-2 flex items-center gap-1.5">
-								<Sparkles className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-								<span className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">
+								<Sparkles className="h-3.5 w-3.5 text-primary" />
+								<span className="text-xs font-semibold uppercase tracking-wide text-primary">
 									Gevinst ved ekstra betaling
 								</span>
 							</div>
 							<div className="grid grid-cols-2 gap-3">
 								<div>
-									<p className="text-xs text-green-700/70 dark:text-green-400/70">Tid spart</p>
-									<p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-400">
+									<p className="text-xs text-primary/70">Tid spart</p>
+									<p className="text-lg font-bold tabular-nums text-primary">
 										{result.monthsSaved} mnd
 									</p>
 								</div>
 								<div>
-									<p className="text-xs text-green-700/70 dark:text-green-400/70">Renter spart</p>
-									<p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-400">
+									<p className="text-xs text-primary/70">Renter spart</p>
+									<p className="text-lg font-bold tabular-nums text-primary">
 										{formatNOK(result.interestSavedOere)}
 									</p>
 								</div>

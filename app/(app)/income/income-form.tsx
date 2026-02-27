@@ -111,7 +111,7 @@ export function IncomeForm({
 					autoFocus={!defaultAmountNOK}
 				/>
 				{state?.fieldErrors?.amount && (
-					<p className="text-xs text-red-600 dark:text-red-400">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.amount[0]}
 					</p>
 				)}
@@ -132,7 +132,7 @@ export function IncomeForm({
 					Navn på arbeidsgiver, klient, eller inntektskilde
 				</p>
 				{state?.fieldErrors?.source && (
-					<p className="text-xs text-red-600 dark:text-red-400">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.source[0]}
 					</p>
 				)}
@@ -151,7 +151,7 @@ export function IncomeForm({
 					<option value="variable">Variabel inntekt (uforutsigbar)</option>
 				</select>
 				{state?.fieldErrors?.type && (
-					<p className="text-xs text-red-600 dark:text-red-400">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.type[0]}
 					</p>
 				)}

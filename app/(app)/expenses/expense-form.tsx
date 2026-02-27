@@ -133,7 +133,7 @@ export function ExpenseForm({
 					autoFocus={!defaultAmountNOK}
 				/>
 				{state?.fieldErrors?.amount && (
-					<p className="text-xs text-red-600 dark:text-red-400">
+					<p className="text-xs text-destructive">
 						{state.fieldErrors.amount[0]}
 					</p>
 				)}
@@ -193,7 +193,7 @@ export function ExpenseForm({
 								className="h-9"
 							/>
 							{state?.fieldErrors?.interestAmount && (
-								<p className="text-xs text-red-600 dark:text-red-400">
+								<p className="text-xs text-destructive">
 									{state.fieldErrors.interestAmount[0]}
 								</p>
 							)}
@@ -211,7 +211,7 @@ export function ExpenseForm({
 								className="h-9"
 							/>
 							{state?.fieldErrors?.principalAmount && (
-								<p className="text-xs text-red-600 dark:text-red-400">
+								<p className="text-xs text-destructive">
 									{state.fieldErrors.principalAmount[0]}
 								</p>
 							)}
