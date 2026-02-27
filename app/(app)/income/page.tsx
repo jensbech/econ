@@ -1,16 +1,16 @@
 import { format } from "date-fns";
 import { and, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Plus } from "lucide-react";
-import Link from "next/link";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { categories, incomeEntries } from "@/db/schema";
+import { getFilteredAccountIds } from "@/lib/accounts";
 import { verifySession } from "@/lib/dal";
 import { expandRecurringIncome } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
-import { getFilteredAccountIds } from "@/lib/accounts";
 import { IncomeTable } from "./income-table";
 
 export default async function IncomePage({
@@ -79,7 +79,25 @@ export default async function IncomePage({
 	}
 
 	// Empty selection = all public accounts; explicit selection = those accounts only
-	const validIds = await getFilteredAccountIds(user.id as string, householdId, selectedIds);
+	const [validIds, categoryRows] = await Promise.all([
+		getFilteredAccountIds(user.id as string, householdId, selectedIds),
+		db
+			.select({ id: categories.id, name: categories.name })
+			.from(categories)
+			.where(
+				and(
+					eq(categories.householdId, householdId),
+					eq(categories.type, "income"),
+					isNull(categories.deletedAt),
+				),
+			)
+			.orderBy(categories.name),
+	]);
+
+	// Validate categoryId belongs to this household
+	const validCategoryId = categoryId
+		? (categoryRows.find((c) => c.id === categoryId)?.id ?? null)
+		: null;
 
 	type WhereCondition = Parameters<typeof and>[0];
 	const conditions: WhereCondition[] = [];
@@ -89,7 +107,12 @@ export default async function IncomePage({
 
 	if (validIds.length > 0) {
 		// Show income with no account, OR with an account in the selected set
-		conditions.push(or(isNull(incomeEntries.accountId), inArray(incomeEntries.accountId, validIds)));
+		conditions.push(
+			or(
+				isNull(incomeEntries.accountId),
+				inArray(incomeEntries.accountId, validIds),
+			),
+		);
 	}
 
 	if (view === "yearly") {
@@ -120,44 +143,31 @@ export default async function IncomePage({
 		conditions.push(lte(incomeEntries.date, end));
 	}
 
-	if (categoryId) {
-		conditions.push(eq(incomeEntries.categoryId, categoryId));
+	if (validCategoryId) {
+		conditions.push(eq(incomeEntries.categoryId, validCategoryId));
 	}
 
-	const [incomeRows, categoryRows] = await Promise.all([
-		db
-			.select({
-				id: incomeEntries.id,
-				date: incomeEntries.date,
-				source: incomeEntries.source,
-				type: incomeEntries.type,
-				amountOere: incomeEntries.amountOere,
-				categoryId: incomeEntries.categoryId,
-				categoryName: categories.name,
-				recurringTemplateId: incomeEntries.recurringTemplateId,
-			})
-			.from(incomeEntries)
-			.leftJoin(
-				categories,
-				and(
-					eq(incomeEntries.categoryId, categories.id),
-					eq(categories.householdId, householdId),
-				),
-			)
-			.where(and(...conditions))
-			.orderBy(desc(incomeEntries.date), desc(incomeEntries.createdAt)),
-		db
-			.select({ id: categories.id, name: categories.name })
-			.from(categories)
-			.where(
-				and(
-					eq(categories.householdId, householdId),
-					eq(categories.type, "income"),
-					isNull(categories.deletedAt),
-				),
-			)
-			.orderBy(categories.name),
-	]);
+	const incomeRows = await db
+		.select({
+			id: incomeEntries.id,
+			date: incomeEntries.date,
+			source: incomeEntries.source,
+			type: incomeEntries.type,
+			amountOere: incomeEntries.amountOere,
+			categoryId: incomeEntries.categoryId,
+			categoryName: categories.name,
+			recurringTemplateId: incomeEntries.recurringTemplateId,
+		})
+		.from(incomeEntries)
+		.leftJoin(
+			categories,
+			and(
+				eq(incomeEntries.categoryId, categories.id),
+				eq(categories.householdId, householdId),
+			),
+		)
+		.where(and(...conditions))
+		.orderBy(desc(incomeEntries.date), desc(incomeEntries.createdAt));
 
 	return (
 		<div className="p-4 sm:p-8">
@@ -170,7 +180,10 @@ export default async function IncomePage({
 						Oversikt over inntekter.
 					</p>
 				</div>
-				<Button asChild className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
+				<Button
+					asChild
+					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+				>
 					<Link href="/income/new">
 						<Plus className="h-4 w-4" />
 						Ny inntekt

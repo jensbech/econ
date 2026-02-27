@@ -49,7 +49,13 @@ export default async function RecurringExpensesPage() {
 					categoryName: categories.name,
 				})
 				.from(recurringTemplates)
-				.leftJoin(categories, eq(recurringTemplates.categoryId, categories.id))
+				.leftJoin(
+					categories,
+					and(
+						eq(recurringTemplates.categoryId, categories.id),
+						eq(categories.householdId, householdId),
+					),
+				)
 				.where(
 					and(
 						eq(recurringTemplates.householdId, householdId),
@@ -71,7 +77,10 @@ export default async function RecurringExpensesPage() {
 						Administrer faste og gjentagende utgifter.
 					</p>
 				</div>
-				<Button asChild className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
+				<Button
+					asChild
+					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+				>
 					<Link href="/expenses/recurring/new">
 						<Plus className="h-4 w-4" />
 						Ny gjentagende utgift

@@ -1,16 +1,16 @@
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { and, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { Plus, Repeat } from "lucide-react";
-import Link from "next/link";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { categories, expenses, loans, users } from "@/db/schema";
+import { getFilteredAccountIds, getVisibleAccounts } from "@/lib/accounts";
 import { verifySession } from "@/lib/dal";
 import { expandRecurringExpenses } from "@/lib/expand-recurring";
 import { getHouseholdId } from "@/lib/households";
-import { getFilteredAccountIds, getVisibleAccounts } from "@/lib/accounts";
 import { ExpenseTable } from "./expense-table";
 
 export default async function ExpensesPage({
@@ -37,8 +37,15 @@ export default async function ExpensesPage({
 	const MONTH_RE = /^\d{4}-(?:0[1-9]|1[0-2])$/;
 	const monthCookie = cookieStore.get("selectedMonth")?.value;
 	const { month: monthParam, categoryId, from, to, importBatch } = params;
-	const rawMonth = monthParam ?? (monthCookie && monthCookie !== "all" ? monthCookie : undefined);
-	const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : rawMonth === "all" ? "all" : undefined;
+	const rawMonth =
+		monthParam ??
+		(monthCookie && monthCookie !== "all" ? monthCookie : undefined);
+	const month =
+		rawMonth && MONTH_RE.test(rawMonth)
+			? rawMonth
+			: rawMonth === "all"
+				? "all"
+				: undefined;
 
 	// Expand recurring expenses for the viewed month (idempotent)
 	if (householdId) {
@@ -80,10 +87,25 @@ export default async function ExpensesPage({
 	}
 
 	// Empty selection = all public accounts; explicit selection = those accounts only
-	const [validIds, visibleAccounts] = await Promise.all([
+	const [validIds, visibleAccounts, categoryRows] = await Promise.all([
 		getFilteredAccountIds(user.id as string, householdId, selectedIds),
 		getVisibleAccounts(user.id as string, householdId),
+		db
+			.select({ id: categories.id, name: categories.name })
+			.from(categories)
+			.where(
+				and(
+					eq(categories.householdId, householdId),
+					isNull(categories.deletedAt),
+				),
+			)
+			.orderBy(categories.name),
 	]);
+
+	// Validate categoryId belongs to this household
+	const validCategoryId = categoryId
+		? (categoryRows.find((c) => c.id === categoryId)?.id ?? null)
+		: null;
 
 	type WhereCondition = Parameters<typeof and>[0];
 	const conditions: WhereCondition[] = [];
@@ -93,7 +115,9 @@ export default async function ExpensesPage({
 
 	if (validIds.length > 0) {
 		// Show expenses with no account, OR with an account in the selected set
-		conditions.push(or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)));
+		conditions.push(
+			or(isNull(expenses.accountId), inArray(expenses.accountId, validIds)),
+		);
 	}
 
 	if (importBatch) {
@@ -118,52 +142,45 @@ export default async function ExpensesPage({
 		conditions.push(lte(expenses.date, format(endOfMonth(now), "yyyy-MM-dd")));
 	}
 
-	if (categoryId) {
-		conditions.push(eq(expenses.categoryId, categoryId));
+	if (validCategoryId) {
+		conditions.push(eq(expenses.categoryId, validCategoryId));
 	}
 
-	const [expenseRows, categoryRows] = await Promise.all([
-		db
-			.select({
-				id: expenses.id,
-				date: expenses.date,
-				notes: expenses.notes,
-				amountOere: expenses.amountOere,
-				categoryId: expenses.categoryId,
-				categoryName: categories.name,
-				accountId: expenses.accountId,
-				uploaderName: users.name,
-				loanId: expenses.loanId,
-				interestOere: expenses.interestOere,
-				principalOere: expenses.principalOere,
-				loanName: loans.name,
-			})
-			.from(expenses)
-			.leftJoin(
-				categories,
-				and(
-					eq(expenses.categoryId, categories.id),
-					eq(categories.householdId, householdId),
-				),
-			)
-			.leftJoin(users, eq(expenses.userId, users.id))
-			.leftJoin(loans, eq(expenses.loanId, loans.id))
-			.where(and(...conditions))
-			.orderBy(desc(expenses.date), desc(expenses.createdAt)),
-		db
-			.select({ id: categories.id, name: categories.name })
-			.from(categories)
-			.where(
-				and(
-					eq(categories.householdId, householdId),
-					isNull(categories.deletedAt),
-				),
-			)
-			.orderBy(categories.name),
-	]);
+	const expenseRows = await db
+		.select({
+			id: expenses.id,
+			date: expenses.date,
+			notes: expenses.notes,
+			amountOere: expenses.amountOere,
+			categoryId: expenses.categoryId,
+			categoryName: categories.name,
+			accountId: expenses.accountId,
+			uploaderName: users.name,
+			loanId: expenses.loanId,
+			interestOere: expenses.interestOere,
+			principalOere: expenses.principalOere,
+			loanName: loans.name,
+		})
+		.from(expenses)
+		.leftJoin(
+			categories,
+			and(
+				eq(expenses.categoryId, categories.id),
+				eq(categories.householdId, householdId),
+			),
+		)
+		.leftJoin(users, eq(expenses.userId, users.id))
+		.leftJoin(
+			loans,
+			and(eq(expenses.loanId, loans.id), eq(loans.householdId, householdId)),
+		)
+		.where(and(...conditions))
+		.orderBy(desc(expenses.date), desc(expenses.createdAt));
 
 	// Map accountId to account name for display
-	const accountMap = Object.fromEntries(visibleAccounts.map((a) => [a.id, a.name]));
+	const accountMap = Object.fromEntries(
+		visibleAccounts.map((a) => [a.id, a.name]),
+	);
 	const expenseRowsWithAccount = expenseRows.map((r) => ({
 		...r,
 		accountName: r.accountId ? (accountMap[r.accountId] ?? null) : null,
@@ -188,7 +205,10 @@ export default async function ExpensesPage({
 							Gjentagende
 						</Link>
 					</Button>
-					<Button asChild className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8">
+					<Button
+						asChild
+						className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+					>
 						<Link href="/expenses/new">
 							<Plus className="h-4 w-4" />
 							Ny utgift
@@ -204,7 +224,11 @@ export default async function ExpensesPage({
 					</div>
 				}
 			>
-				<ExpenseTable expenses={expenseRowsWithAccount} categories={categoryRows} importBatchId={importBatch} />
+				<ExpenseTable
+					expenses={expenseRowsWithAccount}
+					categories={categoryRows}
+					importBatchId={importBatch}
+				/>
 			</Suspense>
 		</div>
 	);
