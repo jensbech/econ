@@ -99,16 +99,19 @@ const FALLBACK_CATEGORIES = [
 ];
 
 function buildSystemPrompt(categoryNames?: string[]): string {
-	const categoryList = (categoryNames ?? FALLBACK_CATEGORIES).join(", ");
+	const categories = categoryNames ?? FALLBACK_CATEGORIES;
 	return `Du er en norsk regnskapsassistent. Trekk ut alle transaksjoner fra dokumentet.
 
 Regler:
 - Datoer: konverter til dd.mm.yyyy format
 - Beløp: konverter til øre (1 NOK = 100 øre), heltall. Utgifter er positive tall. Inntekter og refusjoner er negative tall.
 - Beskrivelse: kort og norsk, gjerne butikknavn eller transaksjonskategori
-- suggestedCategory: velg én fra listen: ${categoryList}
+- suggestedCategory: velg én fra listen nedenfor (bruk eksakt stavemåte)
 - confidence: "high" hvis dato og beløp er klart leselig, "medium" hvis noe er usikkert, "low" hvis mye er utydelig
 - accountNumber: Hvis dokumentet er en kontoutskrift, trekk ut kontonummeret fra headeren/overskriften. Formater som ren tekst (f.eks. "1234.56.78901"). Sett null hvis ikke funnet eller ved kvittering.
+
+Gyldige kategorier (bruk eksakt stavemåte):
+${JSON.stringify(categories)}
 
 Returner et JSON-objekt med en "transactions"-liste. Hvis ingen transaksjoner finnes, returner { "transactions": [] }.`;
 }
@@ -155,8 +158,7 @@ export async function extractTransactions(
 	} catch (error) {
 		// Log sanitized error server-side (do not log full error object or stack)
 		const errorId = Math.random().toString(36).substring(7);
-		const errorMessage =
-			error instanceof Error ? error.message : String(error);
+		const errorMessage = error instanceof Error ? error.message : String(error);
 		console.error(`[AI Extraction Error ${errorId}] ${errorMessage}`);
 
 		// Return generic message to client
