@@ -181,6 +181,7 @@ export async function updateRecurringTemplate(
 			and(
 				eq(recurringTemplates.id, id),
 				eq(recurringTemplates.householdId, householdId),
+				eq(recurringTemplates.userId, user.id as string),
 				isNull(recurringTemplates.deletedAt),
 			),
 		);
@@ -208,6 +209,7 @@ export async function deleteRecurringTemplate(id: string): Promise<void> {
 			and(
 				eq(recurringTemplates.id, id),
 				eq(recurringTemplates.householdId, householdId),
+				eq(recurringTemplates.userId, user.id as string),
 				isNull(recurringTemplates.deletedAt),
 			),
 		);

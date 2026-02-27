@@ -29,10 +29,7 @@ export async function validateCsrfOrigin(): Promise<void> {
 	} else {
 		const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
 		if (!host) {
-			if (process.env.NODE_ENV === "production") {
-				throw new Error("CSRF protection: cannot determine expected host");
-			}
-			return;
+			throw new Error("CSRF protection: cannot determine expected host");
 		}
 		expectedHost = host.split(",")[0].trim();
 	}

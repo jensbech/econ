@@ -47,14 +47,14 @@ export async function addCategory(formData: FormData) {
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
+	const rawName = ((formData.get("name") as string) ?? "").trim().normalize("NFKC");
 	const parsed = AddCategorySchema.safeParse({
-		name: formData.get("name"),
+		name: rawName,
 		type: formData.get("type"),
 	});
 	if (!parsed.success) throw new Error("Ugyldig skjemadata");
 
-	let categoryName = parsed.data.name.trim();
-	categoryName = categoryName.normalize("NFKC");
+	const categoryName = parsed.data.name;
 
 	// Enforce category count cap (HIGH-08)
 	const [{ cnt }] = await db
@@ -108,14 +108,14 @@ export async function renameCategory(formData: FormData) {
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
+	const rawName = ((formData.get("name") as string) ?? "").trim().normalize("NFKC");
 	const parsed = RenameCategorySchema.safeParse({
 		id: formData.get("id"),
-		name: formData.get("name"),
+		name: rawName,
 	});
 	if (!parsed.success) throw new Error("Ugyldig skjemadata");
 
-	let newName = parsed.data.name.trim();
-	newName = newName.normalize("NFKC");
+	const newName = parsed.data.name;
 
 	// Get the current category to find its type
 	const [currentCategory] = await db

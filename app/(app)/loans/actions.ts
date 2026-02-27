@@ -529,6 +529,7 @@ export async function deleteLoanPayment(
 		.where(
 			and(
 				eq(expenses.id, paymentId),
+				eq(expenses.loanId, loanId),
 				eq(expenses.householdId, householdId),
 				isNull(expenses.deletedAt),
 			),
