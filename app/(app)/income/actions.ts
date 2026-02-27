@@ -245,6 +245,7 @@ export async function updateIncome(
 			and(
 				eq(incomeEntries.id, id),
 				eq(incomeEntries.householdId, householdId),
+				eq(incomeEntries.userId, user.id as string),
 				isNull(incomeEntries.deletedAt),
 			),
 		);

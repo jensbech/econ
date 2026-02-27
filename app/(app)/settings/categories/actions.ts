@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
+import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
@@ -87,12 +88,14 @@ export async function addCategory(formData: FormData) {
 		throw new Error("Kategori med dette navn finnes allerede");
 	}
 
-	await db.insert(categories).values({
+	const [inserted] = await db.insert(categories).values({
 		householdId,
 		name: categoryName,
 		type: parsed.data.type,
 		isDefault: false,
-	});
+	}).returning({ id: categories.id });
+
+	await logCreate(householdId, user.id, "category", inserted.id, { reason: "Category created" });
 
 	revalidatePath("/settings/categories");
 }
@@ -163,6 +166,8 @@ export async function renameCategory(formData: FormData) {
 			),
 		);
 
+	await logUpdate(householdId, user.id, "category", parsed.data.id, { reason: "Category renamed" });
+
 	revalidatePath("/settings/categories");
 }
 
@@ -190,6 +195,8 @@ export async function deleteCategory(formData: FormData) {
 				isNull(categories.deletedAt),
 			),
 		);
+
+	await logDelete(householdId, user.id, "category", id, "Category deleted");
 
 	revalidatePath("/settings/categories");
 }

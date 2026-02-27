@@ -82,8 +82,8 @@ export async function createExpenseCategory(
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
-	const trimmedName = name.trim().slice(0, 100);
-	if (!trimmedName || /[\x00-\x1f\x7f-\x9f]/.test(trimmedName)) {
+	const normalizedName = name.normalize("NFKC").trim().slice(0, 100);
+	if (!normalizedName || /[\x00-\x1f\x7f-\x9f]/.test(normalizedName)) {
 		throw new Error("Ugyldig kategorinavn");
 	}
 
@@ -101,8 +101,10 @@ export async function createExpenseCategory(
 
 	const [cat] = await db
 		.insert(categories)
-		.values({ householdId, name: trimmedName, type: "expense" })
+		.values({ householdId, name: normalizedName, type: "expense" })
 		.returning({ id: categories.id, name: categories.name });
+
+	await logCreate(householdId, user.id as string, "category", cat.id, { source: "ai-import" });
 
 	revalidatePath("/import");
 	revalidatePath("/settings/categories");

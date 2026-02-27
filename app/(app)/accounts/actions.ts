@@ -32,8 +32,11 @@ export async function createAccount(
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
 
-	// Rate limiting: max 5 accounts per minute per user
-	checkRateLimit(`account:create:${user.id}`, 5, 60);
+	try {
+		await checkRateLimit(`account:create:${user.id}`, 5, 60);
+	} catch {
+		return "For mange forespørsler. Prøv igjen senere.";
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";
@@ -45,6 +48,8 @@ export async function createAccount(
 	if (!ICON_RE.test(icon)) {
 		return "Ugyldig ikon";
 	}
+
+	if (name.trim().length > 100) return "Kontonavn kan ikke være lengre enn 100 tegn";
 
 	const trimmedAccountNumber = accountNumber?.trim() || null;
 
@@ -68,7 +73,12 @@ export async function createAccount(
 		if (!coinQuantity?.trim()) return "Antall coins er påkrevd for krypto-konto";
 		const qty = Number(coinQuantity.replace(",", "."));
 		if (Number.isNaN(qty) || qty <= 0) return "Ugyldig mengde";
+		if (qty > 1_000_000_000) return "Mengde er for stor";
 		parsedCoinQuantity = qty;
+	}
+
+	if (coinSymbol && kind === "crypto" && !/^[A-Z]{1,10}$/.test(coinSymbol)) {
+		return "Ugyldig myntsymbol";
 	}
 
 	// Enforce account count cap (MED-10)
@@ -123,8 +133,11 @@ export async function updateAccount(
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
 
-	// Rate limiting: max 10 updates per minute per user
-	checkRateLimit(`account:update:${user.id}`, 10, 60);
+	try {
+		await checkRateLimit(`account:update:${user.id}`, 10, 60);
+	} catch {
+		return "For mange forespørsler. Prøv igjen senere.";
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";
@@ -169,6 +182,8 @@ export async function updateAccount(
 		}
 	}
 
+	if (name.trim().length > 100) return "Kontonavn kan ikke være lengre enn 100 tegn";
+
 	// Validate kind and icon if provided (MED-12)
 	if (icon && !ICON_RE.test(icon)) return "Ugyldig ikon";
 	if (kind && !VALID_KINDS.includes(kind as (typeof VALID_KINDS)[number])) {
@@ -180,7 +195,12 @@ export async function updateAccount(
 		if (!coinQuantity.trim()) return "Antall coins er påkrevd for krypto-konto";
 		const qty = Number(coinQuantity.replace(",", "."));
 		if (Number.isNaN(qty) || qty <= 0) return "Ugyldig mengde";
+		if (qty > 1_000_000_000) return "Mengde er for stor";
 		parsedUpdateCoinQuantity = qty;
+	}
+
+	if (coinSymbol && kind === "crypto" && !/^[A-Z]{1,10}$/.test(coinSymbol)) {
+		return "Ugyldig myntsymbol";
 	}
 
 	const set: Record<string, string | number | null> = { name: name.trim() };
@@ -217,8 +237,11 @@ export async function deleteAccount(id: string): Promise<string | undefined> {
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
 
-	// Rate limiting: max 5 deletes per minute per user
-	checkRateLimit(`account:delete:${user.id}`, 5, 60);
+	try {
+		await checkRateLimit(`account:delete:${user.id}`, 5, 60);
+	} catch {
+		return "For mange forespørsler. Prøv igjen senere.";
+	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";
@@ -249,6 +272,7 @@ export async function deleteAccount(id: string): Promise<string | undefined> {
 				eq(accounts.id, id),
 				eq(accounts.householdId, householdId),
 				eq(accounts.userId, user.id),
+				isNull(accounts.deletedAt),
 			),
 		);
 

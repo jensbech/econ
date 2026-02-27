@@ -334,6 +334,7 @@ export async function updateExpense(
 			and(
 				eq(expenses.id, id),
 				eq(expenses.householdId, householdId),
+				eq(expenses.userId, user.id),
 				isNull(expenses.deletedAt),
 			),
 		);
@@ -396,6 +397,8 @@ export async function deleteExpense(id: string): Promise<void> {
 			),
 		);
 
+	await logDelete(householdId, user.id, "expense", id, "Expense deleted");
+
 	revalidatePath("/expenses");
 	revalidatePath("/savings");
 	revalidatePath("/loans");
@@ -449,6 +452,8 @@ export async function deleteExpenseNoRedirect(
 				isNull(expenses.deletedAt),
 			),
 		);
+
+	await logDelete(householdId, user.id, "expense", id, "Expense deleted");
 
 	revalidatePath("/expenses");
 	revalidatePath("/savings");

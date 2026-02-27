@@ -455,7 +455,7 @@ export async function addLoanPayment(
 		.limit(1);
 
 	// Create expense with "Lån" category (single source of truth for balance)
-	await db.insert(expenses).values({
+	const [insertedPayment] = await db.insert(expenses).values({
 		householdId,
 		userId: user.id as string,
 		categoryId: loanCategory?.id ?? null,
@@ -466,7 +466,9 @@ export async function addLoanPayment(
 		interestOere,
 		principalOere,
 		accountId: loan.accountId,
-	});
+	}).returning({ id: expenses.id });
+
+	await logCreate(householdId, user.id, "loanPayment", insertedPayment.id, { message: "Loan payment added" });
 
 	revalidatePath(`/loans/${loanId}`);
 	revalidatePath("/expenses");

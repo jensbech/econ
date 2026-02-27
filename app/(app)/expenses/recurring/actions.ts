@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { categories, expenses, recurringTemplates } from "@/db/schema";
+import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
@@ -82,17 +83,24 @@ export async function createRecurringTemplate(
 		if (!cat) return { fieldErrors: { categoryId: ["Ugyldig kategori"] } };
 	}
 
-	await db.insert(recurringTemplates).values({
-		householdId,
-		userId: user.id as string,
-		categoryId: parsed.data.categoryId ?? null,
-		amountOere,
-		frequency: parsed.data.frequency as "weekly" | "monthly" | "annual",
-		startDate: parsed.data.startDate,
-		endDate: parsed.data.endDate ?? null,
-		type: "expense",
-		description: parsed.data.description,
-	});
+	const [inserted] = await db
+		.insert(recurringTemplates)
+		.values({
+			householdId,
+			userId: user.id as string,
+			categoryId: parsed.data.categoryId ?? null,
+			amountOere,
+			frequency: parsed.data.frequency as "weekly" | "monthly" | "annual",
+			startDate: parsed.data.startDate,
+			endDate: parsed.data.endDate ?? null,
+			type: "expense",
+			description: parsed.data.description,
+		})
+		.returning({ id: recurringTemplates.id });
+
+	if (inserted) {
+		await logCreate(householdId, user.id as string, "recurringTemplate", inserted.id, { reason: "Recurring template created" });
+	}
 
 	revalidatePath("/expenses/recurring");
 	revalidatePath("/expenses");
@@ -186,6 +194,8 @@ export async function updateRecurringTemplate(
 			),
 		);
 
+	await logUpdate(householdId, user.id as string, "recurringTemplate", id, { reason: "Recurring template updated" });
+
 	revalidatePath("/expenses/recurring");
 	revalidatePath("/expenses");
 	redirect("/expenses/recurring");
@@ -213,6 +223,8 @@ export async function deleteRecurringTemplate(id: string): Promise<void> {
 				isNull(recurringTemplates.deletedAt),
 			),
 		);
+
+	await logDelete(householdId, user.id as string, "recurringTemplate", id, "Recurring template deleted");
 
 	revalidatePath("/expenses/recurring");
 	revalidatePath("/expenses");
