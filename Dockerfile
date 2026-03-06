@@ -18,6 +18,8 @@ COPY . .
 # but no actual connection is made during build.
 ARG DATABASE_URL=postgresql://localhost:5432/dummy
 ENV DATABASE_URL=${DATABASE_URL}
+ARG ALLOWED_EMAILS=build@example.com
+ENV ALLOWED_EMAILS=${ALLOWED_EMAILS}
 RUN pnpm build
 
 # Runtime stage
