@@ -9,13 +9,15 @@ declare module "next-auth" {
 	}
 }
 
-const allowedEmails = (process.env.ALLOWED_EMAILS ?? "")
-	.split(",")
-	.map((e) => e.trim())
-	.filter(Boolean);
-
-if (allowedEmails.length === 0) {
-	throw new Error("ALLOWED_EMAILS env var is not set or empty — refusing to start");
+function getAllowedEmails(): string[] {
+	const list = (process.env.ALLOWED_EMAILS ?? "")
+		.split(",")
+		.map((e) => e.trim())
+		.filter(Boolean);
+	if (list.length === 0) {
+		throw new Error("ALLOWED_EMAILS env var is not set or empty — refusing to start");
+	}
+	return list;
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -41,7 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 				if (!account.providerAccountId || !user.email) {
 					return false;
 				}
-				if (!allowedEmails.includes(user.email)) {
+				if (!getAllowedEmails().includes(user.email)) {
 					return false;
 				}
 				// Dynamic import to keep middleware Edge-runtime compatible
