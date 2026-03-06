@@ -76,6 +76,12 @@ export function ExpenseForm({
 		return cat?.name ?? "";
 	}, [categories, selectedCategoryId]);
 
+	const duplicateMonthHref = useMemo(() => {
+		const d = defaultDate ?? new Date();
+		const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+		return `/expenses?month=${m}`;
+	}, [defaultDate]);
+
 	const isLoanCategory = selectedCategoryName === "Lån";
 
 	return (
@@ -89,6 +95,14 @@ export function ExpenseForm({
 					<div className="flex-1">
 						<p className="font-medium">Mulig duplikat</p>
 						<p className="mt-0.5">{state.warning}</p>
+						<a
+							href={duplicateMonthHref}
+							target="_blank"
+							rel="noreferrer"
+							className="mt-1 inline-block text-xs font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200"
+						>
+							Se eksisterende utgifter &rarr;
+						</a>
 						<div className="mt-3 flex gap-2">
 							<Button
 								type="button"

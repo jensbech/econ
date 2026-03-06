@@ -190,7 +190,8 @@ export default async function RecurringExpensesPage() {
 													<AlertDialogDescription>
 														Er du sikker på at du vil slette «
 														{template.description}»? Fremtidige utgifter vil
-														ikke lenger genereres automatisk.
+														ikke lenger genereres automatisk. Allerede
+														genererte utgifter beholdes og må slettes manuelt.
 													</AlertDialogDescription>
 												</AlertDialogHeader>
 												<AlertDialogFooter>

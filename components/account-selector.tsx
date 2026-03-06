@@ -4,6 +4,12 @@ import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { AccountIcon } from "@/components/account-icon";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Account {
 	id: string;
@@ -123,14 +129,23 @@ export function AccountSelector({
 					msOverflowStyle: "none",
 				}}
 			>
-				<button
-					type="button"
-					aria-pressed={isAll}
-					onClick={selectAll}
-					className={`${chipBase} ${isAll ? chipActive : chipInactive}`}
-				>
-					Alle
-				</button>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<button
+								type="button"
+								aria-pressed={isAll}
+								onClick={selectAll}
+								className={`${chipBase} ${isAll ? chipActive : chipInactive}`}
+							>
+								Alle
+							</button>
+						</TooltipTrigger>
+						<TooltipContent side="bottom" className="max-w-[200px] text-center text-xs">
+							Inkluderer kun delte kontoer. Klikk på private kontoer for å inkludere dem.
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 
 				{publicAccounts.map((account) => {
 					const isSelected = isAll || selected.has(account.id);
@@ -154,7 +169,10 @@ export function AccountSelector({
 				})}
 
 				{privateAccounts.length > 0 && (
-					<span className="h-5 w-px flex-shrink-0 bg-border/40" />
+					<span className="flex items-center gap-1.5 flex-shrink-0">
+						<span className="h-5 w-px bg-border/40" />
+						<span className="text-xs text-foreground/40 select-none">Privat</span>
+					</span>
 				)}
 
 				{privateAccounts.map((account) => {

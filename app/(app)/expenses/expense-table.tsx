@@ -52,6 +52,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatNOK } from "@/lib/format";
 import { deleteExpenseNoRedirect } from "./actions";
 
@@ -134,7 +140,20 @@ export function ExpenseTable({
 
 	const monthOptions = useMemo(() => generateMonthOptions(), []);
 
-	// Client-side text search filter
+	const cookieMonth = useMemo(() => {
+		if (typeof document === "undefined") return null;
+		const match = document.cookie
+			.split("; ")
+			.find((row) => row.startsWith("selectedMonth="));
+		return match ? match.split("=")[1] : null;
+	}, []);
+
+	const showMonthMismatchBanner =
+		monthParam !== null &&
+		cookieMonth !== null &&
+		monthParam !== cookieMonth &&
+		monthParam !== "all";
+
 	const filteredExpenses = useMemo(() => {
 		if (!searchQuery.trim()) return expenses;
 		const q = searchQuery.toLowerCase();
@@ -303,14 +322,21 @@ export function ExpenseTable({
 					const expense = row.original;
 					return (
 						<div className="flex items-center justify-end gap-1">
-							<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-								<Link
-									href={`/expenses/${expense.id}/edit`}
-									onClick={(e) => e.stopPropagation()}
-								>
-									<Pencil className="h-4 w-4 text-foreground/60" />
-								</Link>
-							</Button>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+											<Link
+												href={`/expenses/${expense.id}/edit`}
+												onClick={(e) => e.stopPropagation()}
+											>
+												<Pencil className="h-4 w-4 text-foreground/60" />
+											</Link>
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side="top" className="text-xs">Rediger</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
 									<Button
@@ -363,6 +389,26 @@ export function ExpenseTable({
 
 	return (
 		<div className="space-y-4">
+			{/* Month mismatch banner */}
+			{showMonthMismatchBanner && (
+				<div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 dark:border-amber-900/50 dark:bg-amber-900/20">
+					<p className="text-sm text-amber-800 dark:text-amber-300">
+						Viser{" "}
+						<span className="font-semibold">
+							{monthOptions.find((o) => o.value === monthParam)?.label ?? monthParam}
+						</span>{" "}
+						— avviker fra måneden valgt i sidepanelet.
+					</p>
+					<button
+						type="button"
+						onClick={() => updateParams({ month: null })}
+						className="flex-shrink-0 text-xs font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200"
+					>
+						Tilbakestill
+					</button>
+				</div>
+			)}
+
 			{/* Import batch banner */}
 			{importBatchId && (
 				<div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-primary/8 px-4 py-3 dark:border-indigo-900/50 dark:bg-primary/15/20">
@@ -379,6 +425,7 @@ export function ExpenseTable({
 					</Link>
 				</div>
 			)}
+
 			{/* Filters */}
 			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
 				<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
@@ -545,6 +592,7 @@ export function ExpenseTable({
 				<SheetContent>
 					<SheetHeader>
 						<SheetTitle>Utgiftsdetaljer</SheetTitle>
+						<p className="text-xs text-foreground/50">Hurtigvisning — klikk Rediger for å endre</p>
 					</SheetHeader>
 					{selectedExpense && (
 						<div className="mt-6 space-y-5 px-1">

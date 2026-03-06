@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useActionState, useState } from "react";
+import { FormError } from "@/components/form-fields";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -29,11 +30,7 @@ export function PaymentForm({ action }: PaymentFormProps) {
 
 	return (
 		<form action={formAction} className="space-y-4">
-			{state?.error && (
-				<div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-					{state.error}
-				</div>
-			)}
+			<FormError error={state?.error} />
 
 			{/* Date */}
 			<div className="space-y-1.5">
@@ -66,6 +63,9 @@ export function PaymentForm({ action }: PaymentFormProps) {
 							}}
 							locale={nb}
 							initialFocus
+						captionLayout="dropdown"
+						fromYear={2000}
+						toYear={new Date().getFullYear() + 1}
 						/>
 					</PopoverContent>
 				</Popover>

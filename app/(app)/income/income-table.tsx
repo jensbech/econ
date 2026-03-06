@@ -419,7 +419,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								<TableRow
 									key={row.id}
 									onClick={() => setSelectedIncome(row.original)}
-									className="cursor-pointer border-b border-gray-50 last:border-0 hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
+									className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
@@ -471,6 +471,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 				<SheetContent>
 					<SheetHeader>
 						<SheetTitle>Inntektsdetaljer</SheetTitle>
+						<p className="text-xs text-foreground/50">Hurtigvisning — klikk Rediger for å endre</p>
 					</SheetHeader>
 					{selectedIncome && (
 						<div className="mt-6 space-y-5 px-1">

@@ -51,7 +51,7 @@ export default async function CategoriesPage() {
 						<Input
 							id="name"
 							name="name"
-							placeholder="Kategori navn"
+							placeholder="Ny kategori"
 							required
 							className="h-9"
 						/>

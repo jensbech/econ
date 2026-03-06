@@ -172,6 +172,9 @@ export function DashboardClient({
 									<p className="mt-1.5 text-3xl font-bold tabular-nums text-destructive">
 										{formatNOK(totalExpenses)}
 									</p>
+									<p className="mt-0.5 text-xs text-foreground/50 dark:text-foreground/60">
+										Inkluderer låneutgifter
+									</p>
 								</div>
 								<TrendingDown className="mt-0.5 h-4 w-4 flex-shrink-0 text-destructive" />
 							</div>
@@ -248,6 +251,9 @@ export function DashboardClient({
 												{formatNOK(monthlyLoanPrincipal)}
 											</p>
 										)}
+										<p className="mt-1 text-xs text-foreground/50 dark:text-foreground/60">
+											Inkludert i utgifter over
+										</p>
 									</div>
 									<BarChart3 className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500 dark:text-amber-400" />
 								</div>

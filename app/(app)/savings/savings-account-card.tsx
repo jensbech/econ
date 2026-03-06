@@ -122,7 +122,7 @@ export function SavingsAccountCard({
 
 			{!isCrypto && !hasOpeningBalance && (
 				<p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
-					Saldo beregnes fra alle importerte transaksjoner. Sett startsaldo for korrekt beregning.
+					Saldo beregnes fra alle transaksjoner.{" "}<a href="/accounts" className="underline underline-offset-2 hover:no-underline">Sett startsaldo</a>{" "}for korrekt beregning.
 				</p>
 			)}
 		</div>

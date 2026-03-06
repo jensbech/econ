@@ -649,7 +649,7 @@ export function AiReview({
 							Transaksjoner ({visibleRows.length})
 						</p>
 						<p className="text-xs tabular-nums text-foreground/50 dark:text-foreground/60">
-							Totalsum: {totalAmountNok.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr
+							Totalsum: {totalAmountNok.toLocaleString("nb-NO", { maximumFractionDigits: 0 })} kr
 						</p>
 					</div>
 
@@ -795,13 +795,13 @@ export function AiReview({
 													</td>
 													<td className="px-2 py-1.5">
 														<input
-															type="number"
+															type="text"
+															inputMode="decimal"
+															pattern="[0-9]*[.,]?[0-9]*"
 															value={row.amountNok}
 															onChange={(e) =>
 																updateRow(row.id, { amountNok: e.target.value })
 															}
-															step="0.01"
-															min="0"
 															className="w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600 dark:focus:border-indigo-500"
 														/>
 													</td>
@@ -942,13 +942,13 @@ export function AiReview({
 													className="w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80 dark:hover:border-gray-600"
 												/>
 												<input
-													type="number"
+													type="text"
+													inputMode="decimal"
+													pattern="[0-9]*[.,]?[0-9]*"
 													value={row.amountNok}
 													onChange={(e) =>
 														updateRow(row.id, { amountNok: e.target.value })
 													}
-													step="0.01"
-													min="0"
 													className="ml-auto w-24 shrink-0 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-xs tabular-nums text-foreground/80 hover:border-border focus:border-indigo-400 focus:outline-none dark:text-foreground/80"
 												/>
 												<span className="shrink-0 text-xs text-foreground/50 dark:text-foreground/60">kr</span>

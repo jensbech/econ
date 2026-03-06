@@ -142,6 +142,7 @@ export function LoanForm({
 					defaultValue={defaultTermMonths}
 					className="h-9"
 				/>
+				<p className="text-xs text-foreground/50">f.eks. 360 = 30 år</p>
 				{state?.fieldErrors?.termMonths && (
 					<p className="text-xs text-destructive">
 						{state.fieldErrors.termMonths[0]}

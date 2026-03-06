@@ -15,7 +15,7 @@ import {
 
 /** Shared Tailwind className for native <select> elements */
 export const SELECT_CLASS_NAME =
-	"h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+	"h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground";
 
 /** Top-level form error banner */
 export function FormError({ error }: { error?: string | null }) {

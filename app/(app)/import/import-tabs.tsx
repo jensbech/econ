@@ -58,25 +58,30 @@ export function ImportTabs({
 					</span>
 				</div>
 			) : (
-				<div className="mt-4 flex items-center gap-3">
-					<label
-						htmlFor="importAccount"
-						className="text-sm font-medium text-foreground/80 dark:text-foreground/80"
-					>
-						Konto:
-					</label>
-					<select
-						id="importAccount"
-						value={selectedAccountId}
-						onChange={(e) => setSelectedAccountId(e.target.value)}
-						className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
-					>
-						{accounts.map((a) => (
-							<option key={a.id} value={a.id}>
-								{a.name} {a.type === "private" ? "(Privat)" : ""}
-							</option>
-						))}
-					</select>
+				<div className="mt-4 flex flex-col gap-1.5">
+					<div className="flex items-center gap-3">
+						<label
+							htmlFor="importAccount"
+							className="text-sm font-medium text-foreground/80 dark:text-foreground/80"
+						>
+							Konto:
+						</label>
+						<select
+							id="importAccount"
+							value={selectedAccountId}
+							onChange={(e) => setSelectedAccountId(e.target.value)}
+							className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
+						>
+							{accounts.map((a) => (
+								<option key={a.id} value={a.id}>
+									{a.name} {a.type === "private" ? "(Privat)" : ""}
+								</option>
+							))}
+						</select>
+					</div>
+					<p className="text-xs text-foreground/50 dark:text-foreground/40">
+						Dette er kontoen transaksjonene importeres til — ikke det samme som filteret øverst.
+					</p>
 				</div>
 			)}
 

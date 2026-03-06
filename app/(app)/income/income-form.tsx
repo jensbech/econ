@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { useActionState, useRef } from "react";
+import { useActionState, useMemo, useRef } from "react";
 import {
 	CalendarField,
 	FormError,
@@ -56,6 +56,12 @@ export function IncomeForm({
 	const formRef = useRef<HTMLFormElement>(null);
 	const forceInputRef = useRef<HTMLInputElement>(null);
 
+	const duplicateMonthHref = useMemo(() => {
+		const d = defaultDate ?? new Date();
+		const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+		return `/income?month=${m}`;
+	}, [defaultDate]);
+
 	return (
 		<form ref={formRef} action={formAction} className="space-y-5">
 			<input type="hidden" name="force" ref={forceInputRef} defaultValue="" />
@@ -67,6 +73,14 @@ export function IncomeForm({
 					<div className="flex-1">
 						<p className="font-medium">Mulig duplikat</p>
 						<p className="mt-0.5">{state.warning}</p>
+						<a
+							href={duplicateMonthHref}
+							target="_blank"
+							rel="noreferrer"
+							className="mt-1 inline-block text-xs font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200"
+						>
+							Se eksisterende inntekter &rarr;
+						</a>
 						<div className="mt-3 flex gap-2">
 							<Button
 								type="button"
