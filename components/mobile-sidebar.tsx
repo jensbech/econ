@@ -81,7 +81,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
 									<button
 										type="button"
 										onClick={() => setOpen(false)}
-										className="rounded-lg p-1 text-foreground/60 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:rotate-90"
+										className="rounded-lg p-1 text-foreground/60 transition-all duration-200 hover:bg-primary/10 hover:text-primary"
 										aria-label="Lukk meny"
 									>
 										<X className="h-4 w-4" />

@@ -536,7 +536,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 							<div className="pt-2">
 								<Button
 									asChild
-									className="w-full gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+									className="w-full gap-2 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 								>
 									<Link href={`/income/${selectedIncome.id}/edit`}>
 										<Pencil className="h-4 w-4" />

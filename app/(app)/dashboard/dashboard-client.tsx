@@ -84,7 +84,7 @@ export function DashboardClient({
 					</h1>
 				</div>
 				<div className="rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
-					<Wallet className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-foreground/70" />
+					<Wallet className="mx-auto mb-3 h-8 w-8 text-foreground/25 dark:text-foreground/40" />
 					<p className="text-base font-medium text-foreground/60 dark:text-foreground/50">
 						Velg en konto for å se data
 					</p>
@@ -99,9 +99,9 @@ export function DashboardClient({
 	const tabBase =
 		"pb-3 text-sm font-medium transition-colors border-b-2 -mb-px";
 	const tabActive =
-		"border-gray-900 text-foreground dark:border-white dark:text-card-foreground";
+		"border-foreground text-foreground dark:border-foreground dark:text-card-foreground";
 	const tabInactive =
-		"border-transparent text-foreground/60 hover:text-foreground/80 hover:border-border dark:text-foreground/50 dark:hover:text-gray-200 dark:hover:border-gray-600";
+		"border-transparent text-foreground/60 hover:text-foreground/80 hover:border-border dark:text-foreground/50 dark:hover:text-foreground/80 dark:hover:border-border/60";
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
@@ -264,7 +264,7 @@ export function DashboardClient({
 					{/* Empty state */}
 					{!hasData && (
 						<div className="rounded-xl border border-dashed border-border bg-card py-16 text-center dark:border-border/40 dark:bg-card">
-							<TrendingDown className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-foreground/70" />
+							<TrendingDown className="mx-auto mb-3 h-8 w-8 text-foreground/25 dark:text-foreground/40" />
 							<p className="text-base font-medium text-foreground/60 dark:text-foreground/50">
 								Ingen data for {monthLabelDisplay}
 							</p>
@@ -272,14 +272,14 @@ export function DashboardClient({
 								Legg til{" "}
 								<Link
 									href="/expenses/new"
-									className="underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 dark:decoration-gray-500 dark:hover:decoration-gray-300"
+									className="underline underline-offset-2 decoration-foreground/30 hover:decoration-foreground/50 dark:decoration-foreground/40 dark:hover:decoration-foreground/60"
 								>
 									utgifter
 								</Link>{" "}
 								eller{" "}
 								<Link
 									href="/income/new"
-									className="underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 dark:decoration-gray-500 dark:hover:decoration-gray-300"
+									className="underline underline-offset-2 decoration-foreground/30 hover:decoration-foreground/50 dark:decoration-foreground/40 dark:hover:decoration-foreground/60"
 								>
 									inntekter
 								</Link>{" "}
@@ -291,12 +291,12 @@ export function DashboardClient({
 					{/* Budget vs. actual */}
 					{budgetByCategory.length > 0 && (
 						<div className="mb-8 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
-							<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+							<div className="border-b border-border/50 px-5 py-4 dark:border-border/30">
 								<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 									Budsjett vs. faktisk
 								</h2>
 							</div>
-							<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
+							<ul className="divide-y divide-border/50 dark:divide-border/30">
 								{(() => {
 									const allIds = new Set([
 										...budgetByCategory.map((b) => b.categoryId ?? "__none__"),
@@ -327,7 +327,7 @@ export function DashboardClient({
 														{name}
 													</span>
 													{budgetAmt > 0 && (
-														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-foreground/10">
 															<div
 																className={`h-full rounded-full transition-all duration-500 ${over ? "bg-destructive/60" : "bg-primary/60"}`}
 																style={{
@@ -364,7 +364,7 @@ export function DashboardClient({
 								className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 								style={{ animationDelay: "200ms" }}
 							>
-								<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+								<div className="border-b border-border/50 px-5 py-4 dark:border-border/30">
 									<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 										Utgifter per kategori
 									</h2>
@@ -374,7 +374,7 @@ export function DashboardClient({
 										Ingen utgifter registrert
 									</div>
 								) : (
-									<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
+									<ul className="divide-y divide-border/50 dark:divide-border/30">
 										{categoryBreakdown.map((row, i) => {
 											const pct =
 												totalExpenses > 0
@@ -383,7 +383,7 @@ export function DashboardClient({
 											return (
 												<li
 													key={row.categoryId ?? `uncategorized-${i}`}
-													className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-gray-700/30"
+													className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-foreground/5"
 												>
 													<div className="min-w-0 flex-1">
 														<div className="flex items-center justify-between text-sm">
@@ -394,7 +394,7 @@ export function DashboardClient({
 																{formatNOK(row.total)}
 															</span>
 														</div>
-														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-gray-700">
+														<div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-primary/8 dark:bg-foreground/10">
 															<div
 																className="h-full rounded-full bg-destructive/60 transition-all duration-500 ease-out"
 																style={{ width: `${pct}%` }}
@@ -416,7 +416,7 @@ export function DashboardClient({
 								className="animate-card-in rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card"
 								style={{ animationDelay: "260ms" }}
 							>
-								<div className="border-b border-gray-100 px-5 py-4 dark:border-border/40">
+								<div className="border-b border-border/50 px-5 py-4 dark:border-border/30">
 									<h2 className="text-sm font-semibold text-foreground dark:text-card-foreground">
 										Gjentagende utgifter denne måneden
 									</h2>
@@ -426,11 +426,11 @@ export function DashboardClient({
 										Ingen gjentagende utgifter
 									</div>
 								) : (
-									<ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
+									<ul className="divide-y divide-border/50 dark:divide-border/30">
 										{upcomingRecurring.map((item) => (
 											<li
 												key={item.id}
-												className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-gray-700/30"
+												className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-background/50 dark:hover:bg-foreground/5"
 											>
 												<div className="min-w-0">
 													<p className="truncate text-sm font-medium text-foreground/80 dark:text-card-foreground">

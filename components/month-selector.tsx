@@ -131,7 +131,7 @@ export function MonthSelector({ initialMonth, inline }: MonthSelectorProps) {
 				>
 					<ChevronLeft className="h-4 w-4" />
 				</Button>
-				<span className="min-w-[130px] text-center text-sm font-semibold text-foreground">
+				<span className="min-w-[130px] text-center text-sm font-semibold text-foreground capitalize">
 					{format(selectedMonth, "MMMM yyyy", { locale: nb })}
 				</span>
 				<Button

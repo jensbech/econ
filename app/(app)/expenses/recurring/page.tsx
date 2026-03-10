@@ -79,7 +79,7 @@ export default async function RecurringExpensesPage() {
 				</div>
 				<Button
 					asChild
-					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+					className="gap-2 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 				>
 					<Link href="/expenses/recurring/new">
 						<Plus className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default async function RecurringExpensesPage() {
 					</p>
 					<Button
 						asChild
-						className="mt-4 gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+						className="mt-4 gap-2 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 						size="sm"
 					>
 						<Link href="/expenses/recurring/new">

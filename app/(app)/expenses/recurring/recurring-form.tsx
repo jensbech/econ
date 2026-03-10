@@ -151,7 +151,7 @@ export function RecurringForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+					className="bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 				>
 					{pending ? "Lagrer..." : submitLabel}
 				</Button>

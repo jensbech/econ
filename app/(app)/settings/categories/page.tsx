@@ -70,7 +70,7 @@ export default async function CategoriesPage() {
 					</div>
 					<Button
 						type="submit"
-						className="h-9 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+						className="h-9 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 					>
 						Legg til
 					</Button>

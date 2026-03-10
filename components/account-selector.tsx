@@ -2,7 +2,7 @@
 
 import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AccountIcon } from "@/components/account-icon";
 import {
 	Tooltip,
@@ -95,6 +95,15 @@ export function AccountSelector({
 			setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
 		}
 	}
+
+	useEffect(() => {
+		checkScroll();
+		const el = scrollContainerRef.current;
+		if (!el) return;
+		const observer = new ResizeObserver(checkScroll);
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, []);
 
 	if (accounts.length === 0) {
 		return (

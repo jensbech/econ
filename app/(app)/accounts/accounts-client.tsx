@@ -361,7 +361,7 @@ export function AccountsClient({
 														handleUpdate(account.id)
 													}
 													disabled={isPending || !editFormValid}
-													className="h-8 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+													className="h-8 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 												>
 													Lagre
 												</Button>
@@ -608,7 +608,7 @@ export function AccountsClient({
 						<Button
 							onClick={handleCreate}
 							disabled={isPending || !newName.trim() || !newFormValid}
-							className="bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+							className="bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 						>
 							Opprett konto
 						</Button>
@@ -633,7 +633,7 @@ export function AccountsClient({
 			) : (
 				<Button
 					onClick={() => setShowNewForm(true)}
-					className="gap-2 bg-card hover:bg-card dark:bg-card dark:text-foreground dark:hover:bg-primary/8"
+					className="gap-2 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 				>
 					<Plus className="h-4 w-4" />
 					Ny konto
