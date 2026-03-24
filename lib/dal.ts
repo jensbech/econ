@@ -1,9 +1,8 @@
-import { auth } from "@/auth";
+import { cookies } from "next/headers";
 
 export async function verifySession() {
-	const session = await auth();
-	if (!session?.user || !session.user.id) {
-		throw new Error("Unauthorized");
-	}
-	return session.user;
+	const cookieStore = await cookies();
+	const userId = cookieStore.get("userId")?.value;
+	if (!userId) throw new Error("Unauthorized");
+	return { id: userId };
 }

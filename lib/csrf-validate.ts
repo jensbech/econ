@@ -16,23 +16,12 @@ export async function validateCsrfOrigin(): Promise<void> {
 		return;
 	}
 
-	// Validate origin matches expected host.
-	// Prefer explicit env var; fall back to the Host header (set by nginx-proxy).
-	const rawUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
-	let expectedHost: string;
-	if (rawUrl) {
-		try {
-			expectedHost = new URL(rawUrl).host;
-		} catch {
-			throw new Error("CSRF protection: AUTH_URL is not a valid URL");
-		}
-	} else {
-		const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
-		if (!host) {
-			throw new Error("CSRF protection: cannot determine expected host");
-		}
-		expectedHost = host.split(",")[0].trim();
+	// Validate origin matches expected host using the Host header.
+	const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
+	if (!host) {
+		throw new Error("CSRF protection: cannot determine expected host");
 	}
+	const expectedHost = host.split(",")[0].trim();
 
 	let incomingHost: string;
 	try {

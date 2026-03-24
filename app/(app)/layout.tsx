@@ -10,10 +10,12 @@ import {
 	Settings,
 	TrendingUp,
 } from "lucide-react";
-import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth, signOut } from "@/auth";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { logout } from "@/app/actions/login";
 import { AccountSelector } from "@/components/account-selector";
 import { MonthSelector } from "@/components/month-selector";
 import { MobileSidebar } from "@/components/mobile-sidebar";
@@ -48,23 +50,37 @@ function SidebarNav() {
 	);
 }
 
+function UserAvatar({ name }: { name: string | null }) {
+	return (
+		<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+			{(name ?? "?")[0].toUpperCase()}
+		</div>
+	);
+}
+
 export default async function AppLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	const session = await auth();
-	if (!session?.user) redirect("/");
+	const cookieStore = await cookies();
+	const userId = cookieStore.get("userId")?.value;
+	if (!userId) redirect("/");
 
-	const user = session.user;
+	const [user] = await db
+		.select({ id: users.id, name: users.name })
+		.from(users)
+		.where(eq(users.id, userId))
+		.limit(1);
 
-	const householdId = await getHouseholdId(user.id as string);
+	if (!user) redirect("/");
+
+	const householdId = await getHouseholdId(userId);
 
 	const visibleAccounts = householdId
-		? await getVisibleAccounts(user.id as string, householdId)
+		? await getVisibleAccounts(userId, householdId)
 		: [];
 
-	const cookieStore = await cookies();
 	const selectedRaw = cookieStore.get("selectedAccounts")?.value ?? "";
 	const initialSelected = selectedRaw
 		.split(",")
@@ -100,45 +116,24 @@ export default async function AppLayout({
 
 				<SidebarNav />
 
-
 				{/* User section */}
 				<div className="border-t border-border/40 p-3">
 					<div className="flex items-center gap-3 rounded-lg px-3 py-2">
-						{user.image ? (
-							<Image
-								src={user.image}
-								alt={user.name ?? ""}
-								width={32}
-								height={32}
-								className="rounded-full object-cover"
-							/>
-						) : (
-							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-								{(user.name ?? "?")[0].toUpperCase()}
-							</div>
-						)}
+						<UserAvatar name={user.name} />
 						<div className="min-w-0 flex-1">
 							<p className="truncate text-sm font-medium text-foreground">
 								{user.name}
 							</p>
-							<p className="truncate text-xs text-foreground/60">
-								{user.email}
-							</p>
 						</div>
 					</div>
 					<ThemeToggle />
-					<form
-						action={async () => {
-							"use server";
-							await signOut({ redirectTo: "/" });
-						}}
-					>
+					<form action={logout}>
 						<button
 							type="submit"
 							className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-primary/8 hover:text-primary"
 						>
 							<LogOut className="h-4 w-4 flex-shrink-0" />
-							Logg ut
+							Bytt bruker
 						</button>
 					</form>
 				</div>
@@ -157,41 +152,21 @@ export default async function AppLayout({
 							<SidebarNav />
 							<div className="border-t border-border/40 p-3">
 								<div className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2">
-									{user.image ? (
-										<Image
-											src={user.image}
-											alt={user.name ?? ""}
-											width={32}
-											height={32}
-											className="rounded-full object-cover"
-										/>
-									) : (
-										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-											{(user.name ?? "?")[0].toUpperCase()}
-										</div>
-									)}
+									<UserAvatar name={user.name} />
 									<div className="min-w-0 flex-1">
 										<p className="truncate text-sm font-medium text-foreground">
 											{user.name}
 										</p>
-										<p className="truncate text-xs text-foreground/60">
-											{user.email}
-										</p>
 									</div>
 								</div>
 								<ThemeToggle />
-								<form
-									action={async () => {
-										"use server";
-										await signOut({ redirectTo: "/" });
-									}}
-								>
+								<form action={logout}>
 									<button
 										type="submit"
 										className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-primary/8 hover:text-primary"
 									>
 										<LogOut className="h-4 w-4 flex-shrink-0" />
-										Logg ut
+										Bytt bruker
 									</button>
 								</form>
 							</div>
