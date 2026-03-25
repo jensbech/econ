@@ -241,37 +241,60 @@ export function ExpenseTable({
 			{
 				accessorKey: "notes",
 				header: "Beskrivelse",
-				cell: ({ row }) => (
-					<div className="flex items-center gap-2">
-						{row.original.categoryName && (
-							<Badge variant="secondary" className="md:hidden shrink-0">{row.original.categoryName}</Badge>
-						)}
-						{row.original.scope === "personal" && (
-							<span
-								className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-								title={`Personlig utgift fra ${row.original.uploaderName ?? "ukjent"}`}
-							>
-								<UserCircle className="h-3 w-3" />
-								{row.original.uploaderName?.split(" ")[0] ?? "Privat"}
-							</span>
-						)}
-						{row.original.loanId && (
-							<span
-								className="inline-flex items-center rounded-full bg-amber-100 p-1 dark:bg-amber-900/30"
-								title={row.original.loanName ?? "Lån"}
-							>
-								<BarChart3 className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-							</span>
-						)}
-						{row.original.notes ? (
-							<span className="text-foreground/80 dark:text-foreground/80">
-								{row.original.notes}
-							</span>
-						) : (
-							<span className="italic text-foreground/50">—</span>
-						)}
-					</div>
-				),
+				cell: ({ row }) => {
+					return (
+						<div className="min-w-0">
+							<div className="flex items-center gap-2">
+								{row.original.scope === "personal" && (
+									<span
+										className="hidden md:inline-flex items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 shrink-0"
+										title={`Personlig utgift fra ${row.original.uploaderName ?? "ukjent"}`}
+									>
+										<UserCircle className="h-3 w-3" />
+										{row.original.uploaderName?.split(" ")[0] ?? "Privat"}
+									</span>
+								)}
+								{row.original.loanId && (
+									<span
+										className="hidden md:inline-flex items-center rounded-full bg-amber-100 p-1 dark:bg-amber-900/30 shrink-0"
+										title={row.original.loanName ?? "Lån"}
+									>
+										<BarChart3 className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+									</span>
+								)}
+								{row.original.notes ? (
+									<span className="text-foreground/80 dark:text-foreground/80">
+										{row.original.notes}
+									</span>
+								) : (
+									<span className="italic text-foreground/50">—</span>
+								)}
+							</div>
+							<div className="mt-1 flex min-h-[18px] flex-wrap items-center gap-1 opacity-60 md:hidden">
+								<span className="text-xs">{format(parseLocalDate(row.original.date), "d. MMM", { locale: nb })}</span>
+								{row.original.categoryName && (
+									<Badge variant="secondary" className="px-1.5 py-0.5 text-xs">{row.original.categoryName}</Badge>
+								)}
+								{row.original.scope === "personal" && (
+									<span
+										className="inline-flex items-center rounded-full bg-purple-100 p-1 dark:bg-purple-900/30"
+										title={`Personlig utgift fra ${row.original.uploaderName ?? "ukjent"}`}
+									>
+										<UserCircle className="h-3 w-3 text-purple-700 dark:text-purple-400" />
+									</span>
+								)}
+								{row.original.loanId && (
+									<span
+										className="inline-flex items-center rounded-full bg-amber-100 p-1 dark:bg-amber-900/30"
+										title={row.original.loanName ?? "Lån"}
+									>
+										<BarChart3 className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+									</span>
+								)}
+							</div>
+						</div>
+					);
+				},
 			},
 			{
 				accessorKey: "categoryName",
@@ -522,7 +545,7 @@ export function ExpenseTable({
 									className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 								>
 									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id} className={["categoryName", "accountName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
+										<TableHead key={header.id} className={["date", "categoryName", "accountName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
 											{header.isPlaceholder
 												? null
 												: flexRender(
@@ -543,7 +566,7 @@ export function ExpenseTable({
 										className={`cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background group dark:border-border/40/50 dark:hover:bg-card/50${row.index % 2 !== 0 ? " bg-muted/20" : ""}`}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id} className={["categoryName", "accountName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
+											<TableCell key={cell.id} className={["date", "categoryName", "accountName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
 												{flexRender(
 													cell.column.columnDef.cell,
 													cell.getContext(),

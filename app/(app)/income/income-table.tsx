@@ -122,21 +122,26 @@ const columns: ColumnDef<IncomeRow>[] = [
 		accessorKey: "source",
 		header: "Kilde",
 		cell: ({ row }) => (
-			<div className="flex flex-wrap items-center gap-1.5">
-				<Badge
-					variant="outline"
-					className={`md:hidden shrink-0 ${row.original.type === "salary" ? "border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400" : "border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400"}`}
-				>
-					{typeLabels[row.original.type] ?? row.original.type}
-				</Badge>
-				{row.original.categoryName && (
-					<Badge variant="secondary" className="md:hidden shrink-0">{row.original.categoryName}</Badge>
-				)}
+			<div className="min-w-0">
 				{row.original.source ? (
 					<span className="text-foreground/80 dark:text-foreground/80">{row.original.source}</span>
 				) : (
 					<span className="italic text-foreground/50">—</span>
 				)}
+				<div className="mt-1 flex min-h-[18px] flex-wrap items-center gap-1 opacity-60 md:hidden">
+					<span className="text-xs">{format(parseLocalDate(row.original.date), "d. MMM", { locale: nb })}</span>
+					{row.original.categoryName && (
+						<>
+							<Badge
+								variant="outline"
+								className={`px-1.5 py-0.5 text-xs ${row.original.type === "salary" ? "border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400" : "border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400"}`}
+							>
+								{typeLabels[row.original.type] ?? row.original.type}
+							</Badge>
+							<Badge variant="secondary" className="px-1.5 py-0.5 text-xs">{row.original.categoryName}</Badge>
+						</>
+					)}
+				</div>
 			</div>
 		),
 	},
@@ -410,7 +415,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 							>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id} className={["type", "categoryName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
+									<TableHead key={header.id} className={["date", "type", "categoryName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -431,7 +436,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 									className={`cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background group dark:border-border/40/50 dark:hover:bg-card/50${row.index % 2 !== 0 ? " bg-muted/20" : ""}`}
 								>
 									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id} className={["type", "categoryName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
+										<TableCell key={cell.id} className={["date", "type", "categoryName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
 											{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext(),
