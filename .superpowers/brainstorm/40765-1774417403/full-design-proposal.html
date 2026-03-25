@@ -1,0 +1,185 @@
+<h2>Proposed design — Transaction tables</h2>
+<p class="subtitle">Desktop stays familiar. Mobile becomes scannable. Does this look right?</p>
+
+<div class="section">
+  <h3>Desktop — what changes</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Before</div>
+      <div class="mockup-body" style="font-family:system-ui;font-size:12px;padding:12px">
+        <div style="background:white;border-radius:8px;border:1px solid #e5e3df;overflow:hidden">
+          <!-- Awkward flex-wrap mixing filters + table -->
+          <div style="padding:10px 14px;border-bottom:1px solid #f0ede9;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+            <div style="flex:1;background:#f4f2ef;border-radius:5px;height:26px;display:flex;align-items:center;padding:0 8px;color:#aaa;font-size:11px;min-width:140px">🔍 Søk...</div>
+            <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 8px;display:flex;align-items:center;color:#666;font-size:11px">mars 2026 ▾</div>
+            <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 8px;display:flex;align-items:center;color:#666;font-size:11px">Kategorier ▾</div>
+            <!-- Table is a sibling inside this flex-wrap! -->
+            <div style="width:100%;overflow-x:auto;margin-top:4px">
+              <table style="width:100%;border-collapse:collapse;min-width:500px">
+                <thead><tr style="border-bottom:1px solid #f0ede9">
+                  <th style="padding:6px 10px;text-align:left;font-size:10px;color:#999;font-weight:600">Dato</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:10px;color:#999;font-weight:600">Beskrivelse</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:10px;color:#999;font-weight:600">Kategori</th>
+                  <th style="padding:6px 10px;text-align:left;font-size:10px;color:#999;font-weight:600">Konto</th>
+                  <th style="padding:6px 10px;text-align:right;font-size:10px;color:#999;font-weight:600">Beløp</th>
+                  <th style="padding:6px 10px;font-size:10px;color:#999;font-weight:600"></th>
+                </tr></thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #f5f3f0">
+                    <td style="padding:7px 10px;font-size:11px;color:#888;white-space:nowrap">12. mars 2026</td>
+                    <td style="padding:7px 10px;font-size:12px;color:#3d3a36">Rema 1000</td>
+                    <td style="padding:7px 10px"><span style="background:#f0edf8;color:#7c6bb5;border-radius:4px;font-size:10px;padding:2px 6px">Mat</span></td>
+                    <td style="padding:7px 10px;font-size:11px;color:#aaa">Brukskonto</td>
+                    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−423 kr</td>
+                    <td style="padding:7px 10px">
+                      <div style="display:flex;gap:4px;opacity:1">
+                        <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px">✏</div>
+                        <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#c94c4c">🗑</div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 10px;font-size:11px;color:#888;white-space:nowrap">10. mars 2026</td>
+                    <td style="padding:7px 10px;font-size:12px;color:#3d3a36">Strøm mars</td>
+                    <td style="padding:7px 10px"><span style="background:#e8f4ea;color:#4a8c52;border-radius:4px;font-size:10px;padding:2px 6px">Bolig</span></td>
+                    <td style="padding:7px 10px;font-size:11px;color:#aaa">—</td>
+                    <td style="padding:7px 10px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−1 200 kr</td>
+                    <td style="padding:7px 10px">
+                      <div style="display:flex;gap:4px;opacity:1">
+                        <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px">✏</div>
+                        <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#c94c4c">🗑</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p style="text-align:center;color:#bbb;font-size:10px;margin-top:6px">Table is a child inside the filter flex-wrap · actions always visible</p>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">After</div>
+      <div class="mockup-body" style="font-family:system-ui;font-size:12px;padding:12px">
+        <div style="background:white;border-radius:8px;border:1px solid #e5e3df;overflow:hidden">
+          <!-- Clean: filter bar then table as siblings in a flex-col card -->
+          <div style="padding:10px 14px;border-bottom:1px solid #f0ede9;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <div style="flex:1;background:#f4f2ef;border-radius:5px;height:26px;display:flex;align-items:center;padding:0 8px;color:#aaa;font-size:11px;min-width:120px">🔍 Søk...</div>
+            <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 8px;display:flex;align-items:center;color:#666;font-size:11px">mars 2026 ▾</div>
+            <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 8px;display:flex;align-items:center;color:#666;font-size:11px">Kategorier ▾</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;min-width:500px">
+              <thead><tr style="border-bottom:1px solid #f0ede9;background:#faf9f7">
+                <th style="padding:6px 14px;text-align:left;font-size:10px;color:#999;font-weight:600">Dato</th>
+                <th style="padding:6px 14px;text-align:left;font-size:10px;color:#999;font-weight:600">Beskrivelse</th>
+                <th style="padding:6px 14px;text-align:left;font-size:10px;color:#999;font-weight:600">Kategori</th>
+                <th style="padding:6px 14px;text-align:left;font-size:10px;color:#999;font-weight:600">Konto</th>
+                <th style="padding:6px 14px;text-align:right;font-size:10px;color:#999;font-weight:600">Beløp</th>
+                <th style="padding:6px 14px;font-size:10px;color:#999;font-weight:600"></th>
+              </tr></thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #f5f3f0">
+                  <td style="padding:8px 14px;font-size:11px;color:#888;white-space:nowrap">12. mars</td>
+                  <td style="padding:8px 14px;font-size:12px;color:#3d3a36">Rema 1000</td>
+                  <td style="padding:8px 14px"><span style="background:#f0edf8;color:#7c6bb5;border-radius:99px;font-size:10px;padding:2px 8px">Mat</span></td>
+                  <td style="padding:8px 14px;font-size:11px;color:#aaa">Brukskonto</td>
+                  <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−423 kr</td>
+                  <td style="padding:8px 14px">
+                    <div style="display:flex;gap:4px;opacity:0.2">
+                      <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px">✏</div>
+                      <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#c94c4c">🗑</div>
+                    </div>
+                  </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f5f3f0;background:#fdfcfb">
+                  <td style="padding:8px 14px;font-size:11px;color:#888;white-space:nowrap">10. mars</td>
+                  <td style="padding:8px 14px;font-size:12px;color:#3d3a36">Strøm mars</td>
+                  <td style="padding:8px 14px"><span style="background:#e8f4ea;color:#4a8c52;border-radius:99px;font-size:10px;padding:2px 8px">Bolig</span></td>
+                  <td style="padding:8px 14px;font-size:11px;color:#aaa">—</td>
+                  <td style="padding:8px 14px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−1 200 kr</td>
+                  <td style="padding:8px 14px">
+                    <div style="display:flex;gap:4px;opacity:0.2">
+                      <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px">✏</div>
+                      <div style="width:22px;height:22px;background:#f4f2ef;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#c94c4c">🗑</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:8px 14px;border-top:1px solid #f0ede9;display:flex;justify-content:space-between;font-size:11px;color:#999;background:#faf9f7"><span>2 utgifter</span><span style="font-weight:600;color:#c94c4c">−1 623 kr</span></div>
+        </div>
+        <p style="text-align:center;color:#bbb;font-size:10px;margin-top:6px">Table is a proper sibling after the filter bar · actions fade in on hover · subtle row stripe</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mobile — 3-column view (≤ 768px)</h3>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <div style="font-family:system-ui;font-size:13px;width:240px">
+      <div style="background:white;border-radius:10px;border:1px solid #e5e3df;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div style="padding:10px 14px;border-bottom:1px solid #f0ede9;display:flex;gap:8px">
+          <div style="flex:1;background:#f4f2ef;border-radius:6px;height:30px;display:flex;align-items:center;padding:0 10px;color:#aaa;font-size:12px">🔍 Søk...</div>
+          <div style="background:#f4f2ef;border-radius:6px;height:30px;width:70px;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px">mars ▾</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid #f0ede9;background:#faf9f7">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;color:#aaa;font-weight:600;white-space:nowrap">Dato</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;color:#aaa;font-weight:600">Beskrivelse</th>
+            <th style="padding:8px 12px;text-align:right;font-size:10px;color:#aaa;font-weight:600">Beløp</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f5f3f0">
+              <td style="padding:9px 12px;font-size:11px;color:#888;white-space:nowrap">12. mar</td>
+              <td style="padding:9px 12px">
+                <div style="font-size:13px;color:#3d3a36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">Rema 1000</div>
+                <div style="margin-top:2px"><span style="background:#f0edf8;color:#7c6bb5;border-radius:99px;font-size:9px;padding:1px 6px">Mat</span></div>
+              </td>
+              <td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#c94c4c;white-space:nowrap">−423 kr</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f5f3f0;background:#fdfcfb">
+              <td style="padding:9px 12px;font-size:11px;color:#888;white-space:nowrap">10. mar</td>
+              <td style="padding:9px 12px">
+                <div style="font-size:13px;color:#3d3a36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">Strøm mars</div>
+                <div style="margin-top:2px"><span style="background:#e8f4ea;color:#4a8c52;border-radius:99px;font-size:9px;padding:1px 6px">Bolig</span></div>
+              </td>
+              <td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#c94c4c;white-space:nowrap">−1 200 kr</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;font-size:11px;color:#888;white-space:nowrap">8. mar</td>
+              <td style="padding:9px 12px">
+                <div style="font-size:13px;color:#3d3a36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">Ruter</div>
+                <div style="margin-top:2px"><span style="background:#fdecd7;color:#c07a3a;border-radius:99px;font-size:9px;padding:1px 6px">Transport</span></div>
+              </td>
+              <td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;color:#c94c4c;white-space:nowrap">−379 kr</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 12px;border-top:1px solid #f0ede9;display:flex;justify-content:space-between;font-size:11px;color:#999;background:#faf9f7">
+          <span>3 utgifter</span><span style="font-weight:600;color:#c94c4c">−2 002 kr</span>
+        </div>
+      </div>
+      <p style="text-align:center;color:#bbb;font-size:10px;margin-top:6px">Tap any row → detail sheet (edit, delete, all fields)</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>What's changing — full list</h3>
+  <ul style="font-size:13px;line-height:1.9;color:#555;padding-left:1.2rem">
+    <li><strong>Structure fix:</strong> Filter bar and table are proper siblings inside the card (not nested in a flex-wrap)</li>
+    <li><strong>Row actions fade:</strong> Edit/delete buttons are dim (opacity 20%) until you hover the row — less visual noise</li>
+    <li><strong>Subtle stripe:</strong> Every other row gets a very light bg tint for scannability</li>
+    <li><strong>Shorter date on mobile:</strong> "12. mars" instead of "12. mars 2026" — year visible in the period filter above</li>
+    <li><strong>Category pill in description on mobile:</strong> Shows inline below the name instead of a separate column</li>
+    <li><strong>Hidden columns on mobile:</strong> Category, Account, Actions columns hidden at &lt;md — tap row for sheet</li>
+    <li><strong>Both tables:</strong> Expenses and Income get the same treatment</li>
+  </ul>
+</div>
+
+<p class="subtitle">Does this look right? Confirm in terminal and I'll write the spec.</p>

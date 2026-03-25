@@ -49,6 +49,8 @@ interface DashboardClientProps {
 	monthlyLoanPrincipal?: number;
 	earliestDataDate?: string | null;
 	activeTab?: "summary" | "grafer";
+	netAssetsOere?: number;
+	netDebtOere?: number;
 }
 
 export function DashboardClient({
@@ -67,6 +69,8 @@ export function DashboardClient({
 	monthlyLoanPrincipal = 0,
 	earliestDataDate,
 	activeTab = "summary",
+	netAssetsOere = 0,
+	netDebtOere = 0,
 }: DashboardClientProps) {
 	const selectedMonth = parseISO(`${selectedMonthStr}-01`);
 	const monthLabel = format(selectedMonth, "MMMM yyyy", { locale: nb });
@@ -111,7 +115,7 @@ export function DashboardClient({
 					Oversikt
 				</h1>
 				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
-					{monthLabelDisplay}
+					for {monthLabel}
 				</p>
 			</div>
 
@@ -139,6 +143,31 @@ export function DashboardClient({
 				/>
 			) : (
 				<>
+					{/* Net worth banner */}
+					{(netAssetsOere > 0 || netDebtOere > 0) && (
+						<div className="mb-6 rounded-xl border border-border bg-card p-4 dark:border-border/40 dark:bg-card">
+							<div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+								<p className="text-[10px] font-semibold uppercase tracking-wider text-foreground/40">
+									Nettoverdi
+								</p>
+								<span className="text-sm text-foreground/50">
+									Eiendeler{" "}
+									<span className="font-semibold tabular-nums text-primary">{formatNOK(netAssetsOere)}</span>
+								</span>
+								{netDebtOere > 0 && (
+									<span className="text-sm text-foreground/50">
+										Gjeld{" "}
+										<span className="font-semibold tabular-nums text-destructive">{"− "}{formatNOK(netDebtOere)}</span>
+									</span>
+								)}
+								<span className="text-sm text-foreground/50">
+									{"= "}Netto{" "}
+									<span className={`font-bold tabular-nums ${(netAssetsOere - netDebtOere) >= 0 ? "text-primary" : "text-destructive"}`}>{formatNOK(netAssetsOere - netDebtOere)}</span>
+								</span>
+							</div>
+						</div>
+					)}
+
 					{/* Summary stat cards */}
 					<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
 						{/* Total income */}

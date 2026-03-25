@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createUser, loginAs } from "@/app/actions/login";
@@ -17,7 +19,7 @@ export default async function SignInPage() {
 					<h1 className="text-2xl font-bold tracking-tight text-foreground">
 						Pengene mine
 					</h1>
-					<p className="mt-2 text-sm text-foreground/60">
+					<p className="mt-2 text-sm text-foreground/70">
 						Velg bruker eller opprett ny
 					</p>
 				</div>
@@ -45,7 +47,7 @@ export default async function SignInPage() {
 						<div className="w-full border-t border-border/40" />
 					</div>
 					<div className="relative flex justify-center text-xs">
-						<span className="bg-card px-2 text-foreground/40">
+						<span className="bg-card px-2 text-foreground/55">
 							{allUsers.length > 0 ? "eller" : "Kom i gang"}
 						</span>
 					</div>
@@ -58,7 +60,7 @@ export default async function SignInPage() {
 						required
 						maxLength={100}
 						placeholder="Ditt navn"
-						className="w-full rounded-lg border border-border/40 bg-input/40 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+						className="w-full rounded-lg border border-border/50 bg-input/40 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
 					/>
 					<button
 						type="submit"

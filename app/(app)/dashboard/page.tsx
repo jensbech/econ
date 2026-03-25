@@ -1,8 +1,9 @@
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 import { and, eq, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { computeLoanBalance } from "@/lib/loan-math";
 import { cookies } from "next/headers";
 import { db } from "@/db";
-import { categories, expenses, incomeEntries, recurringTemplates } from "@/db/schema";
+import { accounts, categories, expenses, incomeEntries, loans, recurringTemplates } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import {
 	expandRecurringExpenses,
@@ -318,6 +319,118 @@ export default async function DashboardPage({
 		income: monthlyIncome.find((e) => e.month === m)?.total ?? 0,
 	}));
 
+	// Net worth (current-state snapshot — ignores month and account filter)
+	let netAssetsOere = 0;
+	let netDebtOere = 0;
+
+	const [allAccountsForNW, allLoansForNW] = await Promise.all([
+		db
+			.select({
+				id: accounts.id,
+				openingBalanceOere: accounts.openingBalanceOere,
+				openingBalanceDate: accounts.openingBalanceDate,
+			})
+			.from(accounts)
+			.where(
+				and(
+					eq(accounts.householdId, householdId),
+					isNull(accounts.deletedAt),
+					or(eq(accounts.type, "public"), eq(accounts.userId, user.id as string)),
+				),
+			),
+		db
+			.select()
+			.from(loans)
+			.where(and(eq(loans.householdId, householdId), isNull(loans.deletedAt))),
+	]);
+
+	if (allAccountsForNW.length > 0) {
+		const [incomeByAcc, expByAcc] = await Promise.all([
+			db
+				.select({
+					accountId: incomeEntries.accountId,
+					total: sql<number>`coalesce(sum(${incomeEntries.amountOere}), 0)::int`,
+				})
+				.from(incomeEntries)
+				.where(and(eq(incomeEntries.householdId, householdId), isNull(incomeEntries.deletedAt)))
+				.groupBy(incomeEntries.accountId),
+			db
+				.select({
+					accountId: expenses.accountId,
+					total: sql<number>`coalesce(sum(${expenses.amountOere}), 0)::int`,
+				})
+				.from(expenses)
+				.where(and(eq(expenses.householdId, householdId), isNull(expenses.deletedAt)))
+				.groupBy(expenses.accountId),
+		]);
+
+		const incMap: Record<string, number> = {};
+		for (const r of incomeByAcc) { if (r.accountId) incMap[r.accountId] = r.total; }
+		const expMap: Record<string, number> = {};
+		for (const r of expByAcc) { if (r.accountId) expMap[r.accountId] = r.total; }
+
+		// Accounts with an opening balance date need date-filtered queries
+		const accountsWithDate = allAccountsForNW.filter((a) => a.openingBalanceDate);
+		const filteredInc: Record<string, number> = {};
+		const filteredExp: Record<string, number> = {};
+
+		await Promise.all(
+			accountsWithDate.flatMap((account) => {
+				const fromDate = account.openingBalanceDate as string;
+				return [
+					db
+						.select({ total: sql<number>`coalesce(sum(${incomeEntries.amountOere}), 0)::int` })
+						.from(incomeEntries)
+						.where(and(eq(incomeEntries.householdId, householdId), isNull(incomeEntries.deletedAt), eq(incomeEntries.accountId, account.id), gte(incomeEntries.date, fromDate)))
+						.then(([r]) => { filteredInc[account.id] = r?.total ?? 0; }),
+					db
+						.select({ total: sql<number>`coalesce(sum(${expenses.amountOere}), 0)::int` })
+						.from(expenses)
+						.where(and(eq(expenses.householdId, householdId), isNull(expenses.deletedAt), eq(expenses.accountId, account.id), gte(expenses.date, fromDate)))
+						.then(([r]) => { filteredExp[account.id] = r?.total ?? 0; }),
+				];
+			}),
+		);
+
+		for (const account of allAccountsForNW) {
+			const inc = account.openingBalanceDate ? (filteredInc[account.id] ?? 0) : (incMap[account.id] ?? 0);
+			const exp = account.openingBalanceDate ? (filteredExp[account.id] ?? 0) : (expMap[account.id] ?? 0);
+			const hasActivity = account.openingBalanceOere != null || inc > 0 || exp > 0;
+			if (hasActivity) {
+				netAssetsOere += (account.openingBalanceOere ?? 0) + inc - exp;
+			}
+		}
+	}
+
+	if (allLoansForNW.length > 0) {
+		const allLoanPayments = await db
+			.select({
+				loanId: expenses.loanId,
+				date: expenses.date,
+				principalOere: expenses.principalOere,
+				amountOere: expenses.amountOere,
+			})
+			.from(expenses)
+			.where(and(eq(expenses.householdId, householdId), isNull(expenses.deletedAt), isNotNull(expenses.loanId)));
+
+		const paymentsByLoan = new Map<string, Array<{ date: string; amountOere: number }>>();
+		for (const p of allLoanPayments) {
+			if (!p.loanId) continue;
+			const arr = paymentsByLoan.get(p.loanId) ?? [];
+			arr.push({ date: p.date, amountOere: p.principalOere ?? p.amountOere });
+			paymentsByLoan.set(p.loanId, arr);
+		}
+
+		netDebtOere = allLoansForNW.reduce((sum, loan) => {
+			const balance = computeLoanBalance(
+				loan.principalOere, loan.interestRate, loan.termMonths, loan.startDate,
+				paymentsByLoan.get(loan.id) ?? [],
+				loan.openingBalanceOere, loan.openingBalanceDate,
+			);
+			return sum + balance.currentBalanceOere;
+		}, 0);
+	}
+
 	return (
 		<DashboardClient
 			selectedMonthStr={selectedMonthStr}
@@ -335,6 +448,8 @@ export default async function DashboardPage({
 			monthlyLoanPrincipal={monthlyLoanPrincipal}
 			earliestDataDate={earliestDataDate}
 			activeTab={activeTab}
+			netAssetsOere={netAssetsOere}
+			netDebtOere={netDebtOere}
 		/>
 	);
 }

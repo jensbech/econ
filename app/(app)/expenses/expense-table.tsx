@@ -233,9 +233,8 @@ export function ExpenseTable({
 				),
 				cell: ({ row }) => (
 					<span className="whitespace-nowrap text-foreground dark:text-card-foreground">
-						{format(parseLocalDate(row.original.date), "d. MMM yyyy", {
-							locale: nb,
-						})}
+						<span className="hidden md:inline">{format(parseLocalDate(row.original.date), "d. MMM yyyy", { locale: nb })}</span>
+						<span className="md:hidden">{format(parseLocalDate(row.original.date), "d. MMM", { locale: nb })}</span>
 					</span>
 				),
 			},
@@ -244,6 +243,9 @@ export function ExpenseTable({
 				header: "Beskrivelse",
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
+						{row.original.categoryName && (
+							<Badge variant="secondary" className="md:hidden shrink-0">{row.original.categoryName}</Badge>
+						)}
 						{row.original.scope === "personal" && (
 							<span
 								className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
@@ -321,7 +323,7 @@ export function ExpenseTable({
 				cell: ({ row }) => {
 					const expense = row.original;
 					return (
-						<div className="flex items-center justify-end gap-1">
+						<div className="flex items-center justify-end gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
 							<TooltipProvider>
 								<Tooltip>
 									<TooltipTrigger asChild>
@@ -427,8 +429,8 @@ export function ExpenseTable({
 			)}
 
 			{/* Filters */}
-			<div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
-				<div className="flex flex-wrap items-end gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
+			<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
+				<div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3 dark:border-border/40">
 					{/* Search */}
 					<div className="space-y-1 flex-1 min-w-[180px]">
 						<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
@@ -520,7 +522,7 @@ export function ExpenseTable({
 									className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 								>
 									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id}>
+										<TableHead key={header.id} className={["categoryName", "accountName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
 											{header.isPlaceholder
 												? null
 												: flexRender(
@@ -538,10 +540,10 @@ export function ExpenseTable({
 									<TableRow
 										key={row.id}
 										onClick={() => setSelectedExpense(row.original)}
-										className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
+										className={`cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background group dark:border-border/40/50 dark:hover:bg-card/50${row.index % 2 !== 0 ? " bg-muted/20" : ""}`}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
+											<TableCell key={cell.id} className={["categoryName", "accountName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
 												{flexRender(
 													cell.column.columnDef.cell,
 													cell.getContext(),

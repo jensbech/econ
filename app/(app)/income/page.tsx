@@ -177,7 +177,13 @@ export default async function IncomePage({
 						Inntekt
 					</h1>
 					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
-						Oversikt over inntekter.
+						Oversikt over inntekter.{' '}
+						<Link
+							href="/expenses/recurring"
+							className="underline underline-offset-2 decoration-foreground/30 hover:decoration-foreground/50"
+						>
+							Faste inntekter →
+						</Link>
 					</p>
 				</div>
 				<Button

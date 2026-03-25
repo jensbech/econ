@@ -1,8 +1,9 @@
-import { and, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, expenses, incomeEntries, users } from "@/db/schema";
+import { accounts, expenses, incomeEntries, loans, users } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
+import { computeLoanBalance } from "@/lib/loan-math";
 import { AccountsClient } from "./accounts-client";
 
 export default async function AccountsPage() {
@@ -93,6 +94,53 @@ export default async function AccountsPage() {
 		}
 	}
 
+	let totalLoanOere = 0;
+	if (householdId) {
+		const allLoans = await db
+			.select()
+			.from(loans)
+			.where(and(eq(loans.householdId, householdId), isNull(loans.deletedAt)));
+
+		if (allLoans.length > 0) {
+			const allPayments = await db
+				.select({
+					loanId: expenses.loanId,
+					date: expenses.date,
+					principalOere: expenses.principalOere,
+					amountOere: expenses.amountOere,
+				})
+				.from(expenses)
+				.where(
+					and(
+						eq(expenses.householdId, householdId),
+						isNull(expenses.deletedAt),
+						isNotNull(expenses.loanId),
+					),
+				);
+
+			const paymentsByLoan = new Map<string, Array<{ date: string; amountOere: number }>>();
+			for (const p of allPayments) {
+				if (!p.loanId) continue;
+				const arr = paymentsByLoan.get(p.loanId) ?? [];
+				arr.push({ date: p.date, amountOere: p.principalOere ?? p.amountOere });
+				paymentsByLoan.set(p.loanId, arr);
+			}
+
+			totalLoanOere = allLoans.reduce((sum, loan) => {
+				const balance = computeLoanBalance(
+					loan.principalOere,
+					loan.interestRate,
+					loan.termMonths,
+					loan.startDate,
+					paymentsByLoan.get(loan.id) ?? [],
+					loan.openingBalanceOere,
+					loan.openingBalanceDate,
+				);
+				return sum + balance.currentBalanceOere;
+			}, 0);
+		}
+	}
+
 	return (
 		<div className="p-4 sm:p-8">
 			<div className="mb-6">
@@ -100,13 +148,14 @@ export default async function AccountsPage() {
 					Kontoer
 				</h1>
 				<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
-					Administrer kontoer for husholdningen.
+					Administrer kontoer og se saldo. Nettoverdi vises nederst.
 				</p>
 			</div>
 			<AccountsClient
 				accounts={rows}
 				currentUserId={user.id as string}
 				balances={balanceMap}
+				totalLoanOere={totalLoanOere}
 			/>
 		</div>
 	);

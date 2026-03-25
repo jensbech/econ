@@ -51,7 +51,11 @@ export default async function SavingsPage() {
 				.where(
 					and(
 						eq(accounts.householdId, householdId),
-						or(eq(accounts.kind, "savings"), eq(accounts.kind, "crypto")),
+						or(
+							eq(accounts.kind, "savings"),
+							eq(accounts.kind, "investment"),
+							eq(accounts.kind, "crypto"),
+						),
 						isNull(accounts.deletedAt),
 						or(
 							eq(accounts.type, "public"),
@@ -269,8 +273,11 @@ export default async function SavingsPage() {
 					<h2 className="text-2xl font-semibold text-foreground dark:text-card-foreground">
 						Sparing
 					</h2>
+					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
+						Spar- og investeringskontoer med saldoutvikling og transaksjonshistorikk.
+					</p>
 					{savingsAccounts.length > 0 && (
-						<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
+						<p className="mt-0.5 text-sm text-foreground/60 dark:text-foreground/50">
 							Total saldo:{" "}
 							<span className="font-medium text-primary">
 								{formatNOK(totalBalance)}
@@ -288,7 +295,7 @@ export default async function SavingsPage() {
 						Ingen sparekontoer ennå
 					</p>
 					<p className="mt-1 text-sm text-foreground/50 dark:text-foreground/60">
-						Opprett en konto av type &laquo;Sparekonto&raquo; eller &laquo;Krypto&raquo; på Kontoer-siden.
+						Opprett en konto av type «Sparekonto», «Investering» eller «Krypto» på Kontoer-siden.
 					</p>
 					<Link
 						href="/accounts"

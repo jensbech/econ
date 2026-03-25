@@ -1,3 +1,4 @@
+import type React from "react";
 import {
 	BarChart3,
 	CreditCard,
@@ -24,29 +25,63 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { getVisibleAccounts } from "@/lib/accounts";
 import { getHouseholdId } from "@/lib/households";
 
-const navItems = [
-	{ href: "/dashboard", label: "Oversikt", icon: LayoutDashboard },
-	{ href: "/expenses", label: "Utgifter", icon: CreditCard },
-	{ href: "/income", label: "Inntekt", icon: TrendingUp },
-	{ href: "/loans", label: "Lån", icon: BarChart3 },
-	{ href: "/savings", label: "Sparing", icon: PiggyBank },
-	{ href: "/accounts", label: "Kontoer", icon: Landmark },
-	{ href: "/import", label: "Importer", icon: Import },
-	{ href: "/settings/categories", label: "Kategorier", icon: Settings },
-	{ href: "/guide", label: "Brukerveiledning", icon: HelpCircle },
+const navGroups: Array<{
+	label: string | null;
+	items: Array<{ href: string; label: string; icon: React.ComponentType<{ className?: string }> }>;
+}> = [
+	{
+		label: null,
+		items: [{ href: "/dashboard", label: "Oversikt", icon: LayoutDashboard }],
+	},
+	{
+		label: "Transaksjoner",
+		items: [
+			{ href: "/expenses", label: "Utgifter", icon: CreditCard },
+			{ href: "/income", label: "Inntekt", icon: TrendingUp },
+		],
+	},
+	{
+		label: "Økonomi",
+		items: [
+			{ href: "/loans", label: "Lån", icon: BarChart3 },
+			{ href: "/savings", label: "Sparing", icon: PiggyBank },
+			{ href: "/accounts", label: "Kontoer", icon: Landmark },
+		],
+	},
+	{
+		label: "Verktøy",
+		items: [
+			{ href: "/import", label: "Importer", icon: Import },
+			{ href: "/settings/categories", label: "Kategorier", icon: Settings },
+		],
+	},
+	{
+		label: null,
+		items: [{ href: "/guide", label: "Brukerveiledning", icon: HelpCircle }],
+	},
 ];
 
 function SidebarNav() {
 	return (
-		<>
-			<nav className="flex-1 space-y-0.5 px-3 py-4">
-				{navItems.map(({ href, label, icon: Icon }) => (
-					<NavLink key={href} href={href} label={label}>
-						<Icon className="h-4 w-4 flex-shrink-0" />
-					</NavLink>
-				))}
-			</nav>
-		</>
+		<nav className="flex-1 px-3 py-4">
+			{navGroups.map((group, i) => (
+				<div key={i}>
+					{i > 0 && <div className="my-2 border-t border-border/30" />}
+					{group.label && (
+						<p className="mb-1 mt-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-foreground/35">
+							{group.label}
+						</p>
+					)}
+					<div className="space-y-0.5">
+						{group.items.map(({ href, label, icon: Icon }) => (
+							<NavLink key={href} href={href} label={label}>
+								<Icon className="h-4 w-4 flex-shrink-0" />
+							</NavLink>
+						))}
+					</div>
+				</div>
+			))}
+		</nav>
 	);
 }
 
@@ -97,27 +132,27 @@ export default async function AppLayout({
 	return (
 		<div className="flex min-h-screen bg-background dark:bg-background">
 			{/* Desktop Sidebar — light & warm */}
-			<aside className="hidden w-60 flex-shrink-0 flex-col bg-background dark:bg-card md:flex border-r border-border/40 animate-sidebar-in">
-				<div className="border-b border-border/40 px-5 py-4">
+			<aside className="hidden w-60 flex-shrink-0 flex-col bg-background dark:bg-card md:flex border-r border-border/50 animate-sidebar-in">
+				<div className="border-b border-border/50 px-5 py-4">
 					<div className="flex items-center gap-2.5">
-						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold tracking-tight text-card-foreground">
+						<div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold tracking-tight text-primary-foreground">
 							kr
 						</div>
-						<h1 className="text-sm font-semibold leading-tight text-foreground">
-							Pengene mine
+						<h1 className="text-sm font-bold leading-tight text-foreground tracking-tight">
+							Jeg vil ha pengene mine!! 💸
 						</h1>
 					</div>
 				</div>
 
 				{/* Month selector */}
-				<div className="border-b border-border/40 px-3 py-2">
+				<div className="border-b border-border/50 px-3 py-2">
 					<MonthSelector initialMonth={initialMonth} />
 				</div>
 
 				<SidebarNav />
 
 				{/* User section */}
-				<div className="border-t border-border/40 p-3">
+				<div className="border-t border-border/50 p-3">
 					<div className="flex items-center gap-3 rounded-lg px-3 py-2">
 						<UserAvatar name={user.name} />
 						<div className="min-w-0 flex-1">
@@ -146,11 +181,11 @@ export default async function AppLayout({
 					<div className="flex items-center gap-2 px-4 py-2.5 md:gap-4 md:px-6 md:py-3">
 						{/* Mobile hamburger + sidebar drawer */}
 						<MobileSidebar>
-							<div className="border-b border-border/40 px-3 py-2">
+							<div className="border-b border-border/50 px-3 py-2">
 								<MonthSelector initialMonth={initialMonth} inline />
 							</div>
 							<SidebarNav />
-							<div className="border-t border-border/40 p-3">
+							<div className="border-t border-border/50 p-3">
 								<div className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2">
 									<UserAvatar name={user.name} />
 									<div className="min-w-0 flex-1">

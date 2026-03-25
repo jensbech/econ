@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ interface AccountsClientProps {
 	accounts: AccountRow[];
 	currentUserId: string;
 	balances: Record<string, number | null>;
+	totalLoanOere: number;
 }
 
 function IconPicker({
@@ -132,10 +133,16 @@ function coinQuantityError(value: string): string | null {
 	return null;
 }
 
+function oereToInputString(oere: number): string {
+	const nok = oere / 100;
+	return Number.isInteger(nok) ? String(nok) : String(nok).replace(".", ",");
+}
+
 export function AccountsClient({
 	accounts,
 	currentUserId,
 	balances,
+	totalLoanOere,
 }: AccountsClientProps) {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
@@ -169,6 +176,12 @@ export function AccountsClient({
 	const newFormValid = !newAccountNumberErr && !newOpeningBalanceErr && !newCoinQuantityErr;
 	const editFormValid = !editAccountNumberErr && !editOpeningBalanceErr && !editCoinQuantityErr;
 
+	const totalAccountOere = Object.values(balances).reduce<number>(
+		(sum, b) => sum + (b ?? 0),
+		0,
+	);
+	const netOere = totalAccountOere - totalLoanOere;
+
 	function handleCreate() {
 		if (!newName.trim() || !newFormValid) return;
 		startTransition(async () => {
@@ -197,10 +210,14 @@ export function AccountsClient({
 		setEditKind(account.kind);
 		setEditIcon(account.icon);
 		setEditAccountNumber(account.accountNumber ?? "");
-		setEditOpeningBalance(account.openingBalanceOere != null ? String(account.openingBalanceOere / 100) : "");
+		setEditOpeningBalance(
+			account.openingBalanceOere != null
+				? oereToInputString(account.openingBalanceOere)
+				: "",
+		);
 		setEditOpeningBalanceDate(account.openingBalanceDate ?? "");
 		setEditCoinSymbol(account.coinSymbol ?? "BTC");
-		setEditCoinQuantity(account.coinQuantity != null ? String(account.coinQuantity) : "");
+		setEditCoinQuantity(account.coinQuantity != null ? String(account.coinQuantity).replace(".", ",") : "");
 	}
 
 	function handleUpdate(id: string) {
@@ -229,18 +246,27 @@ export function AccountsClient({
 		});
 	}
 
+	const selectClass = "h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground";
+
+	const KIND_DESCRIPTIONS: Record<string, string> = {
+		checking: "Vanlig brukskonto for daglige utgifter. Vises ikke i Sparing.",
+		credit: "Kredittkort – saldo er typisk negativ (gjeld). Vises ikke i Sparing.",
+		savings: "Sparekonto – saldo følger inntekter og utgifter. Vises i Sparing.",
+		investment: "Fond/aksjer og andre investeringer. Vises i Sparing.",
+		crypto: "Kryptovaluta – saldo beregnes fra live kurser (CoinGecko). Vises i Sparing.",
+	};
+
 	return (
 		<div className="space-y-4 max-w-2xl">
-			{/* Account list */}
 			{accounts.length === 0 ? (
 				<div className="rounded-xl border border-dashed border-border bg-card py-12 text-center dark:border-border/40 dark:bg-card">
 					<p className="text-sm text-foreground/60 dark:text-foreground/50">
-						Ingen kontoer enn&aring;.
+						Ingen kontoer ennå.
 					</p>
 				</div>
 			) : (
 				<div className="rounded-xl border border-border bg-card overflow-hidden dark:border-border/40 dark:bg-card">
-					<ul className="divide-y divide-gray-100 dark:divide-gray-700">
+					<ul className="divide-y divide-border/40 dark:divide-border/30">
 						{accounts.map((account) => {
 							const isOwner = account.userId === currentUserId;
 							const isEditing = editingId === account.id;
@@ -248,69 +274,39 @@ export function AccountsClient({
 							return (
 								<li
 									key={account.id}
-									className="flex items-center gap-3 px-5 py-4"
+									className={isEditing ? "px-4 py-4 sm:px-5" : "flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4"}
 								>
-									<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/8 dark:bg-gray-700">
-										{account.type === "private" ? (
-											<Lock className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-										) : (
-											<AccountIcon
-												icon={account.icon}
-												className="h-4 w-4 text-foreground/70 dark:text-foreground/80"
-											/>
-										)}
-									</div>
-
-									<div className="flex-1 min-w-0">
-										{isEditing ? (
-											<div className="flex items-center gap-2 flex-wrap">
-												<IconPicker
-													value={editIcon}
-													onChange={setEditIcon}
-												/>
+									{isEditing ? (
+										<div className="space-y-3">
+											<div className="flex flex-wrap items-start gap-2">
+												<IconPicker value={editIcon} onChange={setEditIcon} />
 												<Input
 													value={editName}
-													onChange={(e) =>
-														setEditName(e.target.value)
-													}
+													onChange={(e) => setEditName(e.target.value)}
 													onKeyDown={(e) => {
-														if (e.key === "Enter")
-															handleUpdate(account.id);
-														if (e.key === "Escape")
-															setEditingId(null);
+														if (e.key === "Enter") handleUpdate(account.id);
+														if (e.key === "Escape") setEditingId(null);
 													}}
-													className="h-8 max-w-xs"
+													className="h-8 w-36"
 													placeholder="Kontonavn"
 													// biome-ignore lint/a11y/noAutofocus: intentional focus for inline edit
 													autoFocus
 												/>
 												<Input
 													value={editAccountNumber}
-													onChange={(e) =>
-														setEditAccountNumber(e.target.value)
-													}
+													onChange={(e) => setEditAccountNumber(e.target.value)}
 													onKeyDown={(e) => {
-														if (e.key === "Enter")
-															handleUpdate(account.id);
-														if (e.key === "Escape")
-															setEditingId(null);
+														if (e.key === "Enter") handleUpdate(account.id);
+														if (e.key === "Escape") setEditingId(null);
 													}}
-													className={`h-8 max-w-[160px] ${editAccountNumberErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+													className={`h-8 w-36 ${editAccountNumberErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
 													placeholder="Kontonummer"
 													title={editAccountNumberErr ?? undefined}
 												/>
 												<select
 													value={editKind}
-													onChange={(e) =>
-														setEditKind(e.target.value)
-													}
-													onKeyDown={(e) => {
-														if (e.key === "Enter")
-															handleUpdate(account.id);
-														if (e.key === "Escape")
-															setEditingId(null);
-													}}
-													className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
+													onChange={(e) => setEditKind(e.target.value)}
+													className={selectClass}
 												>
 													<option value="checking">Brukskonto</option>
 													<option value="savings">Sparekonto</option>
@@ -318,48 +314,48 @@ export function AccountsClient({
 													<option value="investment">Investering</option>
 													<option value="crypto">Krypto</option>
 												</select>
-												{editKind === "crypto" ? (
-													<>
-														<select
-															value={editCoinSymbol}
-															onChange={(e) => setEditCoinSymbol(e.target.value)}
-															className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
-														>
-															{COINS.map((c) => (
-																<option key={c.symbol} value={c.symbol}>{c.symbol} — {c.name}</option>
-															))}
-														</select>
-														<Input
-															value={editCoinQuantity}
-															onChange={(e) => setEditCoinQuantity(e.target.value)}
-															placeholder={`Antall ${editCoinSymbol}`}
-															inputMode="decimal"
-															className={`h-8 max-w-[120px] ${editCoinQuantityErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
-															title={editCoinQuantityErr ?? undefined}
-														/>
-													</>
-												) : (
-													<>
-														<Input
-															value={editOpeningBalance}
-															onChange={(e) => setEditOpeningBalance(e.target.value)}
-															placeholder="Startsaldo"
-															inputMode="decimal"
-															className="h-8 max-w-[140px]"
-														/>
-														<Input
-															type="date"
-															value={editOpeningBalanceDate}
-															onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
-															className="h-8 max-w-[160px]"
-														/>
-													</>
-												)}
+											</div>
+											{editKind === "crypto" ? (
+												<div className="flex flex-wrap items-center gap-2">
+													<select
+														value={editCoinSymbol}
+														onChange={(e) => setEditCoinSymbol(e.target.value)}
+														className={selectClass}
+													>
+														{COINS.map((c) => (
+															<option key={c.symbol} value={c.symbol}>{c.symbol} — {c.name}</option>
+														))}
+													</select>
+													<Input
+														value={editCoinQuantity}
+														onChange={(e) => setEditCoinQuantity(e.target.value)}
+														placeholder={`Antall ${editCoinSymbol}`}
+														inputMode="decimal"
+														className={`h-8 w-32 ${editCoinQuantityErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+														title={editCoinQuantityErr ?? undefined}
+													/>
+												</div>
+											) : (
+												<div className="flex flex-wrap items-center gap-2">
+													<Input
+														value={editOpeningBalance}
+														onChange={(e) => setEditOpeningBalance(e.target.value)}
+														placeholder="Startsaldo"
+														inputMode="decimal"
+														className="h-8 w-32"
+													/>
+													<Input
+														type="date"
+														value={editOpeningBalanceDate}
+														onChange={(e) => setEditOpeningBalanceDate(e.target.value)}
+														className="h-8 w-40"
+													/>
+												</div>
+											)}
+											<div className="flex gap-2">
 												<Button
 													size="sm"
-													onClick={() =>
-														handleUpdate(account.id)
-													}
+													onClick={() => handleUpdate(account.id)}
 													disabled={isPending || !editFormValid}
 													className="h-8 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/20"
 												>
@@ -374,10 +370,23 @@ export function AccountsClient({
 													Avbryt
 												</Button>
 											</div>
-										) : (
-											<div>
-												<div className="flex items-center gap-2">
-													<span className="font-medium text-sm text-foreground dark:text-card-foreground">
+										</div>
+									) : (
+										<>
+											<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/8 dark:bg-gray-700">
+												{account.type === "private" ? (
+													<Lock className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+												) : (
+													<AccountIcon
+														icon={account.icon}
+														className="h-4 w-4 text-foreground/70 dark:text-foreground/80"
+													/>
+												)}
+											</div>
+
+											<div className="min-w-0 flex-1">
+												<div className="flex flex-wrap items-center gap-1.5">
+													<span className="font-medium text-sm text-foreground dark:text-card-foreground truncate">
 														{account.name}
 													</span>
 													<Badge
@@ -388,15 +397,13 @@ export function AccountsClient({
 																: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
 														}
 													>
-														{account.type === "private"
-															? "Privat"
-															: "Felles"}
+														{account.type === "private" ? "Privat" : "Felles"}
 													</Badge>
-													<span className="text-xs text-foreground/50">
-														{account.creatorName ??
-															account.creatorEmail ??
-															""}
-													</span>
+													{account.creatorName && (
+														<span className="text-xs text-foreground/45 truncate">
+															{account.creatorName}
+														</span>
+													)}
 												</div>
 												{account.accountNumber && (
 													<span className="text-xs text-foreground/50 dark:text-foreground/60">
@@ -404,75 +411,89 @@ export function AccountsClient({
 													</span>
 												)}
 											</div>
-										)}
-									</div>
 
-									{!isEditing && (
-									<div className="ml-auto text-sm font-medium tabular-nums">
-										{balances[account.id] != null ? (
-											<span className={balances[account.id]! >= 0 ? "text-primary" : "text-destructive"}>
-												{formatNOK(balances[account.id]!)}
-											</span>
-										) : (
-											<span className="text-foreground/30">—</span>
-										)}
-									</div>
-								)}
+											<div className="shrink-0 text-sm font-medium tabular-nums">
+												{balances[account.id] != null ? (
+													<span className={balances[account.id]! >= 0 ? "text-primary" : "text-destructive"}>
+														{formatNOK(balances[account.id]!)}
+													</span>
+												) : (
+													<span className="text-foreground/30">—</span>
+												)}
+											</div>
 
-								{isOwner && !isEditing && (
-										<div className="flex items-center gap-1">
-											<Button
-												variant="ghost"
-												size="icon"
-												className="h-8 w-8"
-												onClick={() => startEdit(account)}
-											>
-												<Pencil className="h-4 w-4 text-foreground/60" />
-											</Button>
-											<AlertDialog>
-												<AlertDialogTrigger asChild>
+											{isOwner && (
+												<div className="flex shrink-0 items-center gap-0.5">
 													<Button
 														variant="ghost"
 														size="icon"
 														className="h-8 w-8"
+														onClick={() => startEdit(account)}
 													>
-														<Trash2 className="h-4 w-4 text-red-400" />
+														<Pencil className="h-4 w-4 text-foreground/60" />
 													</Button>
-												</AlertDialogTrigger>
-												<AlertDialogContent>
-													<AlertDialogHeader>
-														<AlertDialogTitle>
-															Slett konto
-														</AlertDialogTitle>
-														<AlertDialogDescription>
-															Er du sikker p&aring; at du
-															vil slette &laquo;
-															{account.name}&raquo;?
-															Eksisterende transaksjoner
-															vil ikke bli slettet.
-														</AlertDialogDescription>
-													</AlertDialogHeader>
-													<AlertDialogFooter>
-														<AlertDialogCancel>
-															Avbryt
-														</AlertDialogCancel>
-														<AlertDialogAction
-															onClick={() =>
-																handleDelete(account.id)
-															}
-															className="bg-red-600 hover:bg-red-700"
-														>
-															Slett
-														</AlertDialogAction>
-													</AlertDialogFooter>
-												</AlertDialogContent>
-											</AlertDialog>
-										</div>
+													<AlertDialog>
+														<AlertDialogTrigger asChild>
+															<Button variant="ghost" size="icon" className="h-8 w-8">
+																<Trash2 className="h-4 w-4 text-red-400" />
+															</Button>
+														</AlertDialogTrigger>
+														<AlertDialogContent>
+															<AlertDialogHeader>
+																<AlertDialogTitle>Slett konto</AlertDialogTitle>
+																<AlertDialogDescription>
+																	Er du sikker på at du vil slette «{account.name}»?
+																	Eksisterende transaksjoner vil ikke bli slettet.
+																</AlertDialogDescription>
+															</AlertDialogHeader>
+															<AlertDialogFooter>
+																<AlertDialogCancel>Avbryt</AlertDialogCancel>
+																<AlertDialogAction
+																	onClick={() => handleDelete(account.id)}
+																	className="bg-red-600 hover:bg-red-700"
+																>
+																	Slett
+																</AlertDialogAction>
+															</AlertDialogFooter>
+														</AlertDialogContent>
+													</AlertDialog>
+												</div>
+											)}
+										</>
 									)}
 								</li>
 							);
 						})}
+
+						{/* Total row */}
+						<li className="flex items-center justify-between bg-muted/30 px-4 py-3 sm:px-5">
+							<span className="text-sm font-medium text-foreground/70">Totalt</span>
+							<span className={`text-sm font-semibold tabular-nums ${totalAccountOere >= 0 ? "text-primary" : "text-destructive"}`}>
+								{formatNOK(totalAccountOere)}
+							</span>
+						</li>
 					</ul>
+				</div>
+			)}
+
+			{/* Net worth equation */}
+			{totalLoanOere > 0 && accounts.length > 0 && (
+				<div className="rounded-xl border border-border/50 bg-card p-4 space-y-2 dark:border-border/40 dark:bg-card">
+					<p className="text-xs font-medium uppercase tracking-wide text-foreground/40">Nettoverdi</p>
+					<div className="flex items-center justify-between text-sm">
+						<span className="text-foreground/60">Eiendeler</span>
+						<span className="tabular-nums font-medium text-primary">{formatNOK(totalAccountOere)}</span>
+					</div>
+					<div className="flex items-center justify-between text-sm">
+						<span className="text-foreground/60">Gjeld</span>
+						<span className="tabular-nums font-medium text-destructive">− {formatNOK(totalLoanOere)}</span>
+					</div>
+					<div className="flex items-center justify-between border-t border-border/40 pt-2">
+						<span className="font-medium text-foreground">= Netto</span>
+						<span className={`text-base font-bold tabular-nums ${netOere >= 0 ? "text-primary" : "text-destructive"}`}>
+							{formatNOK(netOere)}
+						</span>
+					</div>
 				</div>
 			)}
 
@@ -518,17 +539,11 @@ export function AccountsClient({
 						<select
 							id="newType"
 							value={newType}
-							onChange={(e) =>
-								setNewType(e.target.value as "public" | "private")
-							}
+							onChange={(e) => setNewType(e.target.value as "public" | "private")}
 							className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary dark:border-border/40 dark:bg-card dark:text-card-foreground"
 						>
-							<option value="public">
-								Felles (synlig for alle)
-							</option>
-							<option value="private">
-								Privat (kun synlig for deg)
-							</option>
+							<option value="public">Felles (synlig for alle)</option>
+							<option value="private">Privat (kun synlig for deg)</option>
 						</select>
 					</div>
 					<div className="space-y-1.5">
@@ -545,6 +560,9 @@ export function AccountsClient({
 							<option value="investment">Investering</option>
 							<option value="crypto">Krypto</option>
 						</select>
+						{KIND_DESCRIPTIONS[newKind] && (
+							<p className="text-xs text-foreground/50">{KIND_DESCRIPTIONS[newKind]}</p>
+						)}
 					</div>
 					{newKind === "crypto" ? (
 						<>
@@ -567,7 +585,7 @@ export function AccountsClient({
 									id="newCoinQuantity"
 									value={newCoinQuantity}
 									onChange={(e) => setNewCoinQuantity(e.target.value)}
-									placeholder="0.00"
+									placeholder="0,00"
 									inputMode="decimal"
 									className={`max-w-xs ${newCoinQuantityErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
 								/>
@@ -584,7 +602,7 @@ export function AccountsClient({
 									id="newOpeningBalance"
 									value={newOpeningBalance}
 									onChange={(e) => setNewOpeningBalance(e.target.value)}
-									placeholder="0.00"
+									placeholder="0,00"
 									inputMode="decimal"
 									className={`max-w-xs ${newOpeningBalanceErr ? "border-red-400 focus-visible:ring-red-400" : ""}`}
 								/>

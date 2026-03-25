@@ -113,23 +113,32 @@ const columns: ColumnDef<IncomeRow>[] = [
 		),
 		cell: ({ row }) => (
 			<span className="whitespace-nowrap text-foreground dark:text-card-foreground">
-				{format(parseLocalDate(row.original.date), "d. MMM yyyy", {
-					locale: nb,
-				})}
+				<span className="hidden md:inline">{format(parseLocalDate(row.original.date), "d. MMM yyyy", { locale: nb })}</span>
+				<span className="md:hidden">{format(parseLocalDate(row.original.date), "d. MMM", { locale: nb })}</span>
 			</span>
 		),
 	},
 	{
 		accessorKey: "source",
 		header: "Kilde",
-		cell: ({ row }) =>
-			row.original.source ? (
-				<span className="text-foreground/80 dark:text-foreground/80">
-					{row.original.source}
-				</span>
-			) : (
-				<span className="italic text-foreground/50">—</span>
-			),
+		cell: ({ row }) => (
+			<div className="flex flex-wrap items-center gap-1.5">
+				<Badge
+					variant="outline"
+					className={`md:hidden shrink-0 ${row.original.type === "salary" ? "border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400" : "border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400"}`}
+				>
+					{typeLabels[row.original.type] ?? row.original.type}
+				</Badge>
+				{row.original.categoryName && (
+					<Badge variant="secondary" className="md:hidden shrink-0">{row.original.categoryName}</Badge>
+				)}
+				{row.original.source ? (
+					<span className="text-foreground/80 dark:text-foreground/80">{row.original.source}</span>
+				) : (
+					<span className="italic text-foreground/50">—</span>
+				)}
+			</div>
+		),
 	},
 	{
 		accessorKey: "type",
@@ -184,7 +193,7 @@ const columns: ColumnDef<IncomeRow>[] = [
 			const income = row.original;
 			const boundDelete = deleteIncomeNoRedirect.bind(null, income.id);
 			return (
-				<div className="flex items-center justify-end gap-1">
+				<div className="flex items-center justify-end gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
 					<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
 						<Link
 							href={`/income/${income.id}/edit`}
@@ -307,7 +316,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 		<div className="space-y-4">
 			{/* View toggle + Filters */}
 			<div className="rounded-xl border border-border bg-card dark:border-border/40 dark:bg-card">
-		<div className="flex flex-wrap items-end gap-4 border-b border-gray-100 px-4 py-3 dark:border-border/40">
+		<div className="flex flex-wrap items-center gap-4 border-b border-gray-100 px-4 py-3 dark:border-border/40">
 				{/* Monthly / Yearly toggle */}
 				<div className="space-y-1">
 					<p className="text-xs font-medium text-foreground/60 dark:text-foreground/50">
@@ -401,7 +410,7 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								className="border-b border-gray-100 hover:bg-transparent dark:border-border/40"
 							>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
+									<TableHead key={header.id} className={["type", "categoryName", "actions"].includes(header.id) ? "hidden md:table-cell" : undefined}>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -419,10 +428,10 @@ export function IncomeTable({ incomes, categories }: IncomeTableProps) {
 								<TableRow
 									key={row.id}
 									onClick={() => setSelectedIncome(row.original)}
-									className="cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background dark:border-border/40/50 dark:hover:bg-card/50"
+									className={`cursor-pointer border-b border-gray-50 last:border-0 transition-colors hover:bg-background group dark:border-border/40/50 dark:hover:bg-card/50${row.index % 2 !== 0 ? " bg-muted/20" : ""}`}
 								>
 									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
+										<TableCell key={cell.id} className={["type", "categoryName", "actions"].includes(cell.column.id) ? "hidden md:table-cell" : undefined}>
 											{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext(),

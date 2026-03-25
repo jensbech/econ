@@ -20,7 +20,7 @@ export function NavLink({ href, label, children }: NavLinkProps) {
 			className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
 				isActive
 					? "bg-primary/15 text-primary dark:bg-primary/20 dark:text-primary"
-					: "text-foreground/60 hover:bg-primary/8 hover:text-primary dark:text-foreground/70 dark:hover:bg-primary/10 dark:hover:text-primary"
+					: "text-foreground/75 hover:bg-primary/10 hover:text-primary dark:text-foreground/80 dark:hover:bg-primary/12 dark:hover:text-primary"
 			}`}
 		>
 			<span

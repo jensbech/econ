@@ -74,7 +74,7 @@ export default async function RecurringExpensesPage() {
 						Gjentagende utgifter
 					</h1>
 					<p className="mt-1 text-sm text-foreground/60 dark:text-foreground/50">
-						Administrer faste og gjentagende utgifter.
+						Administrer faste og gjentagende utgifter. Gjentagende inntekter opprettes via inntektskategorien.
 					</p>
 				</div>
 				<Button

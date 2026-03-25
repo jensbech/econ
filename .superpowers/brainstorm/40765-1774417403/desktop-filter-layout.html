@@ -1,0 +1,70 @@
+<h2>Desktop: filter placement</h2>
+<p class="subtitle">Where should the search + month + category filters live?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="above" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f2f0ed;padding:14px;font-family:system-ui;font-size:12px;display:flex;flex-direction:column;gap:8px">
+      <!-- Filter bar above, table below -->
+      <div style="background:white;border-radius:8px;border:1px solid #e5e3df;padding:10px 14px;display:flex;gap:10px;align-items:center">
+        <div style="flex:1;background:#f4f2ef;border-radius:5px;height:26px;display:flex;align-items:center;padding:0 8px;color:#aaa;font-size:11px">🔍 Søk...</div>
+        <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 10px;display:flex;align-items:center;color:#666;font-size:11px;white-space:nowrap">mars 2026 ▾</div>
+        <div style="background:#f4f2ef;border-radius:5px;height:26px;padding:0 10px;display:flex;align-items:center;color:#666;font-size:11px;white-space:nowrap">Alle kategorier ▾</div>
+      </div>
+      <div style="background:white;border-radius:8px;border:1px solid #e5e3df;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#faf9f7;border-bottom:1px solid #f0ede9">
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Dato</th>
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Beskrivelse</th>
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Kategori</th>
+            <th style="padding:7px 12px;text-align:right;font-size:10px;color:#999;font-weight:600">Beløp</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f5f3f0"><td style="padding:7px 12px;font-size:11px;color:#888">12. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Rema 1000</td><td style="padding:7px 12px"><span style="background:#ede9f8;color:#7c6bb5;border-radius:99px;font-size:10px;padding:1px 7px">Mat</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−423 kr</td></tr>
+            <tr style="border-bottom:1px solid #f5f3f0;background:#fdfcfb"><td style="padding:7px 12px;font-size:11px;color:#888">10. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Strøm mars</td><td style="padding:7px 12px"><span style="background:#e8f4ea;color:#4a8c52;border-radius:99px;font-size:10px;padding:1px 7px">Bolig</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−1 200 kr</td></tr>
+            <tr><td style="padding:7px 12px;font-size:11px;color:#888">8. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Ruter</td><td style="padding:7px 12px"><span style="background:#fdecd7;color:#c07a3a;border-radius:99px;font-size:10px;padding:1px 7px">Transport</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−379 kr</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:7px 12px;border-top:1px solid #f0ede9;display:flex;justify-content:space-between;font-size:11px;color:#999"><span>3 utgifter</span><span style="font-weight:600;color:#c94c4c">−2 002 kr</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Filters above, table separate</h3>
+      <p>Two distinct cards. Filters feel lightweight and always visible. Table is clean on its own. Easier to scan the numbers.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="inside" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f2f0ed;padding:14px;font-family:system-ui;font-size:12px">
+      <!-- Current: filters inside table card -->
+      <div style="background:white;border-radius:8px;border:1px solid #e5e3df;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f0ede9;display:flex;gap:10px;align-items:center;background:#faf9f7">
+          <div style="flex:1;background:#f0ede9;border-radius:5px;height:26px;display:flex;align-items:center;padding:0 8px;color:#aaa;font-size:11px">🔍 Søk...</div>
+          <div style="background:#f0ede9;border-radius:5px;height:26px;padding:0 10px;display:flex;align-items:center;color:#666;font-size:11px;white-space:nowrap">mars 2026 ▾</div>
+          <div style="background:#f0ede9;border-radius:5px;height:26px;padding:0 10px;display:flex;align-items:center;color:#666;font-size:11px;white-space:nowrap">Kategorier ▾</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid #f0ede9">
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Dato</th>
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Beskrivelse</th>
+            <th style="padding:7px 12px;text-align:left;font-size:10px;color:#999;font-weight:600">Kategori</th>
+            <th style="padding:7px 12px;text-align:right;font-size:10px;color:#999;font-weight:600">Beløp</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f5f3f0"><td style="padding:7px 12px;font-size:11px;color:#888">12. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Rema 1000</td><td style="padding:7px 12px"><span style="background:#ede9f8;color:#7c6bb5;border-radius:99px;font-size:10px;padding:1px 7px">Mat</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−423 kr</td></tr>
+            <tr style="border-bottom:1px solid #f5f3f0;background:#fdfcfb"><td style="padding:7px 12px;font-size:11px;color:#888">10. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Strøm mars</td><td style="padding:7px 12px"><span style="background:#e8f4ea;color:#4a8c52;border-radius:99px;font-size:10px;padding:1px 7px">Bolig</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−1 200 kr</td></tr>
+            <tr><td style="padding:7px 12px;font-size:11px;color:#888">8. mars</td><td style="padding:7px 12px;font-size:12px;color:#3d3a36">Ruter</td><td style="padding:7px 12px"><span style="background:#fdecd7;color:#c07a3a;border-radius:99px;font-size:10px;padding:1px 7px">Transport</span></td><td style="padding:7px 12px;text-align:right;font-size:12px;font-weight:600;color:#c94c4c">−379 kr</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:7px 12px;border-top:1px solid #f0ede9;display:flex;justify-content:space-between;font-size:11px;color:#999"><span>3 utgifter</span><span style="font-weight:600;color:#c94c4c">−2 002 kr</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Current: filters inside table card</h3>
+      <p>Everything in one container. Compact but feels like the table header and the filters compete for attention. Works fine, just a bit busy.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">Pick one, then confirm in terminal.</p>
