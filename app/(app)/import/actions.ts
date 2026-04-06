@@ -15,7 +15,6 @@ import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import type { DecimalSeparator } from "@/lib/csv-detect";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { parseDateToIso } from "@/lib/server-utils";
 
 export interface CheckRow {
@@ -124,7 +123,6 @@ export async function confirmImport(
 ): Promise<{ batchId: string; inserted: number }> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`import:confirm:${user.id}`, 10, 3600);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
@@ -309,9 +307,6 @@ export async function rollbackImport(batchId: string): Promise<void> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
-
-	// Rate limiting: max 5 rollbacks per hour per user
-	checkRateLimit(`import:rollback:${user.id}`, 5, 3600);
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");

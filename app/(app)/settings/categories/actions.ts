@@ -9,7 +9,6 @@ import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_CATEGORIES = 200;
 
@@ -40,11 +39,6 @@ const RenameCategorySchema = z.object({
 export async function addCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`category:add:${user.id}`, 20, 60);
-	} catch {
-		throw new Error("Too many requests. Please try again later.");
-	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -103,11 +97,6 @@ export async function addCategory(formData: FormData) {
 export async function renameCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`category:rename:${user.id}`, 20, 60);
-	} catch {
-		return { error: "Too many requests. Please try again later." };
-	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 
@@ -174,11 +163,6 @@ export async function renameCategory(formData: FormData) {
 export async function deleteCategory(formData: FormData) {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`category:delete:${user.id}`, 10, 60);
-	} catch {
-		throw new Error("Too many requests. Please try again later.");
-	}
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("No household found");
 

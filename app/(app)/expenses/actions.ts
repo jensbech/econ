@@ -10,7 +10,6 @@ import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import {
 	extractFieldErrors,
 	nokToOere,
@@ -48,12 +47,6 @@ export async function createExpense(
 		return { error: "User ID not available" };
 	}
 
-	// Rate limiting: max 20 expenses per minute per user
-	try {
-		checkRateLimit(`expense:create:${user.id}`, 20, 60);
-	} catch (error) {
-		return { error: "Too many expense creations. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -217,12 +210,6 @@ export async function updateExpense(
 		return { error: "User ID not available" };
 	}
 
-	// Rate limiting: max 20 updates per minute per user
-	try {
-		checkRateLimit(`expense:update:${user.id}`, 20, 60);
-	} catch (error) {
-		return { error: "Too many expense updates. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -359,12 +346,6 @@ export async function deleteExpense(id: string): Promise<void> {
 		throw new Error("User ID not available");
 	}
 
-	// Rate limiting: max 10 deletions per minute per user
-	try {
-		checkRateLimit(`expense:delete:${user.id}`, 10, 60);
-	} catch {
-		throw new Error("Too many delete requests. Please try again later.");
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -415,12 +396,6 @@ export async function deleteExpenseNoRedirect(
 		throw new Error("User ID not available");
 	}
 
-	// Rate limiting: max 10 deletions per minute per user
-	try {
-		checkRateLimit(`expense:delete:${user.id}`, 10, 60);
-	} catch {
-		return { error: "Too many delete requests. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");

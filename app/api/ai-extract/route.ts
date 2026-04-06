@@ -9,7 +9,6 @@ import { extractTransactions, type SupportedMediaType } from "@/lib/ai-extract";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
@@ -65,8 +64,6 @@ export async function POST(request: Request) {
 	try {
 		await validateCsrfOrigin();
 		const user = await verifySession();
-		checkRateLimit(`ai:extract:${user.id}`, 5, 3600);
-
 		const formData = await request.formData();
 		const file = formData.get("file") as File | null;
 

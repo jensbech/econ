@@ -14,7 +14,6 @@ import { logCreate, logDelete } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { parseDateToIso } from "@/lib/server-utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -78,7 +77,6 @@ export async function createExpenseCategory(
 ): Promise<{ id: string; name: string }> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`category:create:${user.id}`, 20, 60);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
@@ -133,7 +131,6 @@ export async function confirmAiImport(
 ): Promise<{ batchId: string; inserted: number }> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	checkRateLimit(`ai:import:${user.id}`, 5, 3600);
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 

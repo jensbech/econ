@@ -10,7 +10,6 @@ import { db } from "@/db";
 import { accounts } from "@/db/schema";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { logCreate, logUpdate, logDelete } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { nokToOere } from "@/lib/server-utils";
@@ -31,12 +30,6 @@ export async function createAccount(
 
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
-
-	try {
-		await checkRateLimit(`account:create:${user.id}`, 5, 60);
-	} catch {
-		return "For mange forespørsler. Prøv igjen senere.";
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";
@@ -132,12 +125,6 @@ export async function updateAccount(
 
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
-
-	try {
-		await checkRateLimit(`account:update:${user.id}`, 10, 60);
-	} catch {
-		return "For mange forespørsler. Prøv igjen senere.";
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";
@@ -236,12 +223,6 @@ export async function deleteAccount(id: string): Promise<string | undefined> {
 
 	const user = await verifySession();
 	if (!user.id) return "Bruker-ID ikke tilgjengelig";
-
-	try {
-		await checkRateLimit(`account:delete:${user.id}`, 5, 60);
-	} catch {
-		return "For mange forespørsler. Prøv igjen senere.";
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return "Ingen husholdning funnet";

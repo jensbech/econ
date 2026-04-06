@@ -10,7 +10,6 @@ import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
 
 export type LoanFormState = {
@@ -59,12 +58,6 @@ export async function createLoan(
 	const user = await verifySession();
 	if (!user.id) return { error: "User ID not available" };
 
-	// Rate limiting: max 5 loans per hour per user
-	try {
-		checkRateLimit(`loan:create:${user.id}`, 5, 3600);
-	} catch (error) {
-		return { error: "Too many loan creations. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -193,11 +186,6 @@ export async function updateLoan(
 	const user = await verifySession();
 	if (!user.id) return { error: "User ID not available" };
 
-	try {
-		checkRateLimit(`loan:update:${user.id}`, 10, 3600);
-	} catch {
-		return { error: "Too many requests. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -341,12 +329,6 @@ export async function deleteLoan(id: string): Promise<void> {
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
 
-	// Rate limiting: max 5 deletions per hour per user
-	try {
-		checkRateLimit(`loan:delete:${user.id}`, 5, 3600);
-	} catch {
-		throw new Error("Too many requests. Please try again later.");
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -395,11 +377,6 @@ export async function addLoanPayment(
 ): Promise<PaymentFormState> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`loan:payment:create:${user.id}`, 10, 60);
-	} catch {
-		return { error: "Too many payment submissions. Please try again later." };
-	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -499,13 +476,6 @@ export async function deleteLoanPayment(
 	await validateCsrfOrigin();
 	const user = await verifySession();
 	if (!user.id) throw new Error("User ID not available");
-
-	// Rate limiting: max 10 payment deletions per minute per user
-	try {
-		checkRateLimit(`loan:payment:delete:${user.id}`, 10, 60);
-	} catch {
-		throw new Error("Too many requests. Please try again later.");
-	}
 
 	const householdId = await getHouseholdId(user.id);
 	if (!householdId) throw new Error("Ingen husholdning funnet");

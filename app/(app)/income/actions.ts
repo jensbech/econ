@@ -10,7 +10,6 @@ import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import {
 	extractFieldErrors,
 	nokToOere,
@@ -43,11 +42,6 @@ export async function createIncome(
 	await validateCsrfOrigin();
 	const user = await verifySession();
 
-	try {
-		checkRateLimit(`income:create:${user.id}`, 20, 60);
-	} catch {
-		return { error: "Too many income creations. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -167,11 +161,6 @@ export async function updateIncome(
 	await validateCsrfOrigin();
 	const user = await verifySession();
 
-	try {
-		checkRateLimit(`income:update:${user.id}`, 20, 60);
-	} catch {
-		return { error: "Too many income updates. Please try again later." };
-	}
 
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
@@ -265,11 +254,6 @@ export async function deleteIncome(id: string): Promise<void> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
 
-	try {
-		checkRateLimit(`income:delete:${user.id}`, 10, 60);
-	} catch {
-		throw new Error("Too many delete requests. Please try again later.");
-	}
 
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
@@ -318,11 +302,6 @@ export async function deleteIncomeNoRedirect(
 	await validateCsrfOrigin();
 	const user = await verifySession();
 
-	try {
-		checkRateLimit(`income:delete:${user.id}`, 10, 60);
-	} catch {
-		throw new Error("Too many delete requests. Please try again later.");
-	}
 
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");

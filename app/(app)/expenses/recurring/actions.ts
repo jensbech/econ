@@ -10,7 +10,6 @@ import { logCreate, logDelete, logUpdate } from "@/lib/audit";
 import { validateCsrfOrigin } from "@/lib/csrf-validate";
 import { verifySession } from "@/lib/dal";
 import { getHouseholdId } from "@/lib/households";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { extractFieldErrors, nokToOere, parseDateToIso } from "@/lib/server-utils";
 
 export type TemplateFormState = {
@@ -47,11 +46,6 @@ export async function createRecurringTemplate(
 ): Promise<TemplateFormState> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`recurring:create:${user.id}`, 5, 3600);
-	} catch {
-		return { error: "Too many template creations. Please try again later." };
-	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -123,11 +117,6 @@ export async function updateRecurringTemplate(
 ): Promise<TemplateFormState> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`recurring:update:${user.id}`, 10, 60);
-	} catch {
-		return { error: "Too many template updates. Please try again later." };
-	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) return { error: "Ingen husholdning funnet" };
 
@@ -228,11 +217,6 @@ export async function updateRecurringTemplate(
 export async function deleteRecurringTemplate(id: string): Promise<void> {
 	await validateCsrfOrigin();
 	const user = await verifySession();
-	try {
-		checkRateLimit(`recurring:delete:${user.id}`, 5, 3600);
-	} catch {
-		throw new Error("Too many requests. Please try again later.");
-	}
 	const householdId = await getHouseholdId(user.id as string);
 	if (!householdId) throw new Error("Ingen husholdning funnet");
 
